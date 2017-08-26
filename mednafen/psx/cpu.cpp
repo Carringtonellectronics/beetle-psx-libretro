@@ -254,7 +254,7 @@ INLINE T PS_CPU::PeekMemory(uint32_t address)
       return PSX_MemPeek8(address);
    else if(sizeof(T) == 2)
       return PSX_MemPeek16(address);
-   return PSX_MemPeek32(address);
+   return PSX_Mem Peek32(address);
 }
 
 template<typename T>

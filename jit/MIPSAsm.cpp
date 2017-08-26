@@ -18,11 +18,9 @@
 #include "ext/armips/Core/Assembler.h"
 #endif
 
-#include "util/text/utf8.h"
-#include "Core/Debugger/SymbolMap.h"
-#include "Core/MemMapHelpers.h"
-#include "Core/MIPS/JitCommon/JitCommon.h"
-#include "Core/MIPS/MIPSAsm.h"
+#include "mednafen/jit/MemMapHelpers.h"
+#include "mednafen/jit/JitCommon/JitCommon.h"
+#include "mednafen/jit/MIPS/MIPSAsm.h"
 
 namespace MIPSAsm
 {	
