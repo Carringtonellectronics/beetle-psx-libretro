@@ -43,7 +43,7 @@ static bool crop_overscan = false;
 static bool enable_memcard1 = false;
 static bool enable_analog_calibration = false;
 static bool enable_variable_serialization_size = false;
-
+static bool enable_jit = false;
 // Sets how often (in number of output frames/retro_run invocations)
 // the internal framerace counter should be updated if
 // display_internal_framerate is true.
@@ -2904,6 +2904,15 @@ static void check_variables(bool startup)
          image_crop = 8;
    }
 
+   var.key = option_jit_enable;
+
+   if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
+   {
+      if (strcmp(var.value, "enabled") == 0)
+         enable_jit = true;
+      else 
+         enable_jit = false;
+   }
 }
 
 #ifdef NEED_CD
@@ -4015,6 +4024,7 @@ void retro_set_environment(retro_environment_t cb)
       { option_memcard0_method, "Memcard 0 method; libretro|mednafen" },
       { option_memcard1_enable, "Enable memory card 1; enabled|disabled" },
       { option_memcard_shared, "Shared memcards (restart); disabled|enabled" },
+      { option_jit_enable, "Enable JIT (restart); disabled|enabled" },
       { NULL, NULL },
    };
    static const struct retro_controller_description pads[] = {
