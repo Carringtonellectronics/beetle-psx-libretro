@@ -203,49 +203,12 @@ void MIPSState::Init() {
 	downcount = 0;
 	// Initialize the VFPU random number generator with .. something?
 	rng.Init(0x1337);
-
-	if (PSP_CoreParameter().cpuCore == CPUCore::JIT) {
-		MIPSComp::jit = MIPSComp::CreateNativeJit(this);
-	} else if (PSP_CoreParameter().cpuCore == CPUCore::IR_JIT) {
-		MIPSComp::jit = new MIPSComp::IRJit(this);
-	} else {
-		MIPSComp::jit = nullptr;
-	}
+	//Used purely for JIT comp.
+	MIPSComp::jit = MIPSComp::CreateNativeJit(this);
 }
 
 bool MIPSState::HasDefaultPrefix() const {
 	return vfpuCtrl[VFPU_CTRL_SPREFIX] == 0xe4 && vfpuCtrl[VFPU_CTRL_TPREFIX] == 0xe4 && vfpuCtrl[VFPU_CTRL_DPREFIX] == 0;
-}
-
-void MIPSState::UpdateCore(CPUCore desired) {
-	if (PSP_CoreParameter().cpuCore == desired) {
-		return;
-	}
-
-	PSP_CoreParameter().cpuCore = desired;
-	switch (PSP_CoreParameter().cpuCore) {
-	case CPUCore::JIT:
-		INFO_LOG(CPU, "Switching to JIT");
-		if (MIPSComp::jit) {
-			delete MIPSComp::jit;
-		}
-		MIPSComp::jit = MIPSComp::CreateNativeJit(this);
-		break;
-
-	case CPUCore::IR_JIT:
-		INFO_LOG(CPU, "Switching to IRJIT");
-		if (MIPSComp::jit) {
-			delete MIPSComp::jit;
-		}
-		MIPSComp::jit = new MIPSComp::IRJit(this);
-		break;
-
-	case CPUCore::INTERPRETER:
-		INFO_LOG(CPU, "Switching to interpreter");
-		delete MIPSComp::jit;
-		MIPSComp::jit = 0;
-		break;
-	}
 }
 
 void MIPSState::DoState(PointerWrap &p) {
@@ -300,15 +263,7 @@ void MIPSState::SingleStep() {
 
 // returns 1 if reached ticks limit
 int MIPSState::RunLoopUntil(u64 globalTicks) {
-	switch (PSP_CoreParameter().cpuCore) {
-	case CPUCore::JIT:
-	case CPUCore::IR_JIT:
-		MIPSComp::jit->RunLoopUntil(globalTicks);
-		break;
-
-	case CPUCore::INTERPRETER:
-		return MIPSInterpret_RunUntil(globalTicks);
-	}
+	MIPSComp::jit->RunLoopUntil(globalTicks);
 	return 1;
 }
 

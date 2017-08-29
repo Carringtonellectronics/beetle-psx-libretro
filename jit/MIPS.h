@@ -177,7 +177,6 @@ public:
 	void Init();
 	void Shutdown();
 	void Reset();
-	void UpdateCore(CPUCore desired);
 
 	void DoState(PointerWrap &p);
 
