@@ -79,13 +79,13 @@ ifneq (,$(findstring unix,$(platform)))
       IS_X86 = 1
    endif
    LDFLAGS += $(PTHREAD_FLAGS)
-   FLAGS += $(PTHREAD_FLAGS)
+   FLAGS +=
    ifeq ($(HAVE_OPENGL),1)
       ifneq (,$(findstring gles,$(platform)))
          GLES = 1
          GL_LIB := -lGLESv2
       else
-         GL_LIB := -lGL
+         GL_LIB := -L/usr/local/lib -lGL
       endif
    endif
 
