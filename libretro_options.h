@@ -46,7 +46,9 @@
 #define option_memcard0_method       "beetle_psx_hw_use_mednafen_memcard0_method"
 #define option_memcard1_enable       "beetle_psx_hw_enable_memcard1"
 #define option_memcard_shared        "beetle_psx_hw_shared_memory_cards"
+#ifdef JIT
 #define option_jit_enable            "beetle_psx_hw_enable_jit"
+#endif
 #else
 #define option_renderer              "beetle_psx_renderer"
 #define option_renderer_software_fb  "beetle_psx_renderer_software_fb"
@@ -81,5 +83,7 @@
 #define option_memcard0_method       "beetle_psx_use_mednafen_memcard0_method"
 #define option_memcard1_enable       "beetle_psx_enable_memcard1"
 #define option_memcard_shared        "beetle_psx_shared_memory_cards"
+#ifdef JIT
 #define option_jit_enable            "beetle_psx_enable_jit"
+#endif
 #endif
