@@ -401,6 +401,7 @@ const MIPSInstruction tableCop0CO[64] = // 010000 1.... ..... ..... ..... xxxxxx
 	//8
 	INSTR("tlbp", JITFUNC(Comp_Generic), Dis_Generic, 0, 0),
 	INVALID, INVALID, INVALID, INVALID, INVALID, INVALID, INVALID,
+	//TODO RFE here?
 	INVALID_X_8,
 	//24
 	INSTR("eret", JITFUNC(Comp_Generic), Dis_Generic, 0, 0),
