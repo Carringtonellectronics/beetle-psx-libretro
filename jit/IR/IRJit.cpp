@@ -17,7 +17,6 @@
 
 #include "base/logging.h"
 #include "profiler/profiler.h"
-#include "Common/ChunkFile.h"
 #include "Common/StringUtils.h"
 #include "mednafen/psx/timer.h"
 #include "Core/Core.h"
@@ -46,12 +45,15 @@ IRJit::IRJit(MIPSState *mips) : frontend_(mips->HasDefaultPrefix()), mips_(mips)
 IRJit::~IRJit() {
 }
 
-void IRJit::DoState(PointerWrap &p) {
+int IRJit::StateAction(StateMem *sm, int load, int data_only) {
+	/*
 	frontend_.DoState(p);
+	*/
 }
 
 // This is here so the savestate matches between jit and non-jit.
-void IRJit::DoDummyState(PointerWrap &p) {
+int IRJit::DummyStateAction(StateMem *sm, int load, int data_only){
+	/*
 	auto s = p.Section("Jit", 1, 2);
 	if (!s)
 		return;
@@ -62,6 +64,7 @@ void IRJit::DoDummyState(PointerWrap &p) {
 		dummy = true;
 		p.Do(dummy);
 	}
+	*/
 }
 
 void IRJit::ClearCache() {

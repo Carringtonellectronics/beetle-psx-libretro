@@ -16,7 +16,6 @@
 // https://github.com/hrydgard/ppsspp and http://www.ppsspp.org/.
 
 #include "base/logging.h"
-#include "Common/ChunkFile.h"
 #include "Core/Reporting.h"
 #include "Core/Config.h"
 #include "Core/Core.h"
@@ -45,8 +44,9 @@ FakeJit::FakeJit(MIPSState *mips) : blocks(mips, this), mips_(mips)
 	blocks.Init();
 }
 
-void FakeJit::DoState(PointerWrap &p)
+int FakeJit::StateAction(StateMem *sm, int load, int data_only)
 {
+	/*
 	auto s = p.Section("FakeJit", 1, 2);
 	if (!s)
 		return;
@@ -58,11 +58,13 @@ void FakeJit::DoState(PointerWrap &p)
 	} else {
 		js.hasSetRounding = 1;
 	}
+	*/
 }
 
 // This is here so the savestate matches between jit and non-jit.
-void FakeJit::DoDummyState(PointerWrap &p)
+int FakeJit::DummyStateAction(StateMem *sm, int load, int data_only)
 {
+	/*
 	auto s = p.Section("FakeJit", 1, 2);
 	if (!s)
 		return;
@@ -73,6 +75,7 @@ void FakeJit::DoDummyState(PointerWrap &p)
 		dummy = true;
 		p.Do(dummy);
 	}
+	*/
 }
 
 void FakeJit::FlushAll()

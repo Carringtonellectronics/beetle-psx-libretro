@@ -20,7 +20,6 @@
 
 #include "base/logging.h"
 #include "profiler/profiler.h"
-#include "Common/ChunkFile.h"
 
 #include "Core/Reporting.h"
 #include "Core/Config.h"
@@ -90,8 +89,9 @@ ArmJit::ArmJit(MIPSState *mips) : blocks(mips, this), gpr(mips, &js, &jo), fpr(m
 ArmJit::~ArmJit() {
 }
 
-void ArmJit::DoState(PointerWrap &p)
+int ArmJit::StateAction(StateMem *sm, int load, int data_only)
 {
+	/*
 	auto s = p.Section("Jit", 1, 2);
 	if (!s)
 		return;
@@ -103,11 +103,13 @@ void ArmJit::DoState(PointerWrap &p)
 	} else {
 		js.hasSetRounding = 1;
 	}
+	*/
 }
 
 // This is here so the savestate matches between jit and non-jit.
-void ArmJit::DoDummyState(PointerWrap &p)
+int ArmJit::DummyStateAction(StateMem *sm, int load, int data_only)
 {
+	/*
 	auto s = p.Section("Jit", 1, 2);
 	if (!s)
 		return;
@@ -118,6 +120,7 @@ void ArmJit::DoDummyState(PointerWrap &p)
 		dummy = true;
 		p.Do(dummy);
 	}
+	*/
 }
 
 void ArmJit::FlushAll()

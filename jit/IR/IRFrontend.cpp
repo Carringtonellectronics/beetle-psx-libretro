@@ -17,7 +17,6 @@
 
 #include "base/logging.h"
 
-#include "Common/ChunkFile.h"
 #include "Core/Debugger/Breakpoints.h"
 #include "Core/Debugger/SymbolMap.h"
 #include "Core/Reporting.h"
@@ -43,7 +42,8 @@ IRFrontend::IRFrontend(bool startDefaultPrefix) {
 	CBreakPoints::SetSkipFirst(0);
 }
 
-void IRFrontend::DoState(PointerWrap &p) {
+int IRFrontend::StateAction(StateMem *sm, int load, int data_only) {
+	/*
 	auto s = p.Section("Jit", 1, 2);
 	if (!s)
 		return;
@@ -59,6 +59,7 @@ void IRFrontend::DoState(PointerWrap &p) {
 	// The debugger sets this so that "go" on a breakpoint will actually... go.
 	// But if they reset, we can end up hitting it by mistake, since it's based on PC and ticks.
 	CBreakPoints::SetSkipFirst(0);
+	*/
 }
 
 void IRFrontend::FlushAll() {

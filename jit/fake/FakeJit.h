@@ -34,8 +34,8 @@ class FakeJit : public FakeGen::FakeXCodeBlock {
 public:
 	FakeJit(MIPSState *mips);
 
-	void DoState(PointerWrap &p);
-	static void DoDummyState(PointerWrap &p);
+	int StateAction(StateMem *sm, int load, int data_only);
+	static int StateAction(StateMem *sm, int load, int data_only);
 
 	const JitOptions &GetJitOptions() { return jo; }
 

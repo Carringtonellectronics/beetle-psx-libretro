@@ -38,8 +38,9 @@ public:
 	ArmJit(MIPSState *mips);
 	virtual ~ArmJit();
 
-	void DoState(PointerWrap &p) override;
-	void DoDummyState(PointerWrap &p) override;
+	int StateAction(StateMem *sm, int load, int data_only) override;
+	//Is this necessary?
+	int StateDummyAction(StateMem *sm, int load, int data_only) override;
 
 	const JitOptions &GetJitOptions() { return jo; }
 

@@ -20,7 +20,6 @@
 
 #include "base/logging.h"
 #include "profiler/profiler.h"
-#include "Common/ChunkFile.h"
 #include "Common/CPUDetect.h"
 #include "Common/StringUtils.h"
 
@@ -79,7 +78,8 @@ Arm64Jit::Arm64Jit(MIPSState *mips) : blocks(mips, this), gpr(mips, &js, &jo), f
 Arm64Jit::~Arm64Jit() {
 }
 
-void Arm64Jit::DoState(PointerWrap &p) {
+int Arm64Jit::StateAction(StateMem *sm, int load, int data_only) {
+	/*
 	auto s = p.Section("Jit", 1, 2);
 	if (!s)
 		return;
@@ -95,10 +95,12 @@ void Arm64Jit::DoState(PointerWrap &p) {
 	if (p.GetMode() == PointerWrap::MODE_READ) {
 		js.currentRoundingFunc = convertS0ToSCRATCH1[(mips_->fcr31) & 3];
 	}
+	*/
 }
 
 // This is here so the savestate matches between jit and non-jit.
-void Arm64Jit::DoDummyState(PointerWrap &p) {
+int Arm64Jit::DummyStateAction(StateMem *sm, int load, int data_only) {
+	/*
 	auto s = p.Section("Jit", 1, 2);
 	if (!s)
 		return;
@@ -109,6 +111,7 @@ void Arm64Jit::DoDummyState(PointerWrap &p) {
 		dummy = true;
 		p.Do(dummy);
 	}
+	*/
 }
 
 void Arm64Jit::FlushAll()

@@ -85,7 +85,7 @@ public:
 	void Comp_Vbfy(MIPSOpcode op) override;
 
 	int Replace_fabsf() override;
-	void DoState(PointerWrap &p);
+	int StateAction(StateMem *sm, int load, int data_only);
 	bool CheckRounding();  // returns true if we need a do-over
 
 	void DoJit(u32 em_address, std::vector<IRInst> &instructions, std::vector<u32> &constants, u32 &mipsBytes);

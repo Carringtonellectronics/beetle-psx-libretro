@@ -20,12 +20,10 @@
 #include <cstddef>
 
 #include "util/random/rng.h"
-#include "Common/Common.h"
+//TODO factor out CommonTypes.h
 #include "Common/CommonTypes.h"
-// #include "Core/CoreParameter.h"
 #include "Core/Opcode.h"
 
-class PointerWrap;
 
 typedef Memory::Opcode MIPSOpcode;
 
@@ -178,7 +176,7 @@ public:
 	void Shutdown();
 	void Reset();
 
-	void DoState(PointerWrap &p);
+	int StateAction(StateMem *sm, int load, int data_only);
 
 	// MUST start with r and be followed by f, v, and t!
 	u32 r[32];

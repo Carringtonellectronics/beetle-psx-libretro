@@ -38,8 +38,8 @@ public:
 	Arm64Jit(MIPSState *mips);
 	virtual ~Arm64Jit();
 
-	void DoState(PointerWrap &p) override;
-	void DoDummyState(PointerWrap &p) override;
+	int StateAction(StateMem *sm, int load, int data_only) override;
+	int StateAction(StateMem *sm, int load, int data_only) override;
 
 	const JitOptions &GetJitOptions() { return jo; }
 

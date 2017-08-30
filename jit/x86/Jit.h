@@ -32,8 +32,6 @@
 #include "Core/MIPS/x86/RegCache.h"
 #include "Core/MIPS/x86/RegCacheFPU.h"
 
-class PointerWrap;
-
 namespace MIPSComp {
 
 // This is called when Jit hits a breakpoint.  Returns 1 when hit.
@@ -51,8 +49,8 @@ public:
 
 	const JitOptions &GetJitOptions() { return jo; }
 
-	void DoState(PointerWrap &p) override;
-	void DoDummyState(PointerWrap &p) override;
+	int StateAction(StateMem *sm, int load, int data_only) override;
+	int DummyStateAction(StateMem *sm, int load, int data_only) override;
 
 	// Compiled ops should ignore delay slots
 	// the compiler will take care of them by itself

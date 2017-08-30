@@ -37,8 +37,8 @@ class MipsJit : public MIPSGen::MIPSCodeBlock, public JitInterface, public MIPSF
 public:
 	MipsJit(MIPSState *mips);
 
-	void DoState(PointerWrap &p) override;
-	void DoDummyState(PointerWrap &p) override;
+	int StateAction(StateMem *sm, int load, int data_only) override;
+	int DummyStateAction(StateMem *sm, int load, int data_only) override;
 
 	// Compiled ops should ignore delay slots
 	// the compiler will take care of them by itself

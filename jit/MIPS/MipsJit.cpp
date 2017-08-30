@@ -20,7 +20,6 @@
 
 #include "base/logging.h"
 #include "profiler/profiler.h"
-#include "Common/ChunkFile.h"
 #include "Core/Reporting.h"
 #include "Core/Config.h"
 #include "Core/Core.h"
@@ -50,8 +49,9 @@ MipsJit::MipsJit(MIPSState *mips) : blocks(mips, this), mips_(mips)
 	js.startDefaultPrefix = mips_->HasDefaultPrefix();
 }
 
-void MipsJit::DoState(PointerWrap &p)
+int MipsJit::StateAction(StateMem *sm, int load, int data_only)
 {
+	/*
 	auto s = p.Section("Jit", 1, 2);
 	if (!s)
 		return;
@@ -63,11 +63,13 @@ void MipsJit::DoState(PointerWrap &p)
 	} else {
 		js.hasSetRounding = 1;
 	}
+	*/
 }
 
 // This is here so the savestate matches between jit and non-jit.
-void MipsJit::DoDummyState(PointerWrap &p)
+int MipsJit::DummyStateAction(StateMem *sm, int load, int data_only)
 {
+	/*
 	auto s = p.Section("Jit", 1, 2);
 	if (!s)
 		return;
@@ -78,6 +80,7 @@ void MipsJit::DoDummyState(PointerWrap &p)
 		dummy = true;
 		p.Do(dummy);
 	}
+	*/
 }
 
 void MipsJit::FlushAll()

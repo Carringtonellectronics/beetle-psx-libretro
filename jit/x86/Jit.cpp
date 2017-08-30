@@ -24,7 +24,6 @@
 #include "math/math_util.h"
 #include "profiler/profiler.h"
 
-#include "Common/ChunkFile.h"
 #include "Core/Core.h"
 #include "Core/MemMap.h"
 #include "Core/System.h"
@@ -123,7 +122,8 @@ Jit::Jit(MIPSState *mips)
 Jit::~Jit() {
 }
 
-void Jit::DoState(PointerWrap &p) {
+int Jit::StateAction(StateMem *sm, int load, int data_only) {
+	/*
 	auto s = p.Section("Jit", 1, 2);
 	if (!s)
 		return;
@@ -139,10 +139,12 @@ void Jit::DoState(PointerWrap &p) {
 	// The debugger sets this so that "go" on a breakpoint will actually... go.
 	// But if they load a state, we can end up hitting it by mistake, since it's based on PC and ticks.
 	CBreakPoints::SetSkipFirst(0);
+	*/
 }
 
 // This is here so the savestate matches between jit and non-jit.
-void Jit::DoDummyState(PointerWrap &p) {
+int Jit::DummyStateAction(StateMem *sm, int load, int data_only) {
+	/*
 	auto s = p.Section("Jit", 1, 2);
 	if (!s)
 		return;
@@ -153,6 +155,7 @@ void Jit::DoDummyState(PointerWrap &p) {
 		dummy = true;
 		p.Do(dummy);
 	}
+	*/
 }
 
 

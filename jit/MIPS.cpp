@@ -20,15 +20,13 @@
 
 #include "math/math_util.h"
 
-#include "Common.h"
-#include "Common/ChunkFile.h"
-#include "Core/MIPS/MIPS.h"
-#include "Core/MIPS/MIPSInt.h"
-#include "Core/MIPS/MIPSTables.h"
-#include "Core/MIPS/MIPSDebugInterface.h"
-#include "Core/MIPS/MIPSVFPUUtils.h"
-#include "Core/MIPS/IR/IRJit.h"
-#include "Core/MIPS/JitCommon/JitCommon.h"
+#include "jit/MIPS.h"
+#include "jit/MIPSInt.h"
+#include "jit/MIPSTables.h"
+#include "jit/MIPSDebugInterface.h"
+#include "jit/MIPSVFPUUtils.h"
+#include "jit/IR/IRJit.h"
+#include "jit/JitCommon/JitCommon.h"
 #include "mednafen/psx/timer.h"
 
 MIPSState mipsr4k;
@@ -211,7 +209,8 @@ bool MIPSState::HasDefaultPrefix() const {
 	return vfpuCtrl[VFPU_CTRL_SPREFIX] == 0xe4 && vfpuCtrl[VFPU_CTRL_TPREFIX] == 0xe4 && vfpuCtrl[VFPU_CTRL_DPREFIX] == 0;
 }
 
-void MIPSState::DoState(PointerWrap &p) {
+int MIPSState::StateAction(StateMem *sm, int load, int data_only)
+{
 	//TODO save states
 	/*
 	auto s = p.Section("MIPSState", 1, 3);
