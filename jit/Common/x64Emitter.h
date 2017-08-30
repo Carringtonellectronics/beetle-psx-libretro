@@ -18,10 +18,10 @@
 #ifndef _DOLPHIN_INTEL_CODEGEN_
 #define _DOLPHIN_INTEL_CODEGEN_
 
-#include "ppsspp_config.h"
+//#include "ppsspp_config.h"
 
 #include <cstddef>
-#include "Common.h"
+#include "jit/Common/Common.h"
 #include "CodeBlock.h"
 
 #if PPSSPP_ARCH(64BIT)

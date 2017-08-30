@@ -33,7 +33,6 @@
 
 #include "Core/Core.h"
 #include "Core/MemMap.h"
-#include "Core/CoreTiming.h"
 #include "Core/Reporting.h"
 
 #include "Core/MIPS/MIPS.h"

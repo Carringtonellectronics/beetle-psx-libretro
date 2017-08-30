@@ -18,7 +18,7 @@
 #include "ext/armips/Core/Assembler.h"
 #endif
 
-#include "mednafen/jit/MemMapHelpers.h"
+#include "Common/MemMapHelpers.h"
 #include "mednafen/jit/JitCommon/JitCommon.h"
 #include "mednafen/jit/MIPS/MIPSAsm.h"
 

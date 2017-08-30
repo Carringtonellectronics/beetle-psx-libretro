@@ -18,6 +18,12 @@
 #include "psx.h"
 #include "timer.h"
 
+#define DEFAULT_SLICE_LENGTH = 1024;
+
+#ifdef JIT
+#include "jit/MIPS.h"
+#endif
+
 /*
  Notes(some of it may be incomplete or wrong in subtle ways)
 
@@ -95,6 +101,9 @@ static bool vblank;
 static bool hretrace;
 static Timer Timers[3];
 static int32_t lastts;
+static int32_t globalTimer;
+static int32_t slicelength = DEFAULT_SLICE_LENGTH;
+static int32_t nexteventts;
 
 static int32_t CalcNextEvent(int32_t next_event)
 {
@@ -151,7 +160,7 @@ static int32_t CalcNextEvent(int32_t next_event)
             next_event = tmp_clocks;
       }
    }
-
+   
    return(next_event);
 }
 
@@ -160,6 +169,7 @@ static void ClockTimer(int i, uint32_t clocks)
    int32_t before = Timers[i].Counter;
    int32_t target = 0x10000;
    bool zero_tm = false;
+
 
    if(Timers[i].DoZeCounting <= 0)
       clocks = 0;
@@ -291,7 +301,11 @@ void TIMER_ClockHRetrace(void)
 
 int32_t TIMER_Update(const int32_t timestamp)
 {
+#ifdef JIT
+   int32_t cpu_clocks = timestamp - lastts - currentMIPS->downcount;
+#else
    int32_t cpu_clocks = timestamp - lastts;
+#endif
    int32_t i;
 
    for(i = 0; i < 3; i++)
@@ -303,8 +317,9 @@ int32_t TIMER_Update(const int32_t timestamp)
    }
 
    lastts = timestamp;
-
-   return(timestamp + CalcNextEvent(1024));
+   globalTimer = timestamp;
+   nexteventts = timestamp + CalcNextEvent(1024);
+   return(nexteventts);
 }
 
 static void CalcCountingStart(unsigned which)
@@ -427,6 +442,7 @@ uint16_t TIMER_Read(const int32_t timestamp, uint32_t A)
 void TIMER_ResetTS(void)
 {
    lastts = 0;
+   globalTimer = 0;
 }
 
 void TIMER_Power(void)
@@ -505,4 +521,26 @@ void TIMER_SetRegister(unsigned int which, uint32_t value)
          break;
    }
 
+}
+
+//Advances the timer some amount of cycles. This function is needed for the JIT, the internal state makes it easier, no params have to be passed.
+//basically, it's supposed to lower currentMIPS->downcount, until it's >=0, at which point the compiled code should return.
+//TODO verify this works the way it should. Will timestamps become out of order? Maybe set up some logic for which timestamps is right in 
+//TIMER_Update
+void TIMER_Advance(){
+      int cyclesEx = slicelength - currentMIPS->downcount;
+
+      globalTimer += cyclesExecuted;
+      
+      slicelength = nexteventts - globalTimer;
+      //TODO max slice length?
+
+      currentMIPS->downcount = slicelength;
+}
+//Forces timer to advance to instantly check timers.
+void TIMER_ForceCheck(){
+      int cyclesEx = slicelength - currentMIPS->downcount;
+      globalTimer += cyclesEx;
+      slicelength = -1;
+      currentMIPS->downcount = -1;
 }

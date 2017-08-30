@@ -29,7 +29,7 @@
 #include "Core/MIPS/MIPSVFPUUtils.h"
 #include "Core/MIPS/IR/IRJit.h"
 #include "Core/MIPS/JitCommon/JitCommon.h"
-#include "Core/CoreTiming.h"
+#include "mednafen/psx/timer.h"
 
 MIPSState mipsr4k;
 MIPSState *currentMIPS = &mipsr4k;
@@ -212,6 +212,8 @@ bool MIPSState::HasDefaultPrefix() const {
 }
 
 void MIPSState::DoState(PointerWrap &p) {
+	//TODO save states
+	/*
 	auto s = p.Section("MIPSState", 1, 3);
 	if (!s)
 		return;
@@ -253,12 +255,13 @@ void MIPSState::DoState(PointerWrap &p) {
 	p.Do(inDelaySlot);
 	p.Do(llBit);
 	p.Do(debugCount);
+	*/
 }
 
 void MIPSState::SingleStep() {
 	int cycles = MIPS_SingleStep();
 	currentMIPS->downcount -= cycles;
-	CoreTiming::Advance();
+	TIMER_Advance();
 }
 
 // returns 1 if reached ticks limit

@@ -23,7 +23,7 @@
 #include "Core/MemMap.h"
 #include "Core/MIPS/MIPS.h"
 #include "Core/System.h"
-#include "Core/CoreTiming.h"
+#include "mednafen/psx/timer.h"
 #include "Common/MemoryUtil.h"
 #include "Common/CPUDetect.h"
 #include "Common/Arm64Emitter.h"
@@ -214,7 +214,7 @@ void Arm64Jit::GenerateFixedCode(const JitOptions &jo) {
 	outerLoop = GetCodePtr();
 		SaveStaticRegisters();  // Advance can change the downcount, so must save/restore
 		RestoreRoundingMode(true);
-		QuickCallFunction(SCRATCH1_64, &CoreTiming::Advance);
+		QuickCallFunction(SCRATCH1_64, &TIMER_Advance);
 		ApplyRoundingMode(true);
 		LoadStaticRegisters();
 		FixupBranch skipToCoreStateCheck = B();  //skip the downcount check

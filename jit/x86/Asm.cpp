@@ -27,7 +27,7 @@
 #include "Core/MemMap.h"
 #include "Core/System.h"
 #include "Core/MIPS/MIPS.h"
-#include "Core/CoreTiming.h"
+#include "mednafen/psx/timer.h"
 #include "Common/MemoryUtil.h"
 
 #include "Core/MIPS/JitCommon/JitCommon.h"
@@ -137,7 +137,7 @@ void Jit::GenerateFixedCode(JitOptions &jo) {
 
 	outerLoop = GetCodePtr();
 		RestoreRoundingMode(true);
-		ABI_CallFunction(reinterpret_cast<void *>(&CoreTiming::Advance));
+		ABI_CallFunction(reinterpret_cast<void *>(&TIMER_Advance));
 		ApplyRoundingMode(true);
 		FixupBranch skipToCoreStateCheck = J();  //skip the downcount check
 

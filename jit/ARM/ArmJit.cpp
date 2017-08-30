@@ -25,7 +25,6 @@
 #include "Core/Reporting.h"
 #include "Core/Config.h"
 #include "Core/Core.h"
-#include "Core/CoreTiming.h"
 #include "Core/Debugger/SymbolMap.h"
 #include "Core/MemMap.h"
 

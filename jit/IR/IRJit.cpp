@@ -19,9 +19,9 @@
 #include "profiler/profiler.h"
 #include "Common/ChunkFile.h"
 #include "Common/StringUtils.h"
-
+#include "mednafen/psx/timer.h"
 #include "Core/Core.h"
-#include "Core/CoreTiming.h"
+#include "Core/.h"
 #include "Core/HLE/sceKernelMemory.h"
 #include "Core/MemMap.h"
 #include "Core/MIPS/MIPS.h"
@@ -102,7 +102,7 @@ void IRJit::RunLoopUntil(u64 globalticks) {
 	
 	while (true) {
 		// RestoreRoundingMode(true);
-		CoreTiming::Advance();
+		TIMER_Advance();
 		// ApplyRoundingMode(true);
 		if (coreState != 0) {
 			break;

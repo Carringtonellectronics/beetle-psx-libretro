@@ -9,7 +9,6 @@
 #endif
 
 #include "Core/Core.h"
-#include "Core/CoreTiming.h"
 #include "Core/Debugger/Breakpoints.h"
 #include "Core/HLE/HLE.h"
 #include "Core/HLE/ReplaceTables.h"
@@ -765,7 +764,7 @@ u32 IRInterpret(MIPSState *mips, const IRInst *inst, const u32 *constPool, int c
 			MIPSOpcode op(constPool[inst->src1]);
 			CallSyscall(op);
 			if (coreState != CORE_RUNNING)
-				CoreTiming::ForceCheck();
+				TIMER_ForceCheck();
 			break;
 		}
 
@@ -806,14 +805,14 @@ u32 IRInterpret(MIPSState *mips, const IRInst *inst, const u32 *constPool, int c
 
 		case IROp::Breakpoint:
 			if (RunBreakpoint(mips->pc)) {
-				CoreTiming::ForceCheck();
+				TIMER_ForceCheck();
 				return mips->pc;
 			}
 			break;
 
 		case IROp::MemoryCheck:
 			if (RunMemCheck(mips->pc, mips->r[inst->src1] + constPool[inst->src2])) {
-				CoreTiming::ForceCheck();
+				TIMER_ForceCheck();
 				return mips->pc;
 			}
 			break;

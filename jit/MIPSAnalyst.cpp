@@ -91,6 +91,7 @@ struct HardHashTableEntry {
 };
 
 // Some hardcoded hashes.  Some have a comment specifying at least one game they are found in.
+//TODO add some hardcoded hashes for psx games?
 static const HardHashTableEntry hardcodedHashes[] = {
 	{ 0x006b570008068310, 184, "strtok_r", },
 	{ 0x019ba2099fb88f3c, 48, "vector_normalize_t", },

@@ -25,7 +25,7 @@
 #include "Core/MIPS/MIPSIntVFPU.h"
 #include "Core/MIPS/MIPSCodeUtils.h"
 #include "Core/MIPS/MIPSTables.h"
-#include "Core/CoreTiming.h"
+#include "mednafen/psx/timer.h"
 #include "Core/Reporting.h"
 #include "Core/Debugger/Breakpoints.h"
 #include "base/logging.h"
@@ -976,7 +976,7 @@ int MIPSInterpret_RunUntil(u64 globalTicks)
 	MIPSState *curMips = currentMIPS;
 	while (coreState == CORE_RUNNING)
 	{
-		CoreTiming::Advance();
+		TIMER_Advance();
 		u32 lastPC = 0;
 
 		// NEVER stop in a delay slot!
@@ -1043,11 +1043,13 @@ int MIPSInterpret_RunUntil(u64 globalTicks)
 			}
 
 			curMips->downcount -= 1;
+			/*
 			if (CoreTiming::GetTicks() > globalTicks)
 			{
 				// DEBUG_LOG(CPU, "Hit the max ticks, bailing 1 : %llu, %llu", globalTicks, CoreTiming::GetTicks());
 				return 1;
 			}
+			*/
 		}
 	}
 

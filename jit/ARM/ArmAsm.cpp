@@ -21,7 +21,7 @@
 #include "Core/MemMap.h"
 #include "Core/MIPS/MIPS.h"
 #include "Core/System.h"
-#include "Core/CoreTiming.h"
+#include "mednafen/psx/timer.h"
 #include "Common/MemoryUtil.h"
 #include "Common/CPUDetect.h"
 #include "Common/ArmEmitter.h"
@@ -175,7 +175,7 @@ void ArmJit::GenerateFixedCode() {
 	outerLoop = GetCodePtr();
 		SaveDowncount();
 		RestoreRoundingMode(true);
-		QuickCallFunction(R0, &CoreTiming::Advance);
+		QuickCallFunction(R0, &TIMER_Advance);
 		ApplyRoundingMode(true);
 		RestoreDowncount();
 		FixupBranch skipToCoreStateCheck = B(); //skip the downcount check
