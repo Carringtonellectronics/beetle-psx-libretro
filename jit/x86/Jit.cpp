@@ -29,7 +29,7 @@
 #include "Core/System.h"
 #include "Core/Config.h"
 #include "Core/Reporting.h"
-#include "Core/Debugger/SymbolMap.h"
+#include "jit/Debugger/SymbolMap.h"
 #include "Core/MIPS/MIPS.h"
 #include "Core/MIPS/MIPSCodeUtils.h"
 #include "Core/MIPS/MIPSInt.h"
@@ -40,7 +40,7 @@
 #include "Jit.h"
 
 #include "Core/Host.h"
-#include "Core/Debugger/Breakpoints.h"
+#include "jit/Debugger/Breakpoints.h"
 
 namespace MIPSComp
 {

@@ -18,9 +18,9 @@
 #include <string>
 #include <cstring>
 
-#include "Core/Debugger/Breakpoints.h"
-#include "Core/Debugger/SymbolMap.h"
-#include "Core/Debugger/DebugInterface.h"
+#include "jit/Debugger/Breakpoints.h"
+#include "jit/Debugger/SymbolMap.h"
+#include "jit/Debugger/DebugInterface.h"
 #include "Core/MIPS/MIPSDebugInterface.h"
 
 #include "Core/MemMap.h"

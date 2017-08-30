@@ -17,8 +17,8 @@
 
 #include "base/logging.h"
 
-#include "Core/Debugger/Breakpoints.h"
-#include "Core/Debugger/SymbolMap.h"
+#include "jit/Debugger/Breakpoints.h"
+#include "jit/Debugger/SymbolMap.h"
 #include "Core/Reporting.h"
 #include "Core/HLE/ReplaceTables.h"
 #include "Core/MemMap.h"

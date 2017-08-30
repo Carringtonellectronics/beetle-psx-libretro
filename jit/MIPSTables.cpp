@@ -27,7 +27,7 @@
 #include "Core/MIPS/MIPSTables.h"
 #include "mednafen/psx/timer.h"
 #include "Core/Reporting.h"
-#include "Core/Debugger/Breakpoints.h"
+#include "jit/Debugger/Breakpoints.h"
 #include "base/logging.h"
 
 #include "JitCommon/JitCommon.h"

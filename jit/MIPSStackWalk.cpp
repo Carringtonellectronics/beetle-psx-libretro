@@ -16,7 +16,7 @@
 // https://github.com/hrydgard/ppsspp and http://www.ppsspp.org/.
 
 #include "Core/MemMap.h"
-#include "Core/Debugger/SymbolMap.h"
+#include "jit/Debugger/SymbolMap.h"
 #include "Core/MIPS/MIPSCodeUtils.h"
 #include "Core/MIPS/MIPSStackWalk.h"
 

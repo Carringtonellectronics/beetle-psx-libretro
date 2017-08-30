@@ -20,7 +20,7 @@
 #if PPSSPP_ARCH(X86) || PPSSPP_ARCH(AMD64)
 
 #include "Core/Config.h"
-#include "Core/Debugger/Breakpoints.h"
+#include "jit/Debugger/Breakpoints.h"
 #include "Core/MemMap.h"
 #include "Core/MIPS/JitCommon/JitCommon.h"
 #include "Core/MIPS/x86/Jit.h"

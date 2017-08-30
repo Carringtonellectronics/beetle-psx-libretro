@@ -23,7 +23,7 @@
 #include "Core/Reporting.h"
 #include "Core/Config.h"
 #include "Core/Core.h"
-#include "Core/Debugger/SymbolMap.h"
+#include "jit/Debugger/SymbolMap.h"
 #include "Core/MemMap.h"
 #include "Core/MIPS/MIPS.h"
 #include "Core/MIPS/MIPSCodeUtils.h"

@@ -31,8 +31,8 @@
 #include "Core/MIPS/MIPSTables.h"
 #include "Core/MIPS/MIPSAnalyst.h"
 #include "Core/MIPS/MIPSCodeUtils.h"
-#include "Core/Debugger/SymbolMap.h"
-#include "Core/Debugger/DebugInterface.h"
+#include "jit/Debugger/SymbolMap.h"
+#include "jit/Debugger/DebugInterface.h"
 #include "Core/HLE/ReplaceTables.h"
 #include "ext/xxhash.h"
 

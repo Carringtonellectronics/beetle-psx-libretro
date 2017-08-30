@@ -21,7 +21,7 @@
 #include <cstring>
 #include <cstdio>
 #include "Core/MIPS/MIPS.h"
-#include "Core/Debugger/DebugInterface.h"
+#include "jit/Debugger/DebugInterface.h"
 
 class MIPSDebugInterface : public DebugInterface
 {
