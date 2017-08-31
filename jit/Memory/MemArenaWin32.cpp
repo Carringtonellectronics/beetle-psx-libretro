@@ -67,7 +67,6 @@ bool MemArena::NeedsProbing() {
 	return false;
 #endif
 }
-
 u8* MemArena::Find4GBBase() {
 	// Now, create views in high memory where there's plenty of space.
 #if PPSSPP_ARCH(32BIT)
