@@ -63,6 +63,9 @@ PS_CPU::PS_CPU()
 
       MULT_Tab24[i] = v;
    }
+#ifdef JIT
+   currentMIPS = &mips;
+#endif
 }
 
 PS_CPU::~PS_CPU()
@@ -145,8 +148,12 @@ void PS_CPU::Power(void)
    }
 
    GTE_Power();
-}
 
+#ifdef JIT
+   mips.Reset();
+#endif
+}
+//TODO JIT savestate
 int PS_CPU::StateAction(StateMem *sm, int load, int data_only)
 {
    SFORMAT StateRegs[] =
@@ -254,7 +261,7 @@ INLINE T PS_CPU::PeekMemory(uint32_t address)
       return PSX_MemPeek8(address);
    else if(sizeof(T) == 2)
       return PSX_MemPeek16(address);
-   return PSX_Mem Peek32(address);
+   return PSX_MemPeek32(address);
 }
 
 template<typename T>
@@ -451,6 +458,14 @@ INLINE uint32 PS_CPU::ReadInstruction(pscpu_timestamp_t &timestamp, uint32 addre
 	return instr;
 }
 
+#ifdef JIT
+//TODO replacements
+PS_CPU::ReadInstructionJIT(uint32_t address, bool resolve_replacements){
+    pscpu_timestamp_t cycles = 0;
+    return Opcode(ReadInstruction(&cycles, address));    
+}
+
+#endif
 uint32_t PS_CPU::Exception(uint32_t code, uint32_t PC, const uint32 NP, const uint32_t NPM, const uint32_t instr)
 {
    const bool AfterBranchInstr = !(NPM & 0x1);
@@ -2440,7 +2455,9 @@ SkipNPCStuff:	;
 
 int32_t PS_CPU::Run(int32_t timestamp_in)
 {
-#ifdef HAVE_DEBUG
+#ifdef JIT
+    
+#elif defined(HAVE_DEBUG)
    if(CPUHook || ADDBT)
       return(RunReal<true>(timestamp_in));
 #endif

@@ -82,7 +82,7 @@ const float cst_constants[32] = {
 };
 
 
-MIPSState::MIPSState() {
+MIPSState::MIPSState(PS_CPU* cpu) {
 	MIPSComp::jit = 0;
 
 	// Initialize vorder
@@ -149,6 +149,8 @@ MIPSState::MIPSState() {
 			ERROR_LOG(CPU, "Wrong voffset order! %i: %i should have been %i", firstThirtyTwo[i], voffset[firstThirtyTwo[i]], i);
 		}
 	}
+
+	currentCPU = cpu;
 }
 
 MIPSState::~MIPSState() {

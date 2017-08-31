@@ -169,7 +169,7 @@ enum {
 class MIPSState
 {
 public:
-	MIPSState();
+	MIPSState(PS_CPU* cpu);
 	~MIPSState();
 
 	void Init();
@@ -263,6 +263,8 @@ public:
 	void InvalidateICache(u32 address, int length = 4);
 
 	void ClearJitCache();
+
+	PS_CPU* currentCPU;
 };
 
 
