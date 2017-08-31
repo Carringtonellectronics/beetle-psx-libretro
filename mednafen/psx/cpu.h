@@ -3,6 +3,11 @@
 
 #include "gte.h"
 
+#ifdef JIT
+#include "jit/MIPS.h"
+#include "jit/Common/Opcode.h"
+#endif
+
 #define FAST_MAP_SHIFT        16
 #define FAST_MAP_PSIZE        (1 << FAST_MAP_SHIFT)
 
@@ -72,7 +77,6 @@ class PS_CPU
 
       int StateAction(StateMem *sm, int load, int data_only);
 
-   private:
 
       uint32_t GPR[32 + 1];	// GPR[32] Used as dummy in load delay simulation(indexing past the end of real GPR)
       uint32_t LO;
@@ -81,6 +85,42 @@ class PS_CPU
 
       uint32_t BACKED_PC;
       uint32_t BACKED_new_PC;
+      
+      struct
+      {
+         union
+         {
+            uint32_t Regs[32];
+            struct
+            {
+               uint32_t Unused00;
+               uint32_t Unused01;
+               uint32_t Unused02;
+               uint32_t BPC;		// RW
+               uint32_t Unused04;
+               uint32_t BDA;		// RW
+               uint32_t TAR;
+               uint32_t DCIC;	   // RW
+               uint32_t BADA;	   // R
+               uint32_t BDAM;	   // R/W
+               uint32_t Unused0A;
+               uint32_t BPCM;	   // R/W
+               uint32_t SR;		// R/W
+               uint32_t CAUSE;	// R/W(partial)
+               uint32_t EPC;		// R
+               uint32_t PRID;	   // R
+               uint32_t ERREG;	// ?(may not exist, test)
+            };
+         };
+      } CP0;
+#ifdef JIT
+      Opcode ReadInstructionJIT(uint32_t address);
+#endif
+    private:
+#ifdef JIT
+      MIPSState mips;
+#endif
+
       uint32_t BACKED_new_PC_mask;
 
       uint32_t IPCache;
@@ -110,34 +150,6 @@ class PS_CPU
       };
 
 
-      struct
-      {
-         union
-         {
-            uint32_t Regs[32];
-            struct
-            {
-               uint32_t Unused00;
-               uint32_t Unused01;
-               uint32_t Unused02;
-               uint32_t BPC;		// RW
-               uint32_t Unused04;
-               uint32_t BDA;		// RW
-               uint32_t TAR;
-               uint32_t DCIC;	   // RW
-               uint32_t BADA;	   // R
-               uint32_t BDAM;	   // R/W
-               uint32_t Unused0A;
-               uint32_t BPCM;	   // R/W
-               uint32_t SR;		// R/W
-               uint32_t CAUSE;	// R/W(partial)
-               uint32_t EPC;		// R
-               uint32_t PRID;	   // R
-               uint32_t ERREG;	// ?(may not exist, test)
-            };
-         };
-      } CP0;
-
       uint8_t ReadAbsorb[0x20 + 1];
       uint8_t ReadAbsorbWhich;
       uint8_t ReadFudge;
@@ -160,7 +172,6 @@ class PS_CPU
       template<typename T> void WriteMemory(int32_t &timestamp, uint32_t address, uint32_t value, bool DS24 = false);
 
       uint32 ReadInstruction(pscpu_timestamp_t &timestamp, uint32 address);
-
       // Mednafen debugger stuff follows:
    public:
       void SetCPUHook(void (*cpuh)(const int32_t timestamp, uint32_t pc), void (*addbt)(uint32_t from, uint32_t to, bool exception));

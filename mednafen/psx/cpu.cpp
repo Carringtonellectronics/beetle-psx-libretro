@@ -34,7 +34,7 @@ extern bool psx_cpu_overclock;
 #define BIU_INVALIDATE_MODE	0x00000002	// Enable Invalidate mode(IsC must be set to 1 as well presumably?)
 #define BIU_LOCK_MODE		   0x00000001	// Enable Lock mode(IsC must be set to 1 as well presumably?)
 
-PS_CPU::PS_CPU()
+PS_CPU::PS_CPU() : mips(this)
 {
    uint64_t a;
    unsigned i;
