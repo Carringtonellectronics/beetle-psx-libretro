@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "ppsspp_config.h"
+
 #include "CommonTypes.h"
 #include "ColorConvNEON.h"
 

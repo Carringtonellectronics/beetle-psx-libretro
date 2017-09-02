@@ -1,4 +1,4 @@
-#include "ppsspp_config.h"
+
 #if PPSSPP_ARCH(X86) || PPSSPP_ARCH(AMD64)
 
 #include "Core/MIPS/x86/IRToX86.h"

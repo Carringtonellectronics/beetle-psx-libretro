@@ -17,7 +17,7 @@
 
 #include <time.h>
 
-#include "ppsspp_config.h"
+
 
 #ifdef _WIN32
 #include "CommonWindows.h"

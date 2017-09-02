@@ -25,7 +25,7 @@
 // are below Q8 (D16, S32) using regular VFP instructions but really not sure
 // if it's worth it.
 
-#include "ppsspp_config.h"
+
 #if PPSSPP_ARCH(ARM)
 
 #include <cmath>

@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "ppsspp_config.h"
+
 
 #include <vector>
 #include <mutex>

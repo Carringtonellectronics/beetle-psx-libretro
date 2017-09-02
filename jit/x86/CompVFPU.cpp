@@ -18,7 +18,7 @@
 // Table 13.10 in http://agner.org/optimize/optimizing_assembly.pdf is cool - generate constants with
 // short instruction sequences. Surprisingly many are possible.
 
-#include "ppsspp_config.h"
+
 #if PPSSPP_ARCH(X86) || PPSSPP_ARCH(AMD64)
 
 #include <cmath>

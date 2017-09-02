@@ -27,7 +27,7 @@
 #include <stdarg.h>
 #endif
 
-#include "ppsspp_config.h"
+
 #include "thread/threadutil.h"
 #include "util/text/utf8.h"
 #include "Common.h"

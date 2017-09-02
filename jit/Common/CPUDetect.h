@@ -18,7 +18,7 @@
 // Detect the cpu, so we'll know which optimizations to use
 #pragma once
 
-#include "ppsspp_config.h"
+
 #include <string>
 
 enum CPUVendor {

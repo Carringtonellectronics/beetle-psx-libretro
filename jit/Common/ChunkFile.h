@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "ppsspp_config.h"
+
 
 // Extremely simple serialization framework.
 // Currently mis-named, a native ChunkFile is something different (a RIFF file)

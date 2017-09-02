@@ -22,7 +22,7 @@
 #endif
 #endif
 
-#include "ppsspp_config.h"
+
 
 #include "FileUtil.h"
 #include "StringUtils.h"

@@ -18,7 +18,7 @@
 #ifndef _DOLPHIN_INTEL_CODEGEN_
 #define _DOLPHIN_INTEL_CODEGEN_
 
-//#include "ppsspp_config.h"
+//
 
 #include <cstddef>
 #include "jit/Common/Common.h"
