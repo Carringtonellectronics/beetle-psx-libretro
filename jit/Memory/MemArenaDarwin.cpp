@@ -15,7 +15,6 @@
 // Official SVN repository and contact information can be found at
 // http://code.google.com/p/dolphin-emu/
 
-#include "ppsspp_config.h"
 
 #if defined(__APPLE__)
 
@@ -108,7 +107,7 @@ u8* MemArena::Find4GBBase() {
 	if (retval == KERN_SUCCESS) {
 		// Don't need the memory now, was just probing.
 		vm_deallocate(mach_task_self(), addr, size);
-		return (u8 *)addr;
+		return (uint8 *)addr;
 	}
 #endif
 	return nullptr;

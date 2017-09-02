@@ -17,6 +17,7 @@
 
 #include "psx.h"
 #include "cpu.h"
+#include "jit/Memory/MemMap.h"
 
 // iCB: PGXP STUFF
 #include "../pgxp/pgxp_cpu.h"
@@ -34,7 +35,10 @@ extern bool psx_cpu_overclock;
 #define BIU_INVALIDATE_MODE	0x00000002	// Enable Invalidate mode(IsC must be set to 1 as well presumably?)
 #define BIU_LOCK_MODE		   0x00000001	// Enable Lock mode(IsC must be set to 1 as well presumably?)
 
-PS_CPU::PS_CPU() : mips(this)
+PS_CPU::PS_CPU()  
+#ifdef JIT
+: mips(this)
+#endif
 {
    uint64_t a;
    unsigned i;
@@ -66,12 +70,13 @@ PS_CPU::PS_CPU() : mips(this)
 #ifdef JIT
    currentMIPS = &mips;
 #endif
+    ScratchRAM = new MultiAccessSizeMem();
+    ScratchRAM->data8 = Memory::m_pScratchPad;
 }
 
 PS_CPU::~PS_CPU()
 {
-
-
+    delete ScratchRAM;
 }
 
 void PS_CPU::SetFastMap(void *region_mem, uint32_t region_address, uint32_t region_size)
@@ -136,7 +141,7 @@ void PS_CPU::Power(void)
 
    BIU = 0;
 
-   memset(ScratchRAM.data8, 0, 1024);
+   memset(ScratchRAM->data8, 0, 1024);
 
    PGXP_Init();
 
@@ -186,7 +191,7 @@ int PS_CPU::StateAction(StateMem *sm, int load, int data_only)
       SFVAR(ReadAbsorbWhich),
       SFVAR(ReadFudge),
 
-      SFARRAY(ScratchRAM.data8, 1024),
+      SFARRAY(ScratchRAM->data8, 1024),
 
       SFEND
    };
@@ -253,7 +258,7 @@ INLINE T PS_CPU::PeekMemory(uint32_t address)
    address &= addr_mask[address >> 29];
 
    if(address >= 0x1F800000 && address <= 0x1F8003FF)
-      return ScratchRAM.Read<T>(address & 0x3FF);
+      return ScratchRAM->Read<T>(address & 0x3FF);
 
    //assert(!(CP0.SR & 0x10000));
 
@@ -270,7 +275,7 @@ void PS_CPU::PokeMemory(uint32 address, T value)
    address &= addr_mask[address >> 29];
 
    if(address >= 0x1F800000 && address <= 0x1F8003FF)
-      return ScratchRAM.Write<T>(address & 0x3FF, value);
+      return ScratchRAM->Write<T>(address & 0x3FF, value);
 
    if(sizeof(T) == 1)
       PSX_MemPoke8(address, value);
@@ -295,8 +300,8 @@ INLINE T PS_CPU::ReadMemory(int32_t &timestamp, uint32_t address, bool DS24, boo
       LDAbsorb = 0;
 
       if(DS24)
-         return ScratchRAM.ReadU24(address & 0x3FF);
-      return ScratchRAM.Read<T>(address & 0x3FF);
+         return ScratchRAM->ReadU24(address & 0x3FF);
+      return ScratchRAM->Read<T>(address & 0x3FF);
    }
 
    timestamp += (ReadFudge >> 4) & 2;
@@ -338,9 +343,9 @@ INLINE void PS_CPU::WriteMemory(int32_t &timestamp, uint32_t address, uint32_t v
       if(address >= 0x1F800000 && address <= 0x1F8003FF)
       {
          if(DS24)
-            ScratchRAM.WriteU24(address & 0x3FF, value);
+            ScratchRAM->WriteU24(address & 0x3FF, value);
          else
-            ScratchRAM.Write<T>(address & 0x3FF, value);
+            ScratchRAM->Write<T>(address & 0x3FF, value);
 
          return;
       }
@@ -381,9 +386,9 @@ INLINE void PS_CPU::WriteMemory(int32_t &timestamp, uint32_t address, uint32_t v
       if((BIU & 0x081) == 0x080)	// Writes to the scratchpad(TODO test)
       {
          if(DS24)
-            ScratchRAM.WriteU24(address & 0x3FF, value);
+            ScratchRAM->WriteU24(address & 0x3FF, value);
          else
-            ScratchRAM.Write<T>(address & 0x3FF, value);
+            ScratchRAM->Write<T>(address & 0x3FF, value);
       }
       //printf("IsC WRITE%d 0x%08x 0x%08x -- CP0.SR=0x%08x\n", (int)sizeof(T), address, value, CP0.SR);
    }

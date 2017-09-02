@@ -28,9 +28,9 @@ extern MIPSState *currentMIPS;
 namespace Memory
 {
 
-inline void Memcpy(const u32 to_address, const void *from_data, const u32 len)
+inline void Memcpy(const uint32 to_address, const void *from_data, const uint32 len)
 {
-	u8 *to = GetPointer(to_address);
+	uint8 *to = GetPointer(to_address);
 	if (to) {
 		memcpy(to, from_data, len);
 #ifndef MOBILE_DEVICE
@@ -40,9 +40,9 @@ inline void Memcpy(const u32 to_address, const void *from_data, const u32 len)
 	// if not, GetPointer will log.
 }
 
-inline void Memcpy(void *to_data, const u32 from_address, const u32 len)
+inline void Memcpy(void *to_data, const uint32 from_address, const uint32 len)
 {
-	const u8 *from = GetPointer(from_address);
+	const uint8 *from = GetPointer(from_address);
 	if (from) {
 		memcpy(to_data, from, len);
 #ifndef MOBILE_DEVICE
@@ -52,7 +52,7 @@ inline void Memcpy(void *to_data, const u32 from_address, const u32 len)
 	// if not, GetPointer will log.
 }
 
-inline void Memcpy(const u32 to_address, const u32 from_address, const u32 len)
+inline void Memcpy(const uint32 to_address, const uint32 from_address, const uint32 len)
 {
 	Memcpy(GetPointer(to_address), from_address, len);
 #ifndef MOBILE_DEVICE
@@ -60,33 +60,33 @@ inline void Memcpy(const u32 to_address, const u32 from_address, const u32 len)
 #endif
 }
 
-void Memset(const u32 _Address, const u8 _Data, const u32 _iLength);
+void Memset(const uint32 _Address, const uint8 _Data, const uint32 _iLength);
 
 template<class T>
-void ReadStruct(u32 address, T *ptr)
+void ReadStruct(uint32 address, T *ptr)
 {
-	const u32 sz = (u32)sizeof(*ptr);
+	const uint32 sz = (u32)sizeof(*ptr);
 	Memcpy(ptr, address, sz);
 }
 
 template<class T>
-void ReadStructUnchecked(u32 address, T *ptr)
+void ReadStructUnchecked(uint32 address, T *ptr)
 {
-	const u32 sz = (u32)sizeof(*ptr);
+	const uint32 sz = (u32)sizeof(*ptr);
 	MemcpyUnchecked(ptr, address, sz);
 }
 
 template<class T>
-void WriteStruct(u32 address, T *ptr)
+void WriteStruct(uint32 address, T *ptr)
 {
-	const u32 sz = (u32)sizeof(*ptr);
+	const uint32 sz = (u32)sizeof(*ptr);
 	Memcpy(address, ptr, sz);
 }
 
 template<class T>
-void WriteStructUnchecked(u32 address, T *ptr)
+void WriteStructUnchecked(uint32 address, T *ptr)
 {
-	const u32 sz = (u32)sizeof(*ptr);
+	const uint32 sz = (u32)sizeof(*ptr);
 	MemcpyUnchecked(address, ptr, sz);
 }
 }

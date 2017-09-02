@@ -34,8 +34,8 @@ MIPSState *currentMIPS = &mipsr4k;
 MIPSDebugInterface debugr4k(&mipsr4k);
 MIPSDebugInterface *currentDebugMIPS = &debugr4k;
 
-u8 voffset[128];
-u8 fromvoffset[128];
+uint8 voffset[128];
+uint8 fromvoffset[128];
 
 
 #ifndef M_LOG2E
@@ -132,7 +132,7 @@ MIPSState::MIPSState(PS_CPU* cpu) {
 	}
 
 	// Sanity check that things that should be ordered are ordered.
-	static const u8 firstThirtyTwo[] = {
+	static const uint8 firstThirtyTwo[] = {
 		0x0, 0x20, 0x40, 0x60,
 		0x1, 0x21, 0x41, 0x61,
 		0x2, 0x22, 0x42, 0x62,

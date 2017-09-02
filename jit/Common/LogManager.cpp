@@ -33,7 +33,7 @@ const char *hleCurrentThreadName = nullptr;
 
 static const char level_to_char[8] = "-NEWIDV";
 
-#if PPSSPP_PLATFORM(UWP) && defined(_DEBUG)
+#if defined(UWP) && defined(_DEBUG)
 #define LOG_MSC_OUTPUTDEBUG true
 #else
 #define LOG_MSC_OUTPUTDEBUG false
@@ -111,7 +111,7 @@ LogManager::LogManager() {
 	}
 
 	// Remove file logging on small devices in Release mode.
-#if PPSSPP_PLATFORM(UWP)
+#if defined(UWP)
 	if (IsDebuggerPresent())
 		debuggerLog_ = new OutputDebugStringLogListener();
 #else
@@ -129,7 +129,7 @@ LogManager::LogManager() {
 #if !defined(MOBILE_DEVICE) || defined(_DEBUG)
 	AddListener(fileLog_);
 	AddListener(consoleLog_);
-#if defined(_MSC_VER) && (defined(USING_WIN_UI) || PPSSPP_PLATFORM(UWP))
+#if defined(_MSC_VER) && (defined(USING_WIN_UI) || defined(UWP))
 	if (IsDebuggerPresent() && debuggerLog_ && LOG_MSC_OUTPUTDEBUG)
 		AddListener(debuggerLog_);
 #endif

@@ -108,7 +108,7 @@ void CPUInfo::Detect() {
 #endif
 	num_cores = 1;
 
-#if PPSSPP_PLATFORM(UWP)
+#if defined(UWP)
 	OS64bit = Mode64bit;  // TODO: Not always accurate!
 #elif defined(_WIN32) && defined(_M_IX86)
 	BOOL f64 = false;

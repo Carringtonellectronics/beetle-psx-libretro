@@ -15,6 +15,7 @@
 #include "rsx/rsx_intf.h"
 #include "libretro_cbs.h"
 #include "libretro_options.h"
+#include "jit/Memory/MemMap.h"
 
 #include "mednafen/mednafen-endian.h"
 
@@ -234,10 +235,10 @@ PS_SPU *SPU = NULL;
 PS_CDC *CDC = NULL;
 FrontIO *FIO = NULL;
 
-static MultiAccessSizeMem<512 * 1024, uint32, false> *BIOSROM = NULL;
-static MultiAccessSizeMem<65536, uint32, false> *PIOMem = NULL;
+static MultiAccessSizeMem *BIOSROM = NULL;
+static MultiAccessSizeMem *PIOMem = NULL;
 
-MultiAccessSizeMem<2048 * 1024, uint32, false> MainRAM;
+MultiAccessSizeMem *MainRAM = NULL;
 
 static uint32_t TextMem_Start;
 static std::vector<uint8> TextMem;
@@ -486,16 +487,16 @@ template<typename T, bool IsWrite, bool Access24> static INLINE void MemRW(int32
       if(Access24)
       {
          if(IsWrite)
-            MainRAM.WriteU24(A & 0x1FFFFF, V);
+            MainRAM->WriteU24(A & 0x1FFFFF, V);
          else
-            V = MainRAM.ReadU24(A & 0x1FFFFF);
+            V = MainRAM->ReadU24(A & 0x1FFFFF);
       }
       else
       {
          if(IsWrite)
-            MainRAM.Write<T>(A & 0x1FFFFF, V);
+            MainRAM->Write<T>(A & 0x1FFFFF, V);
          else
-            V = MainRAM.Read<T>(A & 0x1FFFFF);
+            V = MainRAM->Read<T>(A & 0x1FFFFF);
       }
 
       return;
@@ -846,8 +847,8 @@ template<typename T, bool Access24> static INLINE uint32_t MemPeek(int32_t times
    if(A < 0x00800000)
    {
       if(Access24)
-         return(MainRAM.ReadU24(A & 0x1FFFFF));
-      return(MainRAM.Read<T>(A & 0x1FFFFF));
+         return(MainRAM->ReadU24(A & 0x1FFFFF));
+      return(MainRAM->Read<T>(A & 0x1FFFFF));
    }
 
    if(A >= 0x1FC00000 && A <= 0x1FC7FFFF)
@@ -984,7 +985,7 @@ static void PSX_Power(void)
    PSX_PRNG.c = 6543217;
    PSX_PRNG.lcgo = 0xDEADBEEFCAFEBABEULL;
 
-   memset(MainRAM.data32, 0, 2048 * 1024);
+   memset(MainRAM->data32, 0, 2048 * 1024);
 
    for(i = 0; i < 9; i++)
       SysControl.Regs[i] = 0;
@@ -1014,9 +1015,9 @@ template<typename T, bool Access24> static INLINE void MemPoke(pscpu_timestamp_t
    if(A < 0x00800000)
    {
       if(Access24)
-         MainRAM.WriteU24(A & 0x1FFFFF, V);
+         MainRAM->WriteU24(A & 0x1FFFFF, V);
       else
-         MainRAM.Write<T>(A & 0x1FFFFF, V);
+         MainRAM->Write<T>(A & 0x1FFFFF, V);
 
       return;
    }
@@ -1439,17 +1440,20 @@ static void InitCommon(std::vector<CDIF *> *CDInterfaces, const bool EmulateMemc
          (CD_SelectedDisc >= 0 && !CD_TrayOpen) ? cdifs_scex_ids[CD_SelectedDisc] : NULL);
 
 
-   BIOSROM = new MultiAccessSizeMem<512 * 1024, uint32, false>();
+   BIOSROM = new MultiAccessSizeMem();
+   BIOSROM->data8 = Memory::m_pBIOS;
    PIOMem  = NULL;
 
-   if(WantPIOMem)
-      PIOMem = new MultiAccessSizeMem<65536, uint32, false>();
+   if(WantPIOMem){
+      PIOMem = new MultiAccessSizeMem();
+      PIOMem->data8 = Memory::m_pParallelPort;
+   }
 
    for(uint32_t ma = 0x00000000; ma < 0x00800000; ma += 2048 * 1024)
    {
-      CPU->SetFastMap(MainRAM.data32, 0x00000000 + ma, 2048 * 1024);
-      CPU->SetFastMap(MainRAM.data32, 0x80000000 + ma, 2048 * 1024);
-      CPU->SetFastMap(MainRAM.data32, 0xA0000000 + ma, 2048 * 1024);
+      CPU->SetFastMap(MainRAM->data32, 0x00000000 + ma, 2048 * 1024);
+      CPU->SetFastMap(MainRAM->data32, 0x80000000 + ma, 2048 * 1024);
+      CPU->SetFastMap(MainRAM->data32, 0xA0000000 + ma, 2048 * 1024);
    }
 
    CPU->SetFastMap(BIOSROM->data32, 0x1FC00000, 512 * 1024);
@@ -1465,7 +1469,7 @@ static void InitCommon(std::vector<CDIF *> *CDInterfaces, const bool EmulateMemc
 
 
    MDFNMP_Init(1024, ((uint64)1 << 29) / 1024);
-   MDFNMP_AddRAM(2048 * 1024, 0x00000000, MainRAM.data8);
+   MDFNMP_AddRAM(2048 * 1024, 0x00000000, MainRAM->data8);
 #if 0
    MDFNMP_AddRAM(1024, 0x1F800000, ScratchRAM.data8);
 #endif
@@ -1733,6 +1737,7 @@ static void Cleanup(void)
 {
    TextMem.resize(0);
 
+   Memory::Clear();
 
    if(CDC)
       delete CDC;
@@ -1810,7 +1815,7 @@ int StateAction(StateMem *sm, int load, int data_only)
    {
       SFVAR(CD_TrayOpen),
       SFVAR(CD_SelectedDisc),
-      SFARRAY(MainRAM.data8, 1024 * 2048),
+      SFARRAY(MainRAM->data8, 1024 * 2048),
       SFARRAY32(SysControl.Regs, 9),
       SFVAR(PSX_PRNG.lcgo),
       SFVAR(PSX_PRNG.x),
@@ -2485,6 +2490,11 @@ void retro_init(void)
    setting_last_scanline_pal = 287;
 
    check_system_specs();
+
+   //Initialize memory
+   Memory::Init();
+   MainRAM = new MultiAccessSizeMem();
+   MainRAM->data8 = Memory::m_pPhysicalRAM;
 }
 
 void retro_reset(void)
@@ -3912,6 +3922,9 @@ void retro_deinit(void)
          MEDNAFEN_CORE_NAME, (double)audio_frames / video_frames);
    log_cb(RETRO_LOG_INFO, "[%s]: Estimated FPS: %.5f\n",
          MEDNAFEN_CORE_NAME, (double)video_frames * 44100 / audio_frames);
+
+   //Get rid of memory map
+   Memory::Shutdown();
 }
 
 unsigned retro_get_region(void)

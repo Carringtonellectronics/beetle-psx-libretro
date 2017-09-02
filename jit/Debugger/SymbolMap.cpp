@@ -955,7 +955,7 @@ void SymbolMap::GetLabels(std::vector<LabelDefinition> &dest) const
 	}
 }
 
-#if defined(_WIN32) && !PPSSPP_PLATFORM(UWP)
+#if defined(_WIN32) && !defined(UWP)
 
 struct DefaultSymbol {
 	u32 address;

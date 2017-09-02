@@ -65,7 +65,7 @@ ConsoleListener::ConsoleListener() : bHidden(true)
 	bUseColor = false;
 #elif defined(IOS)
 	bUseColor = false;
-#elif PPSSPP_PLATFORM(UWP)
+#elif defined(UWP)
 	bUseColor = false;
 #else
 	bUseColor = isatty(fileno(stdout));

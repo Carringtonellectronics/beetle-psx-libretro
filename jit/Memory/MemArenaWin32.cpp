@@ -15,12 +15,11 @@
 // Official SVN repository and contact information can be found at
 // http://code.google.com/p/dolphin-emu/
 
-#include "ppsspp_config.h"
 
-#ifdef _WIN32
+#ifdef OS_WINDOWS
 
 #include "MemArena.h"
-#include "CommonWindows.h"
+#include "Windows.h"
 
 // Windows mappings need to be on 64K boundaries, due to Alpha legacy.
 size_t MemArena::roundup(size_t x) {
@@ -29,7 +28,7 @@ size_t MemArena::roundup(size_t x) {
 }
 
 void MemArena::GrabLowMemSpace(size_t size) {
-#if !PPSSPP_PLATFORM(UWP)
+#if !defined(UWP)
 	hMemoryMapping = CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, (DWORD)(size), NULL);
 	GetSystemInfo(&sysInfo);
 #else
@@ -42,39 +41,39 @@ void MemArena::ReleaseSpace() {
 	hMemoryMapping = 0;
 }
 
-void *MemArena::CreateView(s64 offset, size_t size, void *viewbase) {
+void *MemArena::CreateView(int64_t offset, size_t size, void *viewbase) {
 	size = roundup(size);
-#if PPSSPP_PLATFORM(UWP)
+#if defined(UWP)
 	// We just grabbed some RAM before using RESERVE. This commits it.
 	void *ptr = VirtualAllocFromApp(viewbase, size, MEM_COMMIT, PAGE_READWRITE);
 #else
-	void *ptr = MapViewOfFileEx(hMemoryMapping, FILE_MAP_ALL_ACCESS, 0, (DWORD)((u64)offset), size, viewbase);
+	void *ptr = MapViewOfFileEx(hMemoryMapping, FILE_MAP_ALL_ACCESS, 0, (DWORD)((uint64)offset), size, viewbase);
 #endif
 	return ptr;
 }
 
 void MemArena::ReleaseView(void* view, size_t size) {
-#if PPSSPP_PLATFORM(UWP)
+#if defined(UWP)
 #else
 	UnmapViewOfFile(view);
 #endif
 }
 
 bool MemArena::NeedsProbing() {
-#if PPSSPP_ARCH(32BIT)
+#ifdef ARCH_32BIT
 	return true;
 #else
 	return false;
 #endif
 }
-u8* MemArena::Find4GBBase() {
+uint8* MemArena::Find4GBBase() {
 	// Now, create views in high memory where there's plenty of space.
-#if PPSSPP_ARCH(32BIT)
+#ifdef ARCH_32BIT
 	// Caller will need to find one in a different way.
 	return nullptr;
 
-#elif PPSSPP_ARCH(64BIT)
-	u8 *base = (u8*)VirtualAlloc(0, 0xE1000000, MEM_RESERVE, PAGE_READWRITE);
+#elif defined(ARCH_64BIT)
+	uint8 *base = (uint8*)VirtualAlloc(0, 0xE1000000, MEM_RESERVE, PAGE_READWRITE);
 	if (base) {
 		VirtualFree(base, 0, MEM_RELEASE);
 	}

@@ -102,17 +102,18 @@ static INLINE void StoreU32_LE(uint32 *a, const uint32 v)
 //
 // pre_padding and post_padding are specified in units of sizeof(max_unit_type).
 //
-template<unsigned size, typename max_unit_type, bool big_endian> //, unsigned pre_padding_count, unsigned post_padding_count>
+ //, unsigned pre_padding_count, unsigned post_padding_count>
 struct MultiAccessSizeMem
 {
  //max_unit_type pre_padding[pre_padding_count ? pre_padding_count : 1];
-
  union
  {
-  uint8 data8[size];
-  uint16 data16[size / sizeof(uint16)];
-  uint32 data32[size / sizeof(uint32)];
+  uint8* data8;
+  uint16* data16;
+  uint32* data32;
  };
+
+ bool big_endian = false;
 
  //max_unit_type post_padding[post_padding_count ? post_padding_count : 1];
 

@@ -156,7 +156,7 @@ class PS_CPU
 
       uint8 MULT_Tab24[24];
 
-      MultiAccessSizeMem<1024, uint32, false> ScratchRAM;
+      MultiAccessSizeMem* ScratchRAM;
 
       uint8_t *FastMap[1 << (32 - FAST_MAP_SHIFT)];
       uint8_t DummyPage[FAST_MAP_PSIZE];

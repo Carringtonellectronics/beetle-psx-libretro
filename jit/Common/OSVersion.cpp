@@ -7,7 +7,7 @@
 #include "Common/CommonWindows.h"
 
 bool DoesVersionMatchWindows(uint32_t major, uint32_t minor, uint32_t spMajor, uint32_t spMinor, bool greater) {
-#if PPSSPP_PLATFORM(UWP)
+#if defined(UWP)
 	if (greater)
 		return true;
 	else
@@ -36,7 +36,7 @@ bool DoesVersionMatchWindows(uint32_t major, uint32_t minor, uint32_t spMajor, u
 }
 
 bool IsVistaOrHigher() {
-#if PPSSPP_PLATFORM(UWP)
+#if defined(UWP)
 	return true;
 #else
 	OSVERSIONINFOEX osvi;

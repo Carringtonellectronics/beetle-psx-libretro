@@ -35,7 +35,8 @@ void TIMER_ResetTS(void);
 
 void TIMER_Power(void);
 int TIMER_StateAction(void *data, int load, int data_only);
-
+#ifdef JIT
 void TIMER_Advance();
 void TIMER_ForceCheck();
+#endif
 #endif

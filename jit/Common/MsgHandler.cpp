@@ -83,7 +83,7 @@ bool MsgHandler(const char* caption, const char* text, bool yes_no, int Style)
 	std::wstring wcaption = ConvertUTF8ToWString(caption);
 
 	return IDYES == MessageBox(0, wtext.c_str(), wcaption.c_str(), STYLE | (yes_no ? MB_YESNO : MB_OK));
-#elif PPSSPP_PLATFORM(UWP)
+#elif defined(UWP)
 	OutputDebugStringUTF8(text);
 	return true;
 #else

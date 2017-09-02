@@ -423,7 +423,7 @@ namespace MIPSInt
 		case 32: R(rt) = (u32)(s32)(s8) Memory::Read_U8(addr); break; //lb
 		case 33: R(rt) = (u32)(s32)(s16)Memory::Read_U16(addr); break; //lh
 		case 35: R(rt) = Memory::Read_U32(addr); break; //lw
-		case 36: R(rt) = Memory::Read_U8 (addr); break; //lbu
+		case 36: R(rt) = Memory::Read_uint8 (addr); break; //lbu
 		case 37: R(rt) = Memory::Read_U16(addr); break; //lhu
 		case 40: Memory::Write_U8(R(rt), addr); break; //sb
 		case 41: Memory::Write_U16(R(rt), addr); break; //sh

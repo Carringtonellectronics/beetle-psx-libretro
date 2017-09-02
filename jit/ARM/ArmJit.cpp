@@ -200,7 +200,7 @@ void ArmJit::CompileDelaySlot(int flags)
 void ArmJit::Compile(u32 em_address) {
 	PROFILE_THIS_SCOPE("jitc");
 
-#if PPSSPP_PLATFORM(UWP)
+#if defined(UWP)
 	// INFO_LOG(JIT, "Compiling at %08x", em_address);
 	// Unfortunately Microsoft forgot to expose FlushInstructionCache to UWP applications... even though they expose
 	// the ability to generate code :( This works great on x86 but on ARM we're out of luck.

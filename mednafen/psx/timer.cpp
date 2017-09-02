@@ -18,7 +18,7 @@
 #include "psx.h"
 #include "timer.h"
 
-#define DEFAULT_SLICE_LENGTH = 1024;
+#define DEFAULT_SLICE_LENGTH 1024;
 
 #ifdef JIT
 #include "jit/MIPS.h"
@@ -522,7 +522,7 @@ void TIMER_SetRegister(unsigned int which, uint32_t value)
    }
 
 }
-
+#ifdef JIT
 //Advances the timer some amount of cycles. This function is needed for the JIT, the internal state makes it easier, no params have to be passed.
 //basically, it's supposed to lower currentMIPS->downcount, until it's >=0, at which point the compiled code should return.
 //TODO verify this works the way it should. Will timestamps become out of order? Maybe set up some logic for which timestamps is right in 
@@ -537,6 +537,7 @@ void TIMER_Advance(){
 
       currentMIPS->downcount = slicelength;
 }
+
 //Forces timer to advance to instantly check timers.
 void TIMER_ForceCheck(){
       int cyclesEx = slicelength - currentMIPS->downcount;
@@ -544,3 +545,4 @@ void TIMER_ForceCheck(){
       slicelength = -1;
       currentMIPS->downcount = -1;
 }
+#endif

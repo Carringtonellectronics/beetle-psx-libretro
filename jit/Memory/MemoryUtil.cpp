@@ -149,7 +149,7 @@ void *AllocateExecutableMemory(size_t size) {
 	else
 #endif
 	{
-#if PPSSPP_PLATFORM(UWP)
+#if defined(UWP)
 		ptr = VirtualAllocFromApp(0, size, MEM_RESERVE | MEM_COMMIT, prot);
 #else
 		ptr = VirtualAlloc(0, size, MEM_RESERVE | MEM_COMMIT, prot);
@@ -217,7 +217,7 @@ void *AllocateMemoryPages(size_t size, uint32_t memProtFlags) {
 	if (sys_info.dwPageSize == 0)
 		GetSystemInfo(&sys_info);
 	uint32_t protect = ConvertProtFlagsWin32(memProtFlags);
-#if PPSSPP_PLATFORM(UWP)
+#if defined(UWP)
 	void* ptr = VirtualAllocFromApp(0, size, MEM_COMMIT, protect);
 #else
 	void* ptr = VirtualAlloc(0, size, MEM_COMMIT, protect);
@@ -286,7 +286,7 @@ void FreeAlignedMemory(void* ptr) {
 bool PlatformIsWXExclusive() {
 	// Only iOS really needs this mode currently. Even without block linking, still should be much faster than IR JIT.
 	// This might also come in useful for UWP (Universal Windows Platform) if I'm understanding things correctly.
-#if defined(IOS) || PPSSPP_PLATFORM(UWP)
+#if defined(IOS) || defined(UWP)
 	return true;
 #else
 	// Returning true here lets you test the W^X path on Windows and other non-W^X platforms.
@@ -309,7 +309,7 @@ bool ProtectMemoryPages(const void* ptr, size_t size, uint32_t memProtFlags) {
 #ifdef _WIN32
 	uint32_t protect = ConvertProtFlagsWin32(memProtFlags);
 
-#if PPSSPP_PLATFORM(UWP)
+#if defined(UWP)
 	DWORD oldValue;
 	if (!VirtualProtectFromApp((void *)ptr, size, protect, &oldValue)) {
 		PanicAlert("WriteProtectMemory failed!\n%s", GetLastErrorMsg());

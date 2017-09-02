@@ -817,10 +817,10 @@ const MIPSInstruction tableEMU[4] = {
 };
 
 struct EncodingBitsInfo {
-	EncodingBitsInfo(u8 shift_, u8 maskBits_) : shift(shift_) {
+	EncodingBitsInfo(uint8 shift_, uint8 maskBits_) : shift(shift_) {
 		mask = (1 << maskBits_) - 1;
 	}
-	u8 shift;
+	uint8 shift;
 	u32 mask;
 };
 

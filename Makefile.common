@@ -28,6 +28,19 @@ CXXFLAGS  += $(GLFLAGS)
 SOURCES_C += $(LIBRETRO_DIR)/glsym/glsym_gl.c
 endif
 
+ifeq ($(OS_WINDOWS), 1)
+CFLAGS += -DOS_WINDOWS
+CXXFLAGS += -DOS_WINDOWS
+endif
+
+ifeq ($(ARCH_64BIT), 1)
+CFLAGS += -DARCH_64BIT
+CXXFLAGS += -DARCH_64BIT
+else
+CFLAGS += -DARCH_32BIT
+CXXFLAGS += -DARCH_32BIT
+endif
+
 SOURCES_C += $(LIBRETRO_DIR)/glsm/glsm.c \
 				 $(LIBRETRO_DIR)/glsym/rglgen.c
 
@@ -260,3 +273,12 @@ SOURCES_C += $(CORE_DIR)/pgxp/pgxp_cpu.c \
 				 $(CORE_DIR)/pgxp/pgxp_main.c \
 				 $(CORE_DIR)/pgxp/pgxp_mem.c \
 				 $(CORE_DIR)/pgxp/pgxp_value.c
+
+SOURCES_CXX += $(CORE_DIR)/jit/Memory/MemArenaAndroid.cpp \
+				 $(CORE_DIR)/jit/Memory/MemArenaDarwin.cpp \
+				 $(CORE_DIR)/jit/Memory/MemArenaPosix.cpp \
+				 $(CORE_DIR)/jit/Memory/MemArenaWin32.cpp \
+				 $(CORE_DIR)/jit/Memory/MemMap.cpp
+				 # Maybe add these in later, if needed.
+				 # $(CORE_DIR)/jit/Memory/MemMapFunctions.cpp \
+				 # $(CORE_DIR)/jit/Memory/MemoryUtil.cpp \

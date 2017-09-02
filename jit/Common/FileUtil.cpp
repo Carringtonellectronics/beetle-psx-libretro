@@ -126,14 +126,14 @@ bool Exists(const std::string &filename) {
 	std::wstring copy = ConvertUTF8ToWString(fn);
 
 	// Make sure Windows will no longer handle critical errors, which means no annoying "No disk" dialog
-#if !PPSSPP_PLATFORM(UWP)
+#if !defined(UWP)
 	int OldMode = SetErrorMode(SEM_FAILCRITICALERRORS);
 #endif
 	WIN32_FILE_ATTRIBUTE_DATA data{};
 	if (!GetFileAttributesEx(copy.c_str(), GetFileExInfoStandard, &data) || data.dwFileAttributes == INVALID_FILE_ATTRIBUTES) {
 		return false;
 	}
-#if !PPSSPP_PLATFORM(UWP)
+#if !defined(UWP)
 	SetErrorMode(OldMode);
 #endif
 	return true;
@@ -334,7 +334,7 @@ bool Copy(const std::string &srcFilename, const std::string &destFilename)
 	INFO_LOG(COMMON, "Copy: %s --> %s", 
 			srcFilename.c_str(), destFilename.c_str());
 #ifdef _WIN32
-#if PPSSPP_PLATFORM(UWP)
+#if defined(UWP)
 	if (CopyFile2(ConvertUTF8ToWString(srcFilename).c_str(), ConvertUTF8ToWString(destFilename).c_str(), nullptr))
 		return true;
 	return false;
@@ -568,7 +568,7 @@ bool CreateEmptyFile(const std::string &filename)
 // Deletes the given directory and anything under it. Returns true on success.
 bool DeleteDirRecursively(const std::string &directory)
 {
-#if PPSSPP_PLATFORM(UWP)
+#if defined(UWP)
 	return false;
 #else
 	INFO_LOG(COMMON, "DeleteDirRecursively: %s", directory.c_str());
@@ -688,7 +688,7 @@ void CopyDir(const std::string &source_path, const std::string &dest_path)
 void openIniFile(const std::string fileName) {
 	std::string iniFile;
 #if defined(_WIN32)
-#if PPSSPP_PLATFORM(UWP)
+#if defined(UWP)
 	// Do nothing.
 #else
 	iniFile = fileName;

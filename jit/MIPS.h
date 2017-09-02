@@ -141,8 +141,8 @@ enum VCondition
 // In memory, we order the VFPU registers differently. 
 // Games use columns a whole lot more than rows, and it would thus be good if columns
 // were contiguous in memory. Also, matrices aren't but should be.
-extern u8 voffset[128];
-extern u8 fromvoffset[128];
+extern uint8 voffset[128];
+extern uint8 fromvoffset[128];
 
 enum class CPUCore;
 
@@ -248,7 +248,7 @@ public:
 	float tempValues[NUM_X86_FPU_TEMPS];
 #endif
 
-	u8 VfpuWriteMask() const {
+	uint8 VfpuWriteMask() const {
 		return (vfpuCtrl[VFPU_CTRL_DPREFIX] >> 8) & 0xF;
 	}
 	bool VfpuWriteMask(int i) const {

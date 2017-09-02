@@ -17,14 +17,22 @@ ifeq ($(platform),)
    platform = unix
    ifeq ($(shell uname -a),)
       platform = win
+      OS_WINDOWS = 1
    else ifneq ($(findstring Darwin,$(shell uname -a)),)
       platform = osx
       arch = intel
       ifeq ($(shell uname -p),powerpc)
          arch = ppc
       endif
+      OS_OSX = 1
    else ifneq ($(findstring MINGW,$(shell uname -a)),)
       platform = win
+      OS_WINDOWS = 1
+      ifneq (&(findstring x86_64, $(shell uname -a)),)
+        ARCH_64BIT = 1
+      else
+        ARCH_32BIT = 1
+      endif
    endif
 else ifneq (,$(findstring armv,$(platform)))
    override platform += unix
