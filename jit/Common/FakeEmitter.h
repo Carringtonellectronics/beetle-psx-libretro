@@ -89,7 +89,7 @@ enum CCFlags
 	CC_HS = CC_CS, // Alias of CC_CS  Unsigned higher or same
 	CC_LO = CC_CC, // Alias of CC_CC  Unsigned lower
 };
-const u32 NO_COND = 0xE0000000;
+const uint32 NO_COND = 0xE0000000;
 
 enum ShiftType
 {
@@ -129,7 +129,7 @@ class Operand2
 {
 	friend class FakeXEmitter;
 protected:
-	u32 Value;
+	uint32 Value;
 
 private:
 	OpType Type;
@@ -146,7 +146,7 @@ public:
 		return Type;
 	}
 	Operand2() {} 
-	Operand2(u32 imm, OpType type = TYPE_IMM)
+	Operand2(uint32 imm, OpType type = TYPE_IMM)
 	{ 
 		Type = type; 
 		Value = imm; 
@@ -211,7 +211,7 @@ public:
 		Value = base;
 		Type = TYPE_IMMSREG;
 	}
-	u32 GetData()
+	uint32 GetData()
 	{
 		switch(Type)
 		{
@@ -228,45 +228,45 @@ public:
 			return 0;
 		}
 	}
-	u32 IMMSR() // IMM shifted register
+	uint32 IMMSR() // IMM shifted register
 	{
 		_assert_msg_(JIT, Type == TYPE_IMMSREG, "IMMSR must be imm shifted register");
 		return ((IndexOrShift & 0x1f) << 7 | (Shift << 5) | Value);
 	}
-	u32 RSR() // Register shifted register
+	uint32 RSR() // Register shifted register
 	{
 		_assert_msg_(JIT, Type == TYPE_RSR, "RSR must be RSR Of Course");
 		return (IndexOrShift << 8) | (Shift << 5) | 0x10 | Value;
 	}
-	u32 Rm()
+	uint32 Rm()
 	{
 		_assert_msg_(JIT, Type == TYPE_REG, "Rm must be with Reg");
 		return Value;
 	}
 
-	u32 Imm5()
+	uint32 Imm5()
 	{
 		_assert_msg_(JIT, (Type == TYPE_IMM), "Imm5 not IMM value");
 		return ((Value & 0x0000001F) << 7);
 	}
-	u32 Imm8()
+	uint32 Imm8()
 	{
 		_assert_msg_(JIT, (Type == TYPE_IMM), "Imm8Rot not IMM value");
 		return Value & 0xFF;
 	}
-	u32 Imm8Rot() // IMM8 with Rotation
+	uint32 Imm8Rot() // IMM8 with Rotation
 	{
 		_assert_msg_(JIT, (Type == TYPE_IMM), "Imm8Rot not IMM value");
 		_assert_msg_(JIT, (Rotation & 0xE1) != 0, "Invalid Operand2: immediate rotation %u", Rotation);
 		return (1 << 25) | (Rotation << 7) | (Value & 0x000000FF);
 	}
-	u32 Imm12()
+	uint32 Imm12()
 	{
 		_assert_msg_(JIT, (Type == TYPE_IMM), "Imm12 not IMM");
 		return (Value & 0x00000FFF);
 	}
 
-	u32 Imm12Mod()
+	uint32 Imm12Mod()
 	{
 		// This is an IMM12 with the top four bits being rotation and the
 		// bottom eight being an IMM. This is for instructions that need to
@@ -276,21 +276,21 @@ public:
 		_assert_msg_(JIT, (Type == TYPE_IMM), "Imm12Mod not IMM");
 		return ((Rotation & 0xF) << 8) | (Value & 0xFF);
 	}
-	u32 Imm16()
+	uint32 Imm16()
 	{
 		_assert_msg_(JIT, (Type == TYPE_IMM), "Imm16 not IMM");
 		return ( (Value & 0xF000) << 4) | (Value & 0x0FFF);
 	}
-	u32 Imm16Low()
+	uint32 Imm16Low()
 	{
 		return Imm16();
 	}
-	u32 Imm16High() // Returns high 16bits
+	uint32 Imm16High() // Returns high 16bits
 	{
 		_assert_msg_(JIT, (Type == TYPE_IMM), "Imm16 not IMM");
 		return ( ((Value >> 16) & 0xF000) << 4) | ((Value >> 16) & 0x0FFF);
 	}
-	u32 Imm24()
+	uint32 Imm24()
 	{
 		_assert_msg_(JIT, (Type == TYPE_IMM), "Imm16 not IMM");
 		return (Value & 0x0FFFFFFF);
@@ -301,15 +301,15 @@ public:
 // This lets you generate both an optimal and a fallback solution by checking
 // the return value, which will be false if these fail to find a Operand2 that
 // represents your 32-bit imm value.
-bool TryMakeOperand2(u32 imm, Operand2 &op2);
-bool TryMakeOperand2_AllowInverse(u32 imm, Operand2 &op2, bool *inverse);
+bool TryMakeOperand2(uint32 imm, Operand2 &op2);
+bool TryMakeOperand2_AllowInverse(uint32 imm, Operand2 &op2, bool *inverse);
 bool TryMakeOperand2_AllowNegation(s32 imm, Operand2 &op2, bool *negated);
 
 // Use this only when you know imm can be made into an Operand2.
-Operand2 AssumeMakeOperand2(u32 imm);
+Operand2 AssumeMakeOperand2(uint32 imm);
 
 inline Operand2 R(FakeReg Reg)	{ return Operand2(Reg, TYPE_REG); }
-inline Operand2 IMM(u32 Imm)	{ return Operand2(Imm, TYPE_IMM); }
+inline Operand2 IMM(uint32 Imm)	{ return Operand2(Imm, TYPE_IMM); }
 inline Operand2 Mem(void *ptr)	{ return Operand2((u32)(uintptr_t)ptr, TYPE_IMM); }
 //usage: struct {int e;} s; STRUCT_OFFSET(s,e)
 #define STRUCT_OFF(str,elem) ((u32)((u32)&(str).elem-(u32)&(str)))
@@ -318,27 +318,27 @@ inline Operand2 Mem(void *ptr)	{ return Operand2((u32)(uintptr_t)ptr, TYPE_IMM);
 struct FixupBranch
 {
 	u8 *ptr;
-	u32 condition; // Remembers our codition at the time
+	uint32 condition; // Remembers our codition at the time
 	int type; //0 = B 1 = BL
 };
 
 typedef const u8* JumpTarget;
 
 // XXX: Stop polluting the global namespace
-const u32 I_8 = (1 << 0);
-const u32 I_16 = (1 << 1);
-const u32 I_32 = (1 << 2);
-const u32 I_64 = (1 << 3);
-const u32 I_SIGNED = (1 << 4);
-const u32 I_UNSIGNED = (1 << 5);
-const u32 F_32 = (1 << 6);
-const u32 I_POLYNOMIAL = (1 << 7); // Only used in VMUL/VMULL
+const uint32 I_8 = (1 << 0);
+const uint32 I_16 = (1 << 1);
+const uint32 I_32 = (1 << 2);
+const uint32 I_64 = (1 << 3);
+const uint32 I_SIGNED = (1 << 4);
+const uint32 I_UNSIGNED = (1 << 5);
+const uint32 F_32 = (1 << 6);
+const uint32 I_POLYNOMIAL = (1 << 7); // Only used in VMUL/VMULL
 
-u32 EncodeVd(FakeReg Vd);
-u32 EncodeVn(FakeReg Vn);
-u32 EncodeVm(FakeReg Vm);
+uint32 EncodeVd(FakeReg Vd);
+uint32 EncodeVn(FakeReg Vn);
+uint32 EncodeVm(FakeReg Vm);
 
-u32 encodedSize(u32 value);
+uint32 encodedSize(uint32 value);
 
 // Subtracts the base from the register to give us the real one
 FakeReg SubBase(FakeReg Reg);
@@ -364,10 +364,10 @@ class FakeXEmitter
 private:
 	u8 *code, *startcode;
 	u8 *lastCacheFlushEnd;
-	u32 condition;
+	uint32 condition;
 
 protected:
-	inline void Write32(u32 value) {*(u32*)code = value; code+=4;}
+	inline void Write32(uint32 value) {*(u32*)code = value; code+=4;}
 
 public:
 	FakeXEmitter() : code(0), startcode(0), lastCacheFlushEnd(0) {
@@ -382,7 +382,7 @@ public:
 	virtual ~FakeXEmitter() {}
 
 	void SetCodePtr(u8 *ptr) {}
-	void ReserveCodeSpace(u32 bytes) {}
+	void ReserveCodeSpace(uint32 bytes) {}
 	const u8 *AlignCode16() { return nullptr; }
 	const u8 *AlignCodePage() { return nullptr; }
 	const u8 *GetCodePtr() const { return nullptr; }

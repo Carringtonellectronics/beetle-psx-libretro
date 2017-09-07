@@ -19,14 +19,14 @@
 #if PPSSPP_ARCH(ARM)
 
 #include "Core/MemMap.h"
-#include "Core/MIPS/MIPS.h"
+#include "jit/MIPS.h"
 #include "Core/System.h"
 #include "mednafen/psx/timer.h"
 #include "Common/MemoryUtil.h"
 #include "Common/CPUDetect.h"
 #include "Common/ArmEmitter.h"
-#include "Core/MIPS/ARM/ArmJit.h"
-#include "Core/MIPS/JitCommon/JitCommon.h"
+#include "jit/ARM/ArmJit.h"
+#include "jit/JitCommon/JitCommon.h"
 
 using namespace ArmGen;
 
@@ -56,7 +56,7 @@ static const bool disasm = false;
 extern volatile CoreState coreState;
 
 void ShowPC(u32 sp) {
-	ERROR_LOG(JIT, "ShowPC : %08x  ArmSP : %08x", currentMIPS->pc, sp);
+	ERROR_LOG(JIT, "ShowPC : %08x  ArmSP : %08x\n", currentMIPS->pc, sp);
 	// Sleep(1);
 }
 

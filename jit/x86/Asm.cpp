@@ -16,27 +16,26 @@
 // http://code.google.com/p/dolphin-emu/
 
 
-#if PPSSPP_ARCH(X86) || PPSSPP_ARCH(AMD64)
+#if defined(ARCH_X86) || defined(ARCH_AMD64)
 
-#include "math/math_util.h"
+#include "jit/Common/math_util.h"
 
-#include "ABI.h"
-#include "x64Emitter.h"
+#include "jit/Common/ABI.h"
+#include "jit/Common/x64Emitter.h"
 
-#include "Core/Core.h"
-#include "Core/MemMap.h"
-#include "Core/System.h"
-#include "Core/MIPS/MIPS.h"
+#include "jit/Memory/MemMap.h"
+#include "jit/MIPS.h"
 #include "mednafen/psx/timer.h"
-#include "Common/MemoryUtil.h"
+#include "jit/Memory/MemoryUtil.h"
 
-#include "Core/MIPS/JitCommon/JitCommon.h"
-#include "Core/MIPS/x86/Jit.h"
+#include "jit/JitCommon/JitCommon.h"
+#include "jit/x86/Jit.h"
 
 using namespace Gen;
 using namespace X64JitConstants;
-
-extern volatile CoreState coreState;
+//0 is CORE_RUNNING in PPSSPP, we'll just keep it like this until I factor it out
+//TODO
+volatile uint32 coreState = 0;
 
 namespace MIPSComp
 {
@@ -123,7 +122,7 @@ void Jit::GenerateFixedCode(JitOptions &jo) {
 
 	enterDispatcher = AlignCode16();
 	ABI_PushAllCalleeSavedRegsAndAdjustStack();
-#ifdef _M_X64
+#ifdef ARCH_64BIT
 	// Two statically allocated registers.
 	MOV(64, R(MEMBASEREG), ImmPtr(Memory::base));
 	uintptr_t jitbase = (uintptr_t)GetBasePtr();
@@ -174,10 +173,10 @@ void Jit::GenerateFixedCode(JitOptions &jo) {
 			AND(32, R(EAX), Imm32(Memory::MEMVIEW32_MASK));
 #endif
 
-#ifdef _M_IX86
+#ifdef ARCH_32BIT
 			_assert_msg_(CPU, Memory::base != 0, "Memory base bogus");
 			MOV(32, R(EAX), MDisp(EAX, (u32)Memory::base));
-#elif _M_X64
+#elif ARCH_64BIT
 			MOV(32, R(EAX), MComplex(MEMBASEREG, RAX, SCALE_1, 0));
 #endif
 			MOV(32, R(EDX), R(EAX));
@@ -190,9 +189,9 @@ void Jit::GenerateFixedCode(JitOptions &jo) {
 				}
 				//grab from list and jump to it
 				AND(32, R(EAX), Imm32(MIPS_EMUHACK_VALUE_MASK));
-#ifdef _M_IX86
+#ifdef ARCH_32BIT
 				ADD(32, R(EAX), ImmPtr(GetBasePtr()));
-#elif _M_X64
+#elif ARCH_64BIT
 				if (jo.reserveR15ForAsm)
 					ADD(64, R(RAX), R(JITBASEREG));
 				else
@@ -235,4 +234,4 @@ void Jit::GenerateFixedCode(JitOptions &jo) {
 
 }  // namespace
 
-#endif // PPSSPP_ARCH(X86) || PPSSPP_ARCH(AMD64)
+#endif // defined(ARCH_X86) || defined(ARCH_AMD64)

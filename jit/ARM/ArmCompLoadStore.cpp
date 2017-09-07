@@ -20,11 +20,11 @@
 
 #include "Core/MemMap.h"
 #include "Core/Config.h"
-#include "Core/MIPS/MIPS.h"
-#include "Core/MIPS/MIPSAnalyst.h"
-#include "Core/MIPS/MIPSCodeUtils.h"
-#include "Core/MIPS/ARM/ArmJit.h"
-#include "Core/MIPS/ARM/ArmRegCache.h"
+#include "jit/MIPS.h"
+#include "jit/MIPSAnalyst.h"
+#include "jit/MIPSCodeUtils.h"
+#include "jit/ARM/ArmJit.h"
+#include "jit/ARM/ArmRegCache.h"
 
 #define _RS MIPS_GET_RS(op)
 #define _RT MIPS_GET_RT(op)

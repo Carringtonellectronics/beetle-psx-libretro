@@ -18,11 +18,13 @@
 
 #pragma once
 
-#include "Common/Common.h"
-#include "Core/MIPS/MIPS.h"
+#include "jit/MIPS.h"
+#include "libretro.h"
 
 struct JitBlock;
 class JitBlockCache;
+
+extern retro_log_printf_t log_cb;
 
 namespace MIPSComp {
 
@@ -65,10 +67,10 @@ namespace MIPSComp {
 			prefixTFlag(PREFIX_UNKNOWN),
 			prefixDFlag(PREFIX_UNKNOWN) {}
 
-		u32 compilerPC;
-		u32 blockStart;
-		u32 lastContinuedPC;
-		u32 initialBlockSize;
+		uint32 compilerPC;
+		uint32 blockStart;
+		uint32 lastContinuedPC;
+		uint32 initialBlockSize;
 		int nextExit;
 		bool cancel;
 		bool inDelaySlot;
@@ -86,9 +88,9 @@ namespace MIPSComp {
 
 		// VFPU prefix magic
 		bool startDefaultPrefix;
-		u32 prefixS;
-		u32 prefixT;
-		u32 prefixD;
+		uint32 prefixS;
+		uint32 prefixT;
+		uint32 prefixD;
 		PrefixState prefixSFlag;
 		PrefixState prefixTFlag;
 		PrefixState prefixDFlag;
@@ -163,20 +165,20 @@ namespace MIPSComp {
 	private:
 		void LogSTPrefix(const char *name, int p, int pflag) {
 			if ((prefixSFlag & PREFIX_KNOWN) == 0) {
-				ERROR_LOG(JIT, "%s: unknown  (%08x %i)", name, p, pflag);
+				log_cb(RETRO_LOG_ERROR, "%s: unknown  (%08x %i)", name, p, pflag);
 			} else if (prefixS != 0xE4) {
-				ERROR_LOG(JIT, "%s: %08x flag: %i", name, p, pflag);
+				log_cb(RETRO_LOG_ERROR, "%s: %08x flag: %i", name, p, pflag);
 			} else {
-				WARN_LOG(JIT, "%s: %08x flag: %i", name, p, pflag);
+				log_cb(RETRO_LOG_WARN, "%s: %08x flag: %i", name, p, pflag);
 			}
 		}
 		void LogDPrefix() {
 			if ((prefixDFlag & PREFIX_KNOWN) == 0) {
-				ERROR_LOG(JIT, "D: unknown (%08x %i)", prefixD, prefixDFlag);
+				log_cb(RETRO_LOG_ERROR, "D: unknown (%08x %i)", prefixD, prefixDFlag);
 			} else if (prefixD != 0) {
-				ERROR_LOG(JIT, "D: (%08x %i)", prefixD, prefixDFlag);
+				log_cb(RETRO_LOG_ERROR, "D: (%08x %i)", prefixD, prefixDFlag);
 			} else {
-				WARN_LOG(JIT, "D: %08x flag: %i", prefixD, prefixDFlag);
+				log_cb(RETRO_LOG_WARN, "D: %08x flag: %i", prefixD, prefixDFlag);
 			}
 		}
 	};

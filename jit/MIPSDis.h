@@ -17,10 +17,10 @@
 
 #pragma once
 
-#include "Common/CommonTypes.h"
-#include "Core/MIPS/MIPS.h"
+#include "mednafen/mednafen-types.h"
+#include "jit/MIPS.h"
 
-extern u32 disPC;
+extern uint32 disPC;
 
 namespace MIPSDis
 {

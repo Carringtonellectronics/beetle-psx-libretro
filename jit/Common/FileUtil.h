@@ -22,10 +22,11 @@
 #include <string>
 #include <vector>
 #include <time.h>
+#include "mednafen/mednafen.h"
+#include "mednafen/mednafen-types.h"
 
-#include "Common.h"
 
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(__MINGW32__)
 inline struct tm* localtime_r(const time_t *clock, struct tm *result) {
 	if (localtime_s(result, clock) == 0)
 		return result;
@@ -39,7 +40,7 @@ namespace File {
 struct FSTEntry
 {
 	bool isDirectory;
-	u64 size;						// file length or number of entries from children
+	uint64 size;						// file length or number of entries from children
 	std::string physicalName;		// name on disk
 	std::string virtualName;		// name in FST names table
 	std::vector<FSTEntry> children;
@@ -47,7 +48,7 @@ struct FSTEntry
 
 struct FileDetails {
 	bool isDirectory;
-	u64 size;
+	uint64 size;
 	uint64_t atime;
 	uint64_t mtime;
 	uint64_t ctime;
@@ -77,10 +78,10 @@ std::string GetFilename(std::string path);
 bool GetModifTime(const std::string &filename, tm &return_time);
 
 // Returns the size of filename (64bit)
-u64 GetFileSize(const std::string &filename);
+uint64 GetFileSize(const std::string &filename);
 
 // Overloaded GetSize, accepts FILE*
-u64 GetFileSize(FILE *f);
+uint64 GetFileSize(FILE *f);
 
 // Returns true if successful, or path already exists.
 bool CreateDir(const std::string &filename);
@@ -107,19 +108,9 @@ bool CreateEmptyFile(const std::string &filename);
 // deletes the given directory and anything under it. Returns true on success.
 bool DeleteDirRecursively(const std::string &directory);
 
-// Returns the current directory
-std::string GetCurrentDir();
-
 // Create directory and copy contents (does not overwrite existing files)
 void CopyDir(const std::string &source_path, const std::string &dest_path);
 
-// Opens ini file (cheats, texture replacements etc.)
-void openIniFile(const std::string fileName);
-
-// Set the current directory to given directory
-bool SetCurrentDir(const std::string &directory);
-
-const std::string &GetExeDirectory();
 
 // simple wrapper for cstdlib file functions to
 // hopefully will make error checking easier
@@ -175,10 +166,10 @@ public:
 
 	void SetHandle(std::FILE* file);
 
-	bool Seek(s64 off, int origin);
-	u64 Tell();
-	u64 GetSize();
-	bool Resize(u64 size);
+	bool Seek(int64 off, int origin);
+	uint64 Tell();
+	uint64 GetSize();
+	bool Resize(uint64 size);
 	bool Flush();
 
 	// clear error state

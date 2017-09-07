@@ -16,7 +16,7 @@
 // https://github.com/hrydgard/ppsspp and http://www.ppsspp.org/.
 
 
-#if PPSSPP_ARCH(MIPS)
+#ifdef ARCH_MIPS
 
 #include "base/logging.h"
 #include "profiler/profiler.h"
@@ -25,10 +25,10 @@
 #include "Core/Core.h"
 #include "jit/Debugger/SymbolMap.h"
 #include "Core/MemMap.h"
-#include "Core/MIPS/MIPS.h"
-#include "Core/MIPS/MIPSCodeUtils.h"
-#include "Core/MIPS/MIPSInt.h"
-#include "Core/MIPS/MIPSTables.h"
+#include "jit/MIPS.h"
+#include "jit/MIPSCodeUtils.h"
+#include "jit/MIPSInt.h"
+#include "jit/MIPSTables.h"
 #include "Core/HLE/ReplaceTables.h"
 
 #include "MipsJit.h"

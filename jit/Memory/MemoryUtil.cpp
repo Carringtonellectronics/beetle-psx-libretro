@@ -16,15 +16,12 @@
 // http://code.google.com/p/dolphin-emu/
 
 
-
-#include "base/logging.h"
-
-#include "Common.h"
 #include "MemoryUtil.h"
-#include "StringUtils.h"
+#include "mednafen/mednafen.h"
+#include "jit/Common/Misc.h"
 
 #ifdef _WIN32
-#include "CommonWindows.h"
+#include "Windows.h"
 #else
 #include <errno.h>
 #include <stdio.h>
@@ -84,7 +81,7 @@ static uint32_t ConvertProtFlagsUnix(uint32_t flags) {
 
 #endif
 
-#if defined(_WIN32) && defined(_M_X64)
+#if defined(_WIN32) && defined(ARCH_64BIT)
 static uintptr_t last_executable_addr;
 static void *SearchForFreeMem(size_t size) {
 	if (!last_executable_addr)
@@ -126,7 +123,7 @@ void *AllocateExecutableMemory(size_t size) {
 		prot = PAGE_READWRITE;
 	if (sys_info.dwPageSize == 0)
 		GetSystemInfo(&sys_info);
-#if defined(_M_X64)
+#if defined(ARCH_64BIT)
 	if ((uintptr_t)&hint_location > 0xFFFFFFFFULL) {
 		size_t aligned_size = round_page(size);
 #if 1   // Turn off to hunt for RIP bugs on x86-64.
@@ -157,7 +154,7 @@ void *AllocateExecutableMemory(size_t size) {
 	}
 #else
 	static char *map_hint = 0;
-#if defined(_M_X64) && !defined(MAP_32BIT)
+#if defined(ARCH_64BIT) && !defined(MAP_32BIT)
 	// Try to request one that is close to our memory location if we're in high memory.
 	// We use a dummy global variable to give us a good location to start from.
 	if (!map_hint) {
@@ -178,7 +175,7 @@ void *AllocateExecutableMemory(size_t size) {
 
 	void* ptr = mmap(map_hint, size, prot,
 		MAP_ANON | MAP_PRIVATE
-#if defined(_M_X64) && defined(MAP_32BIT)
+#if defined(ARCH_64BIT) && defined(MAP_32BIT)
 		| MAP_32BIT
 #endif
 		, -1, 0);
@@ -196,7 +193,7 @@ void *AllocateExecutableMemory(size_t size) {
 		ERROR_LOG(MEMMAP, "Failed to allocate executable memory (%d)", (int)size);
 		PanicAlert("Failed to allocate executable memory\n%s", GetLastErrorMsg());
 	}
-#if defined(_M_X64) && !defined(_WIN32) && !defined(MAP_32BIT)
+#if defined(ARCH_64BIT) && !defined(_WIN32) && !defined(MAP_32BIT)
 	else if ((uintptr_t)map_hint <= 0xFFFFFFFF) {
 		// Round up if we're below 32-bit mark, probably allocating sequentially.
 		map_hint += round_page(size);
@@ -295,7 +292,7 @@ bool PlatformIsWXExclusive() {
 }
 
 bool ProtectMemoryPages(const void* ptr, size_t size, uint32_t memProtFlags) {
-	VERBOSE_LOG(JIT, "ProtectMemoryPages: %p (%d) : r%d w%d x%d", ptr, (int)size,
+	DEBUG_LOG(JIT, "ProtectMemoryPages: %p (%d) : r%d w%d x%d", ptr, (int)size,
 			(memProtFlags & MEM_PROT_READ) != 0, (memProtFlags & MEM_PROT_WRITE) != 0, (memProtFlags & MEM_PROT_EXEC) != 0);
 
 	if (PlatformIsWXExclusive()) {

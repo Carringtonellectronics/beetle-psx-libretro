@@ -18,16 +18,16 @@
 #include <cmath>
 #include <limits>
 
-#include "math/math_util.h"
+#include "jit/Common/math_util.h"
 
 #include "jit/MIPS.h"
 #include "jit/MIPSInt.h"
 #include "jit/MIPSTables.h"
 #include "jit/MIPSDebugInterface.h"
-#include "jit/MIPSVFPUUtils.h"
 #include "jit/IR/IRJit.h"
 #include "jit/JitCommon/JitCommon.h"
 #include "mednafen/psx/timer.h"
+
 
 MIPSState mipsr4k;
 MIPSState *currentMIPS = &mipsr4k;
@@ -82,7 +82,7 @@ const float cst_constants[32] = {
 };
 
 
-MIPSState::MIPSState(PS_CPU* cpu) {
+MIPSState::MIPSState() {
 	MIPSComp::jit = 0;
 
 	// Initialize vorder
@@ -146,11 +146,9 @@ MIPSState::MIPSState(PS_CPU* cpu) {
 
 	for (int i = 0; i < (int)ARRAY_SIZE(firstThirtyTwo); i++) {
 		if (voffset[firstThirtyTwo[i]] != i) {
-			ERROR_LOG(CPU, "Wrong voffset order! %i: %i should have been %i", firstThirtyTwo[i], voffset[firstThirtyTwo[i]], i);
+			log_cb(RETRO_LOG_ERROR, "Wrong voffset order! %i: %i should have been %i", firstThirtyTwo[i], voffset[firstThirtyTwo[i]], i);
 		}
 	}
-
-	currentCPU = cpu;
 }
 
 MIPSState::~MIPSState() {
@@ -202,7 +200,7 @@ void MIPSState::Init() {
 	nextPC = 0;
 	downcount = 0;
 	// Initialize the VFPU random number generator with .. something?
-	rng.Init(0x1337);
+	//rng.Init(0x1337);
 	//Used purely for JIT comp.
 	MIPSComp::jit = MIPSComp::CreateNativeJit(this);
 }
@@ -247,7 +245,7 @@ int MIPSState::StateAction(StateMem *sm, int load, int data_only)
 	p.Do(lo);
 	p.Do(fpcond);
 	if (s <= 1) {
-		u32 fcr0_unused = 0;
+		uint32 fcr0_unused = 0;
 		p.Do(fcr0_unused);
 	}
 	p.Do(fcr31);
@@ -257,6 +255,7 @@ int MIPSState::StateAction(StateMem *sm, int load, int data_only)
 	p.Do(llBit);
 	p.Do(debugCount);
 	*/
+	return 1;
 }
 
 void MIPSState::SingleStep() {
@@ -271,7 +270,7 @@ int MIPSState::RunLoopUntil(u64 globalTicks) {
 	return 1;
 }
 
-void MIPSState::InvalidateICache(u32 address, int length) {
+void MIPSState::InvalidateICache(uint32 address, int length) {
 	// Only really applies to jit.
 	if (MIPSComp::jit)
 		MIPSComp::jit->InvalidateCacheAt(address, length);

@@ -29,6 +29,7 @@
 
 #include "jit/Debugger/SymbolMap.h"
 #include "jit/Debugger/Breakpoints.h"
+#include "jit/JitCommon/JitCommon.h"
 #include "jit/JitCommon/JitBlockCache.h"
 
 #endif
@@ -307,7 +308,7 @@ void Shutdown() {
 void Clear() {
 
 	if (m_pPhysicalRAM)
-		memset(m_pPhysicalRAM, 0, g_MemorySize);
+		memset(m_pPhysicalRAM, 0xFF, g_MemorySize);
 	if (m_pParallelPort)
 		memset(m_pParallelPort, 0, 0x00020000);
 	if (m_pBIOS)
@@ -334,8 +335,8 @@ MemoryInitedLock Lock()
 {
 	return MemoryInitedLock();
 }
-//TODO fix MIPS.h so it compiles, and then uncomment this.
-/*
+//TODO Again, fix replacements to fix this.
+#ifdef JIT
 __forceinline static Opcode Read_Instruction(uint32 address, bool resolveReplacements, Opcode inst)
 {
 	if (!MIPS_IS_EMUHACK(inst.encoding)) {
@@ -343,7 +344,7 @@ __forceinline static Opcode Read_Instruction(uint32 address, bool resolveReplace
 	}
 	if (MIPS_IS_RUNBLOCK(inst.encoding) && MIPSComp::jit) {
 		inst = MIPSComp::jit->GetOriginalOp(inst);
-		if (resolveReplacements && MIPS_IS_REPLACEMENT(inst)) {
+		/*if (resolveReplacements && MIPS_IS_REPLACEMENT(inst)) {
 			uint32 op;
 			if (GetReplacedOpAt(address, &op)) {
 				if (MIPS_IS_EMUHACK(op)) {
@@ -355,18 +356,18 @@ __forceinline static Opcode Read_Instruction(uint32 address, bool resolveReplace
 			} else {
 				ERROR_LOG(MEMMAP, "Replacement, but no replacement op? %08x", inst.encoding);
 			}
-		}
+		}*/
 		return inst;
 	} else if (resolveReplacements && MIPS_IS_REPLACEMENT(inst.encoding)) {
 		uint32 op;
-		if (GetReplacedOpAt(address, &op)) {
+		/*if (GetReplacedOpAt(address, &op)) {
 			if (MIPS_IS_EMUHACK(op)) {
 				ERROR_LOG(MEMMAP, "WTF 2");
 				return Opcode(op);
 			} else {
 				return Opcode(op);
 			}
-		} else {
+		} else*/ {
 			return inst;
 		}
 	} else {
@@ -418,5 +419,5 @@ void Memset(const uint32 _Address, const uint8 _iValue, const uint32 _iLength)
 	CBreakPoints::ExecMemCheck(_Address, true, _iLength, currentMIPS->pc);
 #endif
 }
-*/
+#endif
 } // namespace

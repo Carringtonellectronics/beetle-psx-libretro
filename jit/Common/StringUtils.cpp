@@ -15,7 +15,6 @@
 // Official SVN repository and contact information can be found at
 // http://code.google.com/p/dolphin-emu/
 
-#include "Common.h"
 #include "StringUtils.h"
 
 void truncate_cpy(char *dest, size_t destSize, const char *src) {

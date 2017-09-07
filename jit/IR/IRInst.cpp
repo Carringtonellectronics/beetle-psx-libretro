@@ -1,7 +1,7 @@
 #include "Common/CommonFuncs.h"
-#include "Core/MIPS/IR/IRInst.h"
-#include "Core/MIPS/IR/IRPassSimplify.h"
-#include "Core/MIPS/MIPSDebugInterface.h"
+#include "jit/IR/IRInst.h"
+#include "jit/IR/IRPassSimplify.h"
+#include "jit/MIPSDebugInterface.h"
 
 // Legend
 // ======================

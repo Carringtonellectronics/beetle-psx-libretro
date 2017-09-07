@@ -150,8 +150,8 @@ void PointerWrap::Do(tm &t) {
 	}
 }
 
-void PointerWrap::DoMarker(const char *prevName, u32 arbitraryNumber) {
-	u32 cookie = arbitraryNumber;
+void PointerWrap::DoMarker(const char *prevName, uint32 arbitraryNumber) {
+	uint32 cookie = arbitraryNumber;
 	Do(cookie);
 	if (mode == PointerWrap::MODE_READ && cookie != arbitraryNumber) {
 		PanicAlert("Error: After \"%s\", found %d (0x%X) instead of save marker %d (0x%X). Aborting savestate load...", prevName, cookie, cookie, arbitraryNumber, arbitraryNumber);
@@ -204,7 +204,7 @@ CChunkFileReader::Error CChunkFileReader::LoadFileHeader(File::IOFile &pFile, SC
 		title->clear();
 	}
 
-	u32 sz = (u32)(fileSize - headerSize);
+	uint32 sz = (u32)(fileSize - headerSize);
 	if (header.ExpectedSize != sz) {
 		ERROR_LOG(SAVESTATE, "ChunkReader: Bad file size, got %u expected %u", sz, header.ExpectedSize);
 		return ERROR_BAD_FILE;

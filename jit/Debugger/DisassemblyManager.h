@@ -17,14 +17,14 @@
 
 #pragma once
 
-#include "Common/CommonTypes.h"
+#include "mednafen/mednafen-types.h"
 #include "jit/Debugger/SymbolMap.h"
-#include "Core/MIPS/MIPSAnalyst.h"
+#include "jit/MIPSAnalyst.h"
 
-#ifdef _M_X64
+#ifdef ARCH_64BIT
 typedef u64 HashType;
 #else
-typedef u32 HashType;
+typedef uint32 HashType;
 #endif
 
 enum DisassemblyLineType { DISTYPE_OPCODE, DISTYPE_MACRO, DISTYPE_DATA, DISTYPE_OTHER };
@@ -35,15 +35,15 @@ struct DisassemblyLineInfo
 	MIPSAnalyst::MipsOpcodeInfo info;
 	std::string name;
 	std::string params;
-	u32 totalSize;
+	uint32 totalSize;
 };
 
 enum LineType { LINE_UP, LINE_DOWN, LINE_RIGHT };
 
 struct BranchLine
 {
-	u32 first;
-	u32 second;
+	uint32 first;
+	uint32 second;
 	LineType type;
 	int laneIndex;
 
@@ -59,34 +59,34 @@ public:
 	virtual ~DisassemblyEntry() { };
 	virtual void recheck() = 0;
 	virtual int getNumLines() = 0;
-	virtual int getLineNum(u32 address, bool findStart) = 0;
-	virtual u32 getLineAddress(int line) = 0;
-	virtual u32 getTotalSize() = 0;
-	virtual bool disassemble(u32 address, DisassemblyLineInfo& dest, bool insertSymbols) = 0;
-	virtual void getBranchLines(u32 start, u32 size, std::vector<BranchLine>& dest) { };
+	virtual int getLineNum(uint32 address, bool findStart) = 0;
+	virtual uint32 getLineAddress(int line) = 0;
+	virtual uint32 getTotalSize() = 0;
+	virtual bool disassemble(uint32 address, DisassemblyLineInfo& dest, bool insertSymbols) = 0;
+	virtual void getBranchLines(uint32 start, uint32 size, std::vector<BranchLine>& dest) { };
 };
 
 class DisassemblyFunction: public DisassemblyEntry
 {
 public:
-	DisassemblyFunction(u32 _address, u32 _size);
+	DisassemblyFunction(uint32 _address, uint32 _size);
 	~DisassemblyFunction();
 	void recheck() override;
 	int getNumLines() override;
-	int getLineNum(u32 address, bool findStart) override;
-	u32 getLineAddress(int line) override;
-	u32 getTotalSize() override { return size; };
-	bool disassemble(u32 address, DisassemblyLineInfo& dest, bool insertSymbols) override;
-	void getBranchLines(u32 start, u32 size, std::vector<BranchLine>& dest) override;
+	int getLineNum(uint32 address, bool findStart) override;
+	uint32 getLineAddress(int line) override;
+	uint32 getTotalSize() override { return size; };
+	bool disassemble(uint32 address, DisassemblyLineInfo& dest, bool insertSymbols) override;
+	void getBranchLines(uint32 start, uint32 size, std::vector<BranchLine>& dest) override;
 
 private:
 	void generateBranchLines();
 	void load();
 	void clear();
-	void addOpcodeSequence(u32 start, u32 end);
+	void addOpcodeSequence(uint32 start, uint32 end);
 
-	u32 address;
-	u32 size;
+	uint32 address;
+	uint32 size;
 	HashType hash;
 	std::vector<BranchLine> lines;
 	std::map<u32,DisassemblyEntry*> entries;
@@ -96,18 +96,18 @@ private:
 class DisassemblyOpcode: public DisassemblyEntry
 {
 public:
-	DisassemblyOpcode(u32 _address, int _num): address(_address), num(_num) { };
+	DisassemblyOpcode(uint32 _address, int _num): address(_address), num(_num) { };
 	virtual ~DisassemblyOpcode() { };
 	void recheck() override { };
 	int getNumLines() override { return num; };
-	int getLineNum(u32 address, bool findStart) override { return (address - this->address) / 4; };
-	u32 getLineAddress(int line) override { return address + line * 4; };
-	u32 getTotalSize() override { return num * 4; };
-	bool disassemble(u32 address, DisassemblyLineInfo& dest, bool insertSymbols) override;
-	void getBranchLines(u32 start, u32 size, std::vector<BranchLine>& dest) override;
+	int getLineNum(uint32 address, bool findStart) override { return (address - this->address) / 4; };
+	uint32 getLineAddress(int line) override { return address + line * 4; };
+	uint32 getTotalSize() override { return num * 4; };
+	bool disassemble(uint32 address, DisassemblyLineInfo& dest, bool insertSymbols) override;
+	void getBranchLines(uint32 start, uint32 size, std::vector<BranchLine>& dest) override;
 
 private:
-	u32 address;
+	uint32 address;
 	int num;
 };
 
@@ -115,26 +115,26 @@ private:
 class DisassemblyMacro: public DisassemblyEntry
 {
 public:
-	DisassemblyMacro(u32 _address): address(_address) { };
+	DisassemblyMacro(uint32 _address): address(_address) { };
 	virtual ~DisassemblyMacro() { };
 
-	void setMacroLi(u32 _immediate, u8 _rt);
-	void setMacroMemory(std::string _name, u32 _immediate, u8 _rt, int _dataSize);
+	void setMacroLi(uint32 _immediate, u8 _rt);
+	void setMacroMemory(std::string _name, uint32 _immediate, u8 _rt, int _dataSize);
 
 	void recheck() override { };
 	int getNumLines() override { return 1; };
-	int getLineNum(u32 address, bool findStart) override { return 0; };
-	u32 getLineAddress(int line) override { return address; };
-	u32 getTotalSize() override { return numOpcodes * 4; };
-	bool disassemble(u32 address, DisassemblyLineInfo& dest, bool insertSymbols) override;
+	int getLineNum(uint32 address, bool findStart) override { return 0; };
+	uint32 getLineAddress(int line) override { return address; };
+	uint32 getTotalSize() override { return numOpcodes * 4; };
+	bool disassemble(uint32 address, DisassemblyLineInfo& dest, bool insertSymbols) override;
 private:
 	enum MacroType { MACRO_LI, MACRO_MEMORYIMM };
 
 	MacroType type;
 	std::string name;
-	u32 immediate;
-	u32 address;
-	u32 numOpcodes;
+	uint32 immediate;
+	uint32 address;
+	uint32 numOpcodes;
 	u8 rt;
 	int dataSize;
 };
@@ -143,15 +143,15 @@ private:
 class DisassemblyData: public DisassemblyEntry
 {
 public:
-	DisassemblyData(u32 _address, u32 _size, DataType _type);
+	DisassemblyData(uint32 _address, uint32 _size, DataType _type);
 	virtual ~DisassemblyData() { };
 
 	void recheck() override;
 	int getNumLines() override { return (int)lines.size(); };
-	int getLineNum(u32 address, bool findStart) override;
-	u32 getLineAddress(int line) override { return lineAddresses[line]; };
-	u32 getTotalSize() override { return size; };
-	bool disassemble(u32 address, DisassemblyLineInfo& dest, bool insertSymbols) override;
+	int getLineNum(uint32 address, bool findStart) override;
+	uint32 getLineAddress(int line) override { return lineAddresses[line]; };
+	uint32 getTotalSize() override { return size; };
+	bool disassemble(uint32 address, DisassemblyLineInfo& dest, bool insertSymbols) override;
 
 private:
 	void createLines();
@@ -159,12 +159,12 @@ private:
 	struct DataEntry
 	{
 		std::string text;
-		u32 size;
+		uint32 size;
 		int lineNum;
 	};
 
-	u32 address;
-	u32 size;
+	uint32 address;
+	uint32 size;
 	HashType hash;
 	DataType type;
 	std::map<u32,DataEntry> lines;
@@ -174,19 +174,19 @@ private:
 class DisassemblyComment: public DisassemblyEntry
 {
 public:
-	DisassemblyComment(u32 _address, u32 _size, std::string name, std::string param);
+	DisassemblyComment(uint32 _address, uint32 _size, std::string name, std::string param);
 	virtual ~DisassemblyComment() { };
 
 	void recheck() override { };
 	int getNumLines() override { return 1; };
-	int getLineNum(u32 address, bool findStart) override { return 0; };
-	u32 getLineAddress(int line) override { return address; };
-	u32 getTotalSize() override { return size; };
-	bool disassemble(u32 address, DisassemblyLineInfo& dest, bool insertSymbols) override;
+	int getLineNum(uint32 address, bool findStart) override { return 0; };
+	uint32 getLineAddress(int line) override { return address; };
+	uint32 getTotalSize() override { return size; };
+	bool disassemble(uint32 address, DisassemblyLineInfo& dest, bool insertSymbols) override;
 
 private:
-	u32 address;
-	u32 size;
+	uint32 address;
+	uint32 size;
 	std::string name;
 	std::string param;
 };
@@ -202,13 +202,13 @@ public:
 
 	void setCpu(DebugInterface* _cpu) { cpu = _cpu; };
 	void setMaxParamChars(int num) { maxParamChars = num; clear(); };
-	void getLine(u32 address, bool insertSymbols, DisassemblyLineInfo& dest);
-	void analyze(u32 address, u32 size);
-	std::vector<BranchLine> getBranchLines(u32 start, u32 size);
+	void getLine(uint32 address, bool insertSymbols, DisassemblyLineInfo& dest);
+	void analyze(uint32 address, uint32 size);
+	std::vector<BranchLine> getBranchLines(uint32 start, uint32 size);
 
-	u32 getStartAddress(u32 address);
-	u32 getNthPreviousAddress(u32 address, int n = 1);
-	u32 getNthNextAddress(u32 address, int n = 1);
+	uint32 getStartAddress(uint32 address);
+	uint32 getNthPreviousAddress(uint32 address, int n = 1);
+	uint32 getNthNextAddress(uint32 address, int n = 1);
 
 	static DebugInterface* getCpu() { return cpu; };
 	static int getMaxParamChars() { return maxParamChars; };
@@ -218,4 +218,4 @@ private:
 	static int maxParamChars;
 };
 
-bool isInInterval(u32 start, u32 size, u32 value);
+bool isInInterval(uint32 start, uint32 size, uint32 value);

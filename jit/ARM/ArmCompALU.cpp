@@ -19,10 +19,10 @@
 #if PPSSPP_ARCH(ARM)
 
 #include <algorithm>
-#include "Core/MIPS/MIPS.h"
-#include "Core/MIPS/MIPSCodeUtils.h"
-#include "Core/MIPS/ARM/ArmJit.h"
-#include "Core/MIPS/ARM/ArmRegCache.h"
+#include "jit/MIPS.h"
+#include "jit/MIPSCodeUtils.h"
+#include "jit/ARM/ArmJit.h"
+#include "jit/ARM/ArmRegCache.h"
 #include "Common/CPUDetect.h"
 
 using namespace MIPSAnalyst;

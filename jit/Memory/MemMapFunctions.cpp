@@ -15,17 +15,12 @@
 // Official git repository and contact information can be found at
 // https://github.com/hrydgard/ppsspp and http://www.ppsspp.org/.
 
-#include "Common/Common.h"
-#include "Common/Atomics.h"
 
-#include "Core/Core.h"
-#include "Core/MemMap.h"
-#include "Core/Config.h"
-#include "Core/Host.h"
-#include "Core/Reporting.h"
+#include "jit/Memory/MemMap.h"
 
-#include "Core/MIPS/MIPS.h"
+#include "jit/MIPS.h"
 
+#include "jit/Common/Swap.h"
 namespace Memory
 {
 
@@ -37,31 +32,25 @@ namespace Memory
 
 // GetPointer must always return an address in the bottom 32 bits of address space, so that 64-bit
 // programs don't have problems directly addressing any part of memory.
-
+//TODO it so it makes sense on PSX
 uint8 *GetPointer(const uint32 address) {
-	if ((address & 0x3E000000) == 0x08000000) {
+	if (address <= 0x001FFFFF || 
+		(address >= 0x80000000 && address <= 0x801FFFFF) ||
+		(address >= 0xa0000000 && address <= 0xa01FFFFF)) {
 		// RAM
 		return GetPointerUnchecked(address);
-	} else if ((address & 0x3F800000) == 0x04000000) {
-		// VRAM
+	} else if (address >= 0x1F000000 && address <= 0x1F00FFFF) {
+		// Parallel port
+		//TODO make this call parallel port stuff
 		return GetPointerUnchecked(address);
-	} else if ((address & 0xBFFF0000) == 0x00010000 && (address & 0x0000FFFF) < SCRATCHPAD_SIZE) {
+	} else if (address >= 0x1F800000 && address <= 0x1F8003FF) {
 		// Scratchpad
 		return GetPointerUnchecked(address);
-	} else if ((address & 0x3F000000) >= 0x08000000 && (address & 0x3F000000) < 0x08000000 + g_MemorySize) {
-		// More RAM (remasters, etc.)
+	} else if (address >= 0xBFC00000 && address <= 0xBFC7FFFF) {
+		// BIOS
 		return GetPointerUnchecked(address);
 	} else {
 		ERROR_LOG(MEMMAP, "Unknown GetPointer %08x PC %08x LR %08x", address, currentMIPS->pc, currentMIPS->r[MIPS_REG_RA]);
-		static bool reported = false;
-		if (!reported) {
-			Reporting::ReportMessage("Unknown GetPointer %08x PC %08x LR %08x", address, currentMIPS->pc, currentMIPS->r[MIPS_REG_RA]);
-			reported = true;
-		}
-		if (!g_Config.bIgnoreBadMemAccess) {
-			Core_EnableStepping(true);
-			host->SetDebugMode(true);
-		}
 		return nullptr;
 	}
 }
@@ -72,70 +61,53 @@ inline void ReadFromHardware(T &var, const uint32 address) {
 	// TODO: Make sure this represents the mirrors in a correct way.
 
 	// Could just do a base-relative read, too.... TODO
-
-	if ((address & 0x3E000000) == 0x08000000) {
+	//TODO maybe speed this up somehow?
+	if (address <= 0x001FFFFF || 
+		(address >= 0x80000000 && address <= 0x801FFFFF) ||
+		(address >= 0xa0000000 && address <= 0xa01FFFFF)) {
 		// RAM
-		var = *((const T*)GetPointerUnchecked(address));
-	} else if ((address & 0x3F800000) == 0x04000000) {
-		// VRAM
-		var = *((const T*)GetPointerUnchecked(address));
-	} else if ((address & 0xBFFF0000) == 0x00010000 && (address & 0x0000FFFF) < SCRATCHPAD_SIZE) {
+		var = *(T*)GetPointerUnchecked(address);
+	} else if (address >= 0x1F000000 && address <= 0x1F00FFFF) {
+		// Parallel port
+		//TODO make this call parallel port stuff
+		var = *(T*)GetPointerUnchecked(address);
+	} else if (address >= 0x1F800000 && address <= 0x1F8003FF) {
 		// Scratchpad
-		var = *((const T*)GetPointerUnchecked(address));
-	} else if ((address & 0x3F000000) >= 0x08000000 && (address & 0x3F000000) < 0x08000000 + g_MemorySize) {
-		// More RAM (remasters, etc.)
-		var = *((const T*)GetPointerUnchecked(address));
+		var = *(T*)GetPointerUnchecked(address);
+	} else if (address >= 0xBFC00000 && address <= 0xBFC7FFFF) {
+		// BIOS
+		var = *(T*)GetPointerUnchecked(address);
 	} else {
 		// In jit, we only flush PC when bIgnoreBadMemAccess is off.
-		if (g_Config.iCpuCore == (int)CPUCore::JIT && g_Config.bIgnoreBadMemAccess) {
-			WARN_LOG(MEMMAP, "ReadFromHardware: Invalid address %08x", address);
-		} else {
-			WARN_LOG(MEMMAP, "ReadFromHardware: Invalid address %08x PC %08x LR %08x", address, currentMIPS->pc, currentMIPS->r[MIPS_REG_RA]);
+		if (currentMIPS){
+			WARN_LOG(MEMMAP, "WriteToHardware: Invalid address %08x	PC %08x LR %08x", address, currentMIPS->pc, currentMIPS->r[MIPS_REG_RA]);
 		}
-		static bool reported = false;
-		if (!reported) {
-			Reporting::ReportMessage("ReadFromHardware: Invalid address %08x near PC %08x LR %08x", address, currentMIPS->pc, currentMIPS->r[MIPS_REG_RA]);
-			reported = true;
-		}
-		if (!g_Config.bIgnoreBadMemAccess) {
-			Core_EnableStepping(true);
-			host->SetDebugMode(true);
-		}
-		var = 0;
 	}
 }
 
 template <typename T>
 inline void WriteToHardware(uint32 address, const T data) {
 	// Could just do a base-relative write, too.... TODO
-
-	if ((address & 0x3E000000) == 0x08000000) {
+	//TODO maybe speed this up somehow?
+	if (address <= 0x001FFFFF || 
+		(address >= 0x80000000 && address <= 0x801FFFFF) ||
+		(address >= 0xa0000000 && address <= 0xa01FFFFF)) {
 		// RAM
 		*(T*)GetPointerUnchecked(address) = data;
-	} else if ((address & 0x3F800000) == 0x04000000) {
-		// VRAM
+	} else if (address >= 0x1F000000 && address <= 0x1F00FFFF) {
+		// Parallel port
+		//TODO make this call parallel port stuff
 		*(T*)GetPointerUnchecked(address) = data;
-	} else if ((address & 0xBFFF0000) == 0x00010000 && (address & 0x0000FFFF) < SCRATCHPAD_SIZE) {
+	} else if (address >= 0x1F800000 && address <= 0x1F8003FF) {
 		// Scratchpad
 		*(T*)GetPointerUnchecked(address) = data;
-	} else if ((address & 0x3F000000) >= 0x08000000 && (address & 0x3F000000) < 0x08000000 + g_MemorySize) {
-		// More RAM (remasters, etc.)
+	} else if (address >= 0xBFC00000 && address <= 0xBFC7FFFF) {
+		// BIOS
 		*(T*)GetPointerUnchecked(address) = data;
 	} else {
 		// In jit, we only flush PC when bIgnoreBadMemAccess is off.
-		if (g_Config.iCpuCore == (int)CPUCore::JIT && g_Config.bIgnoreBadMemAccess) {
-			WARN_LOG(MEMMAP, "WriteToHardware: Invalid address %08x", address);
-		} else {
+		if (currentMIPS){
 			WARN_LOG(MEMMAP, "WriteToHardware: Invalid address %08x	PC %08x LR %08x", address, currentMIPS->pc, currentMIPS->r[MIPS_REG_RA]);
-		}
-		static bool reported = false;
-		if (!reported) {
-			Reporting::ReportMessage("WriteToHardware: Invalid address %08x near PC %08x LR %08x", address, currentMIPS->pc, currentMIPS->r[MIPS_REG_RA]);
-			reported = true;
-		}
-		if (!g_Config.bIgnoreBadMemAccess) {
-			Core_EnableStepping(true);
-			host->SetDebugMode(true);
 		}
 	}
 }
@@ -143,21 +115,17 @@ inline void WriteToHardware(uint32 address, const T data) {
 // =====================
 
 bool IsRAMAddress(const uint32 address) {
-	if ((address & 0x3E000000) == 0x08000000) {
-		return true;
-	}	else if ((address & 0x3F000000) >= 0x08000000 && (address & 0x3F000000) < 0x08000000 + g_MemorySize) {
-		return true;
-	}	else {
-		return false;
-	}
+	return (address <= 0x001FFFFF || 
+		(address >= 0x80000000 && address <= 0x801FFFFF) ||
+		(address >= 0xa0000000 && address <= 0xa01FFFFF));
 }
-
+//TODO implement?
 bool IsVRAMAddress(const uint32 address) {
-	return ((address & 0x3F800000) == 0x04000000);
+	return false;
 }
 
 bool IsScratchpadAddress(const uint32 address) {
-	return (address & 0xBFFF0000) == 0x00010000 && (address & 0x0000FFFF) < SCRATCHPAD_SIZE;
+	return (address >= 0x1F800000 && address <= 0x1F8003FF);
 }
 
 uint8 Read_U8(const uint32 _Address)

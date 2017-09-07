@@ -19,14 +19,12 @@
 
 #include <cstring>
 
-#include "Common/Common.h"
-#include "Common/CPUDetect.h"
-#include "Core/MIPS/JitCommon/JitBlockCache.h"
-#include "Core/MIPS/JitCommon/JitCommon.h"
-#include "Core/MIPS/IR/IRRegCache.h"
-#include "Core/MIPS/IR/IRInst.h"
-#include "Core/MIPS/IR/IRFrontend.h"
-#include "Core/MIPS/MIPSVFPUUtils.h"
+#include "jit/JitCommon/JitBlockCache.h"
+#include "jit/JitCommon/JitCommon.h"
+#include "jit/IR/IRRegCache.h"
+#include "jit/IR/IRInst.h"
+#include "jit/IR/IRFrontend.h"
+
 
 #ifndef offsetof
 #include "stddef.h"

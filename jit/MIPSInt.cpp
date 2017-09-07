@@ -19,21 +19,15 @@
 
 #include <cmath>
 
-#include "math/math_util.h"
+#include "jit/Common/math_util.h"
 
-#include "Common/Common.h"
-#include "Core/Config.h"
-#include "Core/Core.h"
-#include "Core/Host.h"
-#include "Core/MemMap.h"
-#include "Core/MIPS/MIPS.h"
-#include "Core/MIPS/MIPSInt.h"
-#include "Core/MIPS/MIPSTables.h"
-#include "Core/Reporting.h"
-#include "Core/HLE/HLE.h"
-#include "Core/HLE/HLETables.h"
-#include "Core/HLE/ReplaceTables.h"
-#include "Core/System.h"
+#include "jit/Memory/MemMap.h"
+#include "jit/MIPS.h"
+#include "jit/MIPSInt.h"
+#include "jit/MIPSTables.h"
+#include "mednafen/mednafen.h"
+#include "jit/Common/CommonFuncs.h"
+#include "jit/JitCommon/JitCommon.h"
 
 #define R(i) (currentMIPS->r[i])
 #define F(i) (currentMIPS->f[i])
@@ -53,7 +47,7 @@
 #define HI currentMIPS->hi
 #define LO currentMIPS->lo
 
-static inline void DelayBranchTo(u32 where)
+static inline void DelayBranchTo(uint32 where)
 {
 	PC += 4;
 	mipsr4k.nextPC = where;
@@ -140,8 +134,11 @@ namespace MIPSInt
 		{
 			mipsr4k.pc += 4;
 		}
+		/*
 		mipsr4k.inDelaySlot = false;
 		CallSyscall(op);
+		*/
+		ERROR_LOG(CPU, "HIT A SYSCALLL INSTR! %x", op);
 	}
 
 	void Int_Sync(MIPSOpcode op)
@@ -152,12 +149,14 @@ namespace MIPSInt
 
 	void Int_Break(MIPSOpcode op)
 	{
-		Reporting::ReportMessage("BREAK instruction hit");
+		/*Reporting::ReportMessage("BREAK instruction hit");*/
 		ERROR_LOG(CPU, "BREAK!");
+		/*
 		if (!g_Config.bIgnoreBadMemAccess) {
 			Core_EnableStepping(true);
 			host->SetDebugMode(true);
 		}
+		*/
 		PC += 4;
 	}
 
@@ -166,7 +165,7 @@ namespace MIPSInt
 		int imm = (signed short)(op&0xFFFF)<<2;
 		int rs = _RS;
 		int rt = _RT;
-		u32 addr = PC + imm + 4;
+		uint32 addr = PC + imm + 4;
 
 		switch (op >> 26) 
 		{
@@ -190,7 +189,7 @@ namespace MIPSInt
 	{
 		int imm = (signed short)(op&0xFFFF)<<2;
 		int rs = _RS;
-		u32 addr = PC + imm + 4;
+		uint32 addr = PC + imm + 4;
 
 		switch ((op>>16) & 0x1F)
 		{
@@ -212,7 +211,7 @@ namespace MIPSInt
 	void Int_VBranch(MIPSOpcode op)
 	{
 		int imm = (signed short)(op&0xFFFF)<<2;
-		u32 addr = PC + imm + 4;
+		uint32 addr = PC + imm + 4;
 
 		// x, y, z, w, any, all, (invalid), (invalid)
 		int imm3 = (op>>18)&7;
@@ -230,7 +229,7 @@ namespace MIPSInt
 	void Int_FPUBranch(MIPSOpcode op)
 	{
 		int imm = (signed short)(op&0xFFFF)<<2;
-		u32 addr = PC + imm + 4;
+		uint32 addr = PC + imm + 4;
 		switch((op>>16)&0x1f)
 		{
 		case 0: if (!currentMIPS->fpcond) DelayBranchTo(addr); else PC += 4; break;//bc1f
@@ -248,8 +247,8 @@ namespace MIPSInt
 		if (mipsr4k.inDelaySlot)
 			_dbg_assert_msg_(CPU,0,"Jump in delay slot :(");
 
-		u32 off = ((op & 0x03FFFFFF) << 2);
-		u32 addr = (currentMIPS->pc & 0xF0000000) | off;
+		uint32 off = ((op & 0x03FFFFFF) << 2);
+		uint32 addr = (currentMIPS->pc & 0xF0000000) | off;
 
 		switch (op>>26) 
 		{
@@ -277,7 +276,7 @@ namespace MIPSInt
 
 		int rs = _RS;
 		int rd = _RD;
-		u32 addr = R(rs);
+		uint32 addr = R(rs);
 		switch (op & 0x3f) 
 		{
 		case 8: //jr
@@ -295,9 +294,9 @@ namespace MIPSInt
 	void Int_IType(MIPSOpcode op)
 	{
 		s32 simm = (s32)(s16)(op & 0xFFFF);
-		u32 uimm = (u32)(u16)(op & 0xFFFF);
+		uint32 uimm = (u32)(u16)(op & 0xFFFF);
 
-		u32 suimm = (u32)simm;
+		uint32 suimm = (u32)simm;
 
 		int rt = _RT;
 		int rs = _RS;
@@ -329,7 +328,7 @@ namespace MIPSInt
 		int imm = (signed short)(op&0xFFFF);
 		int rt = _RT;
 		int rs = _RS;
-		u32 addr = R(rs) + imm;
+		uint32 addr = R(rs) + imm;
 
 		switch (op >> 26)
 		{
@@ -410,7 +409,7 @@ namespace MIPSInt
 		int imm = (signed short)(op&0xFFFF);
 		int rt = _RT;
 		int rs = _RS;
-		u32 addr = R(rs) + imm;
+		uint32 addr = R(rs) + imm;
 
 		if (((op >> 29) & 1) == 0 && rt == 0) {
 			// Don't load anything into $zr
@@ -423,7 +422,7 @@ namespace MIPSInt
 		case 32: R(rt) = (u32)(s32)(s8) Memory::Read_U8(addr); break; //lb
 		case 33: R(rt) = (u32)(s32)(s16)Memory::Read_U16(addr); break; //lh
 		case 35: R(rt) = Memory::Read_U32(addr); break; //lw
-		case 36: R(rt) = Memory::Read_uint8 (addr); break; //lbu
+		case 36: R(rt) = Memory::Read_U8 (addr); break; //lbu
 		case 37: R(rt) = Memory::Read_U16(addr); break; //lhu
 		case 40: Memory::Write_U8(R(rt), addr); break; //sb
 		case 41: Memory::Write_U16(R(rt), addr); break; //sh
@@ -433,37 +432,37 @@ namespace MIPSInt
 		// into a single non-alignment-checking LW.
 		case 34: //lwl
 			{
-				u32 shift = (addr & 3) * 8;
-				u32 mem = Memory::Read_U32(addr & 0xfffffffc);
-				u32 result = ( u32(R(rt)) & (0x00ffffff >> shift) ) | ( mem << (24 - shift) );
+				uint32 shift = (addr & 3) * 8;
+				uint32 mem = Memory::Read_U32(addr & 0xfffffffc);
+				uint32 result = ( u32(R(rt)) & (0x00ffffff >> shift) ) | ( mem << (24 - shift) );
 				R(rt) = result;
 			}
 			break;
 
 		case 38: //lwr
 			{
-				u32 shift = (addr & 3) * 8;
-				u32 mem = Memory::Read_U32(addr & 0xfffffffc);
-				u32 regval = R(rt);
-				u32 result = ( regval & (0xffffff00 << (24 - shift)) ) | ( mem	>> shift );
+				uint32 shift = (addr & 3) * 8;
+				uint32 mem = Memory::Read_U32(addr & 0xfffffffc);
+				uint32 regval = R(rt);
+				uint32 result = ( regval & (0xffffff00 << (24 - shift)) ) | ( mem	>> shift );
 				R(rt) = result;
 			}
 			break;
 
 		case 42: //swl
 			{
-				u32 shift = (addr & 3) * 8;
-				u32 mem = Memory::Read_U32(addr & 0xfffffffc);
-				u32 result = ( ( u32(R(rt)) >>	(24 - shift) ) ) | (	mem & (0xffffff00 << shift) );
+				uint32 shift = (addr & 3) * 8;
+				uint32 mem = Memory::Read_U32(addr & 0xfffffffc);
+				uint32 result = ( ( u32(R(rt)) >>	(24 - shift) ) ) | (	mem & (0xffffff00 << shift) );
 				Memory::Write_U32(result, (addr & 0xfffffffc));
 			}
 			break;
 
 		case 46: //swr
 			{
-				u32 shift = (addr & 3) << 3;
-				u32 mem = Memory::Read_U32(addr & 0xfffffffc);
-				u32 result = ( ( u32(R(rt)) << shift ) | (mem	& (0x00ffffff >> (24 - shift)) ) );
+				uint32 shift = (addr & 3) << 3;
+				uint32 mem = Memory::Read_U32(addr & 0xfffffffc);
+				uint32 result = ( ( u32(R(rt)) << shift ) | (mem	& (0x00ffffff >> (24 - shift)) ) );
 				Memory::Write_U32(result, (addr & 0xfffffffc));
 			}
 			break;
@@ -480,7 +479,7 @@ namespace MIPSInt
 		s32 offset = (s16)(op&0xFFFF);
 		int ft = _FT;
 		int rs = _RS;
-		u32 addr = R(rs) + offset;
+		uint32 addr = R(rs) + offset;
 
 		switch(op >> 26)
 		{
@@ -524,7 +523,7 @@ namespace MIPSInt
 
 		case 6: //ctc1
 			{
-				u32 value = R(rt);
+				uint32 value = R(rt);
 				if (fs == 31) {
 					currentMIPS->fcr31 = value & 0x0181FFFF;
 					currentMIPS->fpcond = (value >> 23) & 1;
@@ -612,7 +611,7 @@ namespace MIPSInt
 			break;
 		case 28: //madd
 			{
-				u32 a=R(rs),b=R(rt),hi=HI,lo=LO;
+				uint32 a=R(rs),b=R(rt),hi=HI,lo=LO;
 				u64 origValBits = (u64)lo | ((u64)(hi)<<32);
 				s64 origVal = (s64)origValBits;
 				s64 result = origVal + (s64)(s32)a * (s64)(s32)b;
@@ -623,7 +622,7 @@ namespace MIPSInt
 			break;
 		case 29: //maddu
 			{
-				u32 a=R(rs),b=R(rt),hi=HI,lo=LO;
+				uint32 a=R(rs),b=R(rt),hi=HI,lo=LO;
 				u64 origVal = (u64)lo | ((u64)(hi)<<32);
 				u64 result = origVal + (u64)a * (u64)b;
 				LO = (u32)(result);
@@ -632,7 +631,7 @@ namespace MIPSInt
 			break;
 		case 46: //msub
 			{
-				u32 a=R(rs),b=R(rt),hi=HI,lo=LO;
+				uint32 a=R(rs),b=R(rt),hi=HI,lo=LO;
 				u64 origValBits = (u64)lo | ((u64)(hi)<<32);
 				s64 origVal = (s64)origValBits;
 				s64 result = origVal - (s64)(s32)a * (s64)(s32)b;
@@ -643,7 +642,7 @@ namespace MIPSInt
 			break;
 		case 47: //msubu
 			{
-				u32 a=R(rs),b=R(rt),hi=HI,lo=LO;
+				uint32 a=R(rs),b=R(rt),hi=HI,lo=LO;
 				u64 origVal = (u64)lo | ((u64)(hi)<<32);
 				u64 result = origVal - (u64)a * (u64)b;
 				LO = (u32)(result);
@@ -672,8 +671,8 @@ namespace MIPSInt
 			break;
 		case 27: //divu
 			{
-				u32 a = R(rs);
-				u32 b = R(rt);
+				uint32 a = R(rs);
+				uint32 b = R(rt);
 				if (b != 0) {
 					LO = (a/b);
 					HI = (a%b);
@@ -766,7 +765,7 @@ namespace MIPSInt
 
 		case 20: // bitrev
 			{
-				u32 tmp = 0;
+				uint32 tmp = 0;
 				for (int i = 0; i < 32; i++)
 				{
 					if (R(rt) & (1 << i))
@@ -823,15 +822,13 @@ namespace MIPSInt
 		{
 		case 36:  // mfic
 			if (!reported) {
-				Reporting::ReportMessage("MFIC instruction hit (%08x) at %08x", op.encoding, currentMIPS->pc);
-				WARN_LOG(CPU,"MFIC Disable/Enable Interrupt CPU instruction");
+				WARN_LOG(CPU,"MFIC instruction hit (%08x) at %08x", op.encoding, currentMIPS->pc);
 				reported = 1;
 			}
 			break;
 		case 38:  // mtic
 			if (!reported) {
-				Reporting::ReportMessage("MTIC instruction hit (%08x) at %08x", op.encoding, currentMIPS->pc);
-				WARN_LOG(CPU,"MTIC Disable/Enable Interrupt CPU instruction");
+				WARN_LOG(CPU,"MTIC instruction hit (%08x) at %08x", op.encoding, currentMIPS->pc);
 				reported = 1;
 			}
 			break;
@@ -855,15 +852,15 @@ namespace MIPSInt
 		case 0x0: //ext
 			{
 				int size = _SIZE + 1;
-				u32 sourcemask = 0xFFFFFFFFUL >> (32 - size);
+				uint32 sourcemask = 0xFFFFFFFFUL >> (32 - size);
 				R(rt) = (R(rs) >> pos) & sourcemask;
 			}
 			break;
 		case 0x4: //ins
 			{
 				int size = (_SIZE + 1) - pos;
-				u32 sourcemask = 0xFFFFFFFFUL >> (32 - size);
-				u32 destmask = sourcemask << pos;
+				uint32 sourcemask = 0xFFFFFFFFUL >> (32 - size);
+				uint32 destmask = sourcemask << pos;
 				R(rt) = (R(rt) & ~destmask) | ((R(rs)&sourcemask) << pos);
 			}
 			break;
@@ -1016,8 +1013,7 @@ namespace MIPSInt
 		{
 		case 0:
 			if (!reported) {
-				Reporting::ReportMessage("INTERRUPT instruction hit (%08x) at %08x", op.encoding, currentMIPS->pc);
-				WARN_LOG(CPU,"Disable/Enable Interrupt CPU instruction");
+				WARN_LOG(CPU,"INTERRUPT instruction hit (%08x) at %08x", op.encoding, currentMIPS->pc);
 				reported = 1;
 			}
 			break;
@@ -1032,7 +1028,8 @@ namespace MIPSInt
 		}
 		// It's a replacement func!
 		int index = op.encoding & 0xFFFFFF;
-		const ReplacementTableEntry *entry = GetReplacementFunc(index);
+		//TODO reimpliment
+		/*const ReplacementTableEntry *entry = GetReplacementFunc(index);
 		if (entry && entry->replaceFunc && (entry->flags & REPFLAG_DISABLED) == 0) {
 			entry->replaceFunc();
 
@@ -1042,10 +1039,11 @@ namespace MIPSInt
 			} else {
 				PC = currentMIPS->r[MIPS_REG_RA];
 			}
-		} else {
-			if (!entry || !entry->replaceFunc) {
+		} else*/ {
+
+			/*if (!entry || !entry->replaceFunc) {
 				ERROR_LOG(CPU, "Bad replacement function index %i", index);
-			}
+			}*/
 			// Interpret the original instruction under it.
 			MIPSInterpret(Memory::Read_Instruction(PC, true));
 		}

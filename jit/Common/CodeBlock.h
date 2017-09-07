@@ -4,8 +4,9 @@
 
 #pragma once
 
-#include "Common.h"
-#include "MemoryUtil.h"
+#include "jit/Memory/MemoryUtil.h"
+#include "mednafen/mednafen-types.h"
+#include "mednafen/mednafen.h"
 
 // Everything that needs to generate code should inherit from this.
 // You get memory management for free, plus, you can use all emitter functions without
@@ -18,23 +19,23 @@ public:
 	CodeBlockCommon() : region(nullptr), region_size(0) {}
 	virtual ~CodeBlockCommon() {}
 
-	bool IsInSpace(const u8 *ptr) {
+	bool IsInSpace(const uint8 *ptr) {
 		return (ptr >= region) && (ptr < (region + region_size));
 	}
 
-	virtual void SetCodePtr(u8 *ptr) = 0;
-	virtual const u8 *GetCodePtr() const = 0;
+	virtual void SetCodePtr(uint8 *ptr) = 0;
+	virtual const uint8 *GetCodePtr() const = 0;
 
-	u8 *GetBasePtr() {
+	uint8 *GetBasePtr() {
 		return region;
 	}
 
-	size_t GetOffset(const u8 *ptr) const {
+	size_t GetOffset(const uint8 *ptr) const {
 		return ptr - region;
 	}
 
 protected:
-	u8 *region;
+	uint8 *region;
 	size_t region_size;
 };
 
@@ -52,7 +53,7 @@ public:
 	void AllocCodeSpace(int size) {
 		region_size = size;
 		// The protection will be set to RW if PlatformIsWXExclusive.
-		region = (u8*)AllocateExecutableMemory(region_size);
+		region = (uint8*)AllocateExecutableMemory(region_size);
 		T::SetCodePointer(region);
 	}
 
@@ -100,11 +101,11 @@ public:
 		region_size = 0;
 	}
 
-	void SetCodePtr(u8 *ptr) override {
+	void SetCodePtr(uint8*ptr) override {
 		T::SetCodePointer(ptr);
 	}
 
-	const u8 *GetCodePtr() const override {
+	const uint8*GetCodePtr() const override {
 		return T::GetCodePointer();
 	}
 

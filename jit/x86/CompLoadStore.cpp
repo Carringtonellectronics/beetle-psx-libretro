@@ -16,14 +16,13 @@
 // https://github.com/hrydgard/ppsspp and http://www.ppsspp.org/.
 
 
-#if PPSSPP_ARCH(X86) || PPSSPP_ARCH(AMD64)
+#if defined(ARCH_X86) || defined(ARCH_AMD64)
 
-#include "Core/MemMap.h"
-#include "Core/MIPS/MIPSAnalyst.h"
-#include "Core/Config.h"
-#include "Core/MIPS/MIPSCodeUtils.h"
-#include "Core/MIPS/x86/Jit.h"
-#include "Core/MIPS/x86/RegCache.h"
+#include "jit/Memory/MemMap.h"
+#include "jit/MIPSAnalyst.h"
+#include "jit/MIPSCodeUtils.h"
+#include "jit/x86/Jit.h"
+#include "jit/x86/RegCache.h"
 
 
 #define _RS MIPS_GET_RS(op)
@@ -94,7 +93,7 @@ namespace MIPSComp {
 			gpr.MapReg(rt, true, false);
 		}
 
-#ifdef _M_IX86
+#ifdef ARCH_32BIT
 		// We use EDX so we can have DL for 8-bit ops.
 		const bool needSwap = bits == 8 && !gpr.R(rt).IsSimpleReg(EDX) && !gpr.R(rt).IsSimpleReg(ECX);
 		if (needSwap)
@@ -145,7 +144,7 @@ namespace MIPSComp {
 
 		X64Reg shiftReg = ECX;
 		gpr.FlushLockX(ECX, EDX);
-#ifdef _M_X64
+#ifdef ARCH_64BIT
 		// On x64, we need ECX for CL, but it's also the first arg and gets lost.  Annoying.
 		gpr.FlushLockX(R9);
 		shiftReg = R9;
@@ -406,4 +405,4 @@ namespace MIPSComp {
 	}
 }
 
-#endif // PPSSPP_ARCH(X86) || PPSSPP_ARCH(AMD64)
+#endif // defined(ARCH_X86) || defined(ARCH_AMD64)

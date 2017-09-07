@@ -17,8 +17,8 @@
 
 #pragma once
 
-#include "Core/MIPS/MIPS.h"
-#include "Core/MIPS/MIPSAnalyst.h"
+#include "jit/MIPS.h"
+#include "jit/MIPSAnalyst.h"
 #include "Common/Arm64Emitter.h"
 
 namespace Arm64JitConstants {

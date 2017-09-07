@@ -17,12 +17,12 @@
 
 #pragma once
 
-#include "Common/x64Emitter.h"
-#include "Core/MIPS/MIPS.h"
-#include "Core/MIPS/MIPSAnalyst.h"
+#include "jit/Common/x64Emitter.h"
+#include "jit/MIPS.h"
+#include "jit/MIPSAnalyst.h"
 
 namespace X64JitConstants {
-#ifdef _M_X64
+#ifdef ARCH_64BIT
 	const Gen::X64Reg MEMBASEREG = Gen::RBX;
 	const Gen::X64Reg CTXREG = Gen::R14;
 	const Gen::X64Reg JITBASEREG = Gen::R15;
@@ -34,9 +34,9 @@ namespace X64JitConstants {
 	const Gen::X64Reg TEMPREG = Gen::EAX;
 	const int NUM_MIPS_GPRS = 36;
 
-#ifdef _M_X64
+#ifdef ARCH_64BIT
 	const u32 NUM_X_REGS = 16;
-#elif _M_IX86
+#elif ARCH_32BIT
 	const u32 NUM_X_REGS = 8;
 #endif
 }

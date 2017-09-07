@@ -1,5 +1,5 @@
-#include "Core/MIPS/IR/IRInst.h"
-#include "Common/x64Emitter.h"
+#include "jit/IR/IRInst.h"
+#include "jit/Common/x64Emitter.h"
 
 namespace MIPSComp {
 

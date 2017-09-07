@@ -20,9 +20,9 @@
 
 #include "base/logging.h"
 #include "Core/MemMap.h"
-#include "Core/MIPS/ARM64/Arm64RegCache.h"
-#include "Core/MIPS/ARM64/Arm64Jit.h"
-#include "Core/MIPS/MIPSAnalyst.h"
+#include "jit/ARM64/Arm64RegCache.h"
+#include "jit/ARM64/Arm64Jit.h"
+#include "jit/MIPSAnalyst.h"
 #include "Core/Reporting.h"
 #include "Common/Arm64Emitter.h"
 

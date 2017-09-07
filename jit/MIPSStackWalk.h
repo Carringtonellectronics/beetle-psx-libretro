@@ -18,19 +18,19 @@
 #pragma once
 
 #include <vector>
-#include "Common/CommonTypes.h"
+#include "mednafen/mednafen-types.h"
 
 namespace MIPSStackWalk {
 	struct StackFrame {
 		// Beginning of function symbol (may be estimated.)
-		u32 entry;
+		uint32 entry;
 		// Next position within function.
-		u32 pc;
+		uint32 pc;
 		// Value of SP inside this function (assuming no alloca()...)
-		u32 sp;
+		uint32 sp;
 		// Size of stack frame in bytes.
 		int stackSize;
 	};
 
-	std::vector<StackFrame> Walk(u32 pc, u32 ra, u32 sp, u32 threadEntry, u32 threadStackTop);
+	std::vector<StackFrame> Walk(uint32 pc, uint32 ra, uint32 sp, uint32 threadEntry, uint32 threadStackTop);
 };

@@ -21,8 +21,8 @@
 
 #include "../MIPS.h"
 #include "../MIPSAnalyst.h"
-#include "Core/MIPS/ARM/ArmRegCache.h"
-#include "Core/MIPS/MIPSVFPUUtils.h"
+#include "jit/ARM/ArmRegCache.h"
+
 #include "Common/ArmEmitter.h"
 
 namespace ArmJitConstants {

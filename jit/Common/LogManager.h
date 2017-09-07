@@ -122,7 +122,7 @@ public:
 	void AddListener(LogListener *listener);
 	void RemoveListener(LogListener *listener);
 
-	static u32 GetMaxLevel() { return MAX_LOGLEVEL;	}
+	static uint32 GetMaxLevel() { return MAX_LOGLEVEL;	}
 	static int GetNumChannels() { return LogTypes::NUMBER_OF_LOGS; }
 
 	void Log(LogTypes::LOG_LEVELS level, LogTypes::LOG_TYPE type, 

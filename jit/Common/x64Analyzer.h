@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "Common.h"
+#include "mednafen/mednafen-types.h"
 
 struct InstructionInfo
 {
@@ -30,14 +30,14 @@ struct InstructionInfo
 	bool signExtend;
 	bool hasImmediate;
 	bool isMemoryWrite;
-	u64 immediate;
-	s32 displacement;
+	uint64 immediate;
+	int32 displacement;
 };
 
 struct ModRM
 {
 	int mod, reg, rm;
-	ModRM(u8 modRM, u8 rex)
+	ModRM(uint8 modRM, uint8 rex)
 	{
 		mod = modRM >> 6;
 		reg = ((modRM >> 3) & 7) | ((rex & 4)?8:0);

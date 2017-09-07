@@ -20,17 +20,17 @@
 
 #pragma once
 
-#include "Common/CommonTypes.h"
-#include "Common/Thunk.h"
-#include "Common/x64Emitter.h"
+#include "mednafen/mednafen-types.h"
+#include "jit/Common/Thunk.h"
+#include "jit/Common/x64Emitter.h"
 
-#include "Common/x64Emitter.h"
-#include "Core/MIPS/JitCommon/JitBlockCache.h"
-#include "Core/MIPS/JitCommon/JitState.h"
-#include "Core/MIPS/JitCommon/JitCommon.h"
-#include "Core/MIPS/x86/JitSafeMem.h"
-#include "Core/MIPS/x86/RegCache.h"
-#include "Core/MIPS/x86/RegCacheFPU.h"
+#include "jit/Common/x64Emitter.h"
+#include "jit/JitCommon/JitBlockCache.h"
+#include "jit/JitCommon/JitState.h"
+#include "jit/JitCommon/JitCommon.h"
+#include "jit/x86/JitSafeMem.h"
+#include "jit/x86/RegCache.h"
+#include "jit/x86/RegCacheFPU.h"
 
 namespace MIPSComp {
 
@@ -94,7 +94,7 @@ public:
 	void Comp_FPU3op(MIPSOpcode op) override;
 	void Comp_FPU2op(MIPSOpcode op) override;
 	void Comp_mxc1(MIPSOpcode op) override;
-
+	/*
 	void Comp_SV(MIPSOpcode op) override;
 	void Comp_SVQ(MIPSOpcode op) override;
 	void Comp_VPFX(MIPSOpcode op) override;
@@ -132,11 +132,11 @@ public:
 	void Comp_Vocp(MIPSOpcode op) override;
 	void Comp_ColorConv(MIPSOpcode op) override;
 	void Comp_Vbfy(MIPSOpcode op) override;
-
+	*/
 	void Comp_DoNothing(MIPSOpcode op) override;
 
 	int Replace_fabsf() override;
-
+	/*
 	void ApplyPrefixST(u8 *vregs, u32 prefix, VectorSize sz);
 	void ApplyPrefixD(const u8 *vregs, VectorSize sz);
 	void GetVectorRegsPrefixS(u8 *regs, VectorSize sz, int vectorReg) {
@@ -150,6 +150,7 @@ public:
 		ApplyPrefixST(regs, js.prefixT, sz);
 	}
 	void GetVectorRegsPrefixD(u8 *regs, VectorSize sz, int vectorReg);
+	*/
 	void EatPrefix() override { js.EatPrefix(); }
 
 	void RestoreRoundingMode(bool force = false);

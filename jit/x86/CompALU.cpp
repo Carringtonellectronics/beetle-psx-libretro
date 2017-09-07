@@ -16,11 +16,11 @@
 // https://github.com/hrydgard/ppsspp and http://www.ppsspp.org/.
 
 
-#if PPSSPP_ARCH(X86) || PPSSPP_ARCH(AMD64)
+#if defined(ARCH_X86) || defined(ARCH_AMD64)
 
-#include "Core/MIPS/MIPSCodeUtils.h"
-#include "Core/MIPS/x86/Jit.h"
-#include "Core/MIPS/x86/RegCache.h"
+#include "jit/MIPSCodeUtils.h"
+#include "jit/x86/Jit.h"
+#include "jit/x86/RegCache.h"
 #include <algorithm>
 
 using namespace MIPSAnalyst;
@@ -50,7 +50,7 @@ namespace MIPSComp
 	using namespace X64JitConstants;
 
 	static bool HasLowSubregister(OpArg arg) {
-#ifndef _M_X64
+#ifndef ARCH_64BIT
 		// Can't use ESI or EDI (which we use), no 8-bit versions.  Only these.
 		if (!arg.IsSimpleReg(EAX) && !arg.IsSimpleReg(EBX) && !arg.IsSimpleReg(ECX) && !arg.IsSimpleReg(EDX)) {
 			return false;
@@ -1128,4 +1128,4 @@ namespace MIPSComp
 	}
 } 
 
-#endif // PPSSPP_ARCH(X86) || PPSSPP_ARCH(AMD64)
+#endif // defined(ARCH_X86) || defined(ARCH_AMD64)

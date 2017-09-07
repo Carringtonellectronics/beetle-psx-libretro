@@ -20,10 +20,10 @@
 
 #include <algorithm>
 
-#include "Core/MIPS/MIPS.h"
-#include "Core/MIPS/MIPSCodeUtils.h"
-#include "Core/MIPS/ARM64/Arm64Jit.h"
-#include "Core/MIPS/ARM64/Arm64RegCache.h"
+#include "jit/MIPS.h"
+#include "jit/MIPSCodeUtils.h"
+#include "jit/ARM64/Arm64Jit.h"
+#include "jit/ARM64/Arm64RegCache.h"
 #include "Common/CPUDetect.h"
 
 using namespace MIPSAnalyst;

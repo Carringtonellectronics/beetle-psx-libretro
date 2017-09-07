@@ -20,9 +20,8 @@
 #include <vector>
 #include <string>
 
-#include "Common/Common.h"
-#include "Common/CommonTypes.h"
-#include "Core/MIPS/MIPS.h"
+#include "mednafen/mednafen-types.h"
+#include "jit/MIPS.h"
 
 // TODO: Find a better place for these.
 std::vector<std::string> DisassembleArm2(const u8 *data, int size);
@@ -73,6 +72,7 @@ namespace MIPSComp {
 		virtual void Comp_FPU3op(MIPSOpcode op) = 0;
 		virtual void Comp_FPU2op(MIPSOpcode op) = 0;
 		virtual void Comp_mxc1(MIPSOpcode op) = 0;
+		/*
 		virtual void Comp_SV(MIPSOpcode op) = 0;
 		virtual void Comp_SVQ(MIPSOpcode op) = 0;
 		virtual void Comp_VPFX(MIPSOpcode op) = 0;
@@ -110,6 +110,7 @@ namespace MIPSComp {
 		virtual void Comp_Vocp(MIPSOpcode op) = 0;
 		virtual void Comp_ColorConv(MIPSOpcode op) = 0;
 		virtual void Comp_Vbfy(MIPSOpcode op) = 0;
+		*/
 		virtual void Comp_DoNothing(MIPSOpcode op) = 0;
 
 		virtual int Replace_fabsf() = 0;
@@ -122,11 +123,11 @@ namespace MIPSComp {
 		virtual bool DescribeCodePtr(const u8 *ptr, std::string &name) = 0;
 		virtual const u8 *GetDispatcher() const = 0;
 		virtual JitBlockCache *GetBlockCache() = 0;
-		virtual void InvalidateCacheAt(u32 em_address, int length = 4) = 0;
+		virtual void InvalidateCacheAt(uint32 em_address, int length = 4) = 0;
 		virtual int StateAction(StateMem *sm, int load, int data_only) = 0;
 		virtual int DummyStateAction(StateMem *sm, int load, int data_only) = 0;
 		virtual void RunLoopUntil(u64 globalticks) = 0;
-		virtual void Compile(u32 em_address) = 0;
+		virtual void Compile(uint32 em_address) = 0;
 		virtual void ClearCache() = 0;
 		virtual MIPSOpcode GetOriginalOp(MIPSOpcode op) = 0;
 
@@ -138,7 +139,7 @@ namespace MIPSComp {
 		// Block linking. This may need to work differently for whole-function JITs and stuff
 		// like that.
 		virtual void LinkBlock(u8 *exitPoint, const u8 *entryPoint) = 0;
-		virtual void UnlinkBlock(u8 *checkedEntry, u32 originalAddress) = 0;
+		virtual void UnlinkBlock(u8 *checkedEntry, uint32 originalAddress) = 0;
 	};
 
 	typedef void (MIPSFrontendInterface::*MIPSCompileFunc)(MIPSOpcode opcode);

@@ -17,9 +17,9 @@
 
 #include <algorithm>
 
-#include "Core/MIPS/MIPS.h"
-#include "Core/MIPS/MIPSCodeUtils.h"
-#include "Core/MIPS/IR/IRFrontend.h"
+#include "jit/MIPS.h"
+#include "jit/MIPSCodeUtils.h"
+#include "jit/IR/IRFrontend.h"
 #include "Common/CPUDetect.h"
 
 #define _RS MIPS_GET_RS(op)

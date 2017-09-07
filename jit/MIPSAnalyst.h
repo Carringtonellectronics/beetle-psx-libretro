@@ -20,10 +20,13 @@
 #include <string>
 #include <vector>
 
-#include "Common/CommonTypes.h"
-#include "Core/MIPS/MIPS.h"
+#include "mednafen/mednafen-types.h"
+#include "jit/MIPS.h"
+#include "libretro.h"
 
 class DebugInterface;
+
+extern retro_log_printf_t log_cb;
 
 namespace MIPSAnalyst
 {
@@ -46,7 +49,7 @@ namespace MIPSAnalyst
 		int FirstRead() const { return firstReadAsAddr < firstRead ? firstReadAsAddr : firstRead; }
 		int LastRead() const { return lastReadAsAddr > lastRead ? lastReadAsAddr : lastRead; }
 
-		void MarkRead(u32 addr) {
+		void MarkRead(uint32 addr) {
 			if (firstRead == -1)
 				firstRead = addr;
 			lastRead = addr;
@@ -54,7 +57,7 @@ namespace MIPSAnalyst
 			used = true;
 		}
 
-		void MarkReadAsAddr(u32 addr) {
+		void MarkReadAsAddr(uint32 addr) {
 			if (firstReadAsAddr == -1)
 				firstReadAsAddr = addr;
 			lastReadAsAddr = addr;
@@ -62,7 +65,7 @@ namespace MIPSAnalyst
 			used = true;
 		}
 
-		void MarkWrite(u32 addr) {
+		void MarkWrite(uint32 addr) {
 			if (firstWrite == -1)
 				firstWrite = addr;
 			lastWrite = addr;
@@ -75,18 +78,18 @@ namespace MIPSAnalyst
 		RegisterAnalysisResults r[MIPS_NUM_GPRS];
 	};
 
-	AnalysisResults Analyze(u32 address);
+	AnalysisResults Analyze(uint32 address);
 
 	// This tells us if the reg is used within intrs of addr (also includes likely delay slots.)
-	bool IsRegisterUsed(MIPSGPReg reg, u32 addr, int instrs);
+	bool IsRegisterUsed(MIPSGPReg reg, uint32 addr, int instrs);
 	// This tells us if the reg is clobbered within intrs of addr (e.g. it is surely not used.)
-	bool IsRegisterClobbered(MIPSGPReg reg, u32 addr, int instrs);
+	bool IsRegisterClobbered(MIPSGPReg reg, uint32 addr, int instrs);
 
 	struct AnalyzedFunction {
-		u32 start;
-		u32 end;
+		uint32 start;
+		uint32 end;
 		u64 hash;
-		u32 size;
+		uint32 size;
 		bool isStraightLeaf;
 		bool hasHash;
 		bool usesVFPU;
@@ -98,15 +101,15 @@ namespace MIPSAnalyst
 
 	void Reset();
 
-	bool IsRegisterUsed(u32 reg, u32 addr);
+	bool IsRegisterUsed(uint32 reg, uint32 addr);
 	// This will not only create a database of "AnalyzedFunction" structs, it also
 	// will insert all the functions it finds into the symbol map, if insertSymbols is true.
 
 	// If we have loaded symbols from the elf, we'll register functions as they are touched
 	// so that we don't just dump them all in the cache.
-	void RegisterFunction(u32 startAddr, u32 size, const char *name);
-	void ScanForFunctions(u32 startAddr, u32 endAddr, bool insertSymbols);
-	void ForgetFunctions(u32 startAddr, u32 endAddr);
+	void RegisterFunction(uint32 startAddr, uint32 size, const char *name);
+	void ScanForFunctions(uint32 startAddr, uint32 endAddr, bool insertSymbols);
+	void ForgetFunctions(uint32 startAddr, uint32 endAddr);
 	void CompileLeafs();
 
 	void SetHashMapFilename(const std::string& filename = "");
@@ -114,7 +117,7 @@ namespace MIPSAnalyst
 	void LoadHashMap(const std::string& filename);
 	void StoreHashMap(std::string filename = "");
 
-	const char *LookupHash(u64 hash, u32 funcSize);
+	const char *LookupHash(u64 hash, uint32 funcSize);
 	void ReplaceFunctions();
 
 	void UpdateHashMap();
@@ -130,14 +133,14 @@ namespace MIPSAnalyst
 	bool IsDelaySlotNiceFPU(MIPSOpcode branchOp, MIPSOpcode op);
 	bool IsSyscall(MIPSOpcode op);
 
-	bool OpWouldChangeMemory(u32 pc, u32 addr, u32 size);
-	int OpMemoryAccessSize(u32 pc);
-	bool IsOpMemoryWrite(u32 pc);
-	bool OpHasDelaySlot(u32 pc);
+	bool OpWouldChangeMemory(uint32 pc, uint32 addr, uint32 size);
+	int OpMemoryAccessSize(uint32 pc);
+	bool IsOpMemoryWrite(uint32 pc);
+	bool OpHasDelaySlot(uint32 pc);
 
 	typedef struct {
 		DebugInterface* cpu;
-		u32 opcodeAddress;
+		uint32 opcodeAddress;
 		MIPSOpcode encodedOpcode;
 
 		// shared between branches and conditional moves
@@ -145,7 +148,7 @@ namespace MIPSAnalyst
 		bool conditionMet;
 
 		// branches
-		u32 branchTarget;
+		uint32 branchTarget;
 		bool isBranch;
 		bool isLinkedBranch;
 		bool isLikelyBranch;
@@ -155,12 +158,12 @@ namespace MIPSAnalyst
 		// data access
 		bool isDataAccess;
 		int dataSize;
-		u32 dataAddress;
+		uint32 dataAddress;
 
 		bool hasRelevantAddress;
-		u32 relevantAddress;
+		uint32 relevantAddress;
 	} MipsOpcodeInfo;
 
-	MipsOpcodeInfo GetOpcodeInfo(DebugInterface* cpu, u32 address);
+	MipsOpcodeInfo GetOpcodeInfo(DebugInterface* cpu, uint32 address);
 
 }	// namespace MIPSAnalyst

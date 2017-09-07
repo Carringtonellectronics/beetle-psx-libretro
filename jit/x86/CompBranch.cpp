@@ -16,25 +16,20 @@
 // https://github.com/hrydgard/ppsspp and http://www.ppsspp.org/.
 
 
-#if PPSSPP_ARCH(X86) || PPSSPP_ARCH(AMD64)
+#if defined(ARCH_X86) || defined(ARCH_AMD64)
 
-#include "profiler/profiler.h"
+#include "jit/profiler/profiler.h"
 
-#include "Core/Reporting.h"
-#include "Core/Config.h"
-#include "Core/HLE/HLE.h"
-#include "Core/HLE/HLETables.h"
-#include "Core/Host.h"
-#include "Core/MemMap.h"
+#include "jit/Memory/MemMap.h"
 
-#include "Core/MIPS/MIPS.h"
-#include "Core/MIPS/MIPSCodeUtils.h"
-#include "Core/MIPS/MIPSAnalyst.h"
-#include "Core/MIPS/MIPSTables.h"
+#include "jit/MIPS.h"
+#include "jit/MIPSCodeUtils.h"
+#include "jit/MIPSAnalyst.h"
+#include "jit/MIPSTables.h"
 
-#include "Core/MIPS/x86/Jit.h"
-#include "Core/MIPS/x86/RegCache.h"
-#include "Core/MIPS/JitCommon/JitBlockCache.h"
+#include "jit/x86/Jit.h"
+#include "jit/x86/RegCache.h"
+#include "jit/JitCommon/JitBlockCache.h"
 
 #define _RS MIPS_GET_RS(op)
 #define _RT MIPS_GET_RT(op)
@@ -107,7 +102,7 @@ static void JitBranchLogMismatch(MIPSOpcode op, u32 pc)
 	char temp[256];
 	MIPSDisAsm(op, pc, temp, true);
 	ERROR_LOG(JIT, "Bad jump: %s - int:%08x jit:%08x", temp, currentMIPS->intBranchExit, currentMIPS->jitBranchExit);
-	host->SetDebugMode(true);
+	/*host->SetDebugMode(true);*/
 }
 
 void Jit::BranchLog(MIPSOpcode op)
@@ -694,8 +689,8 @@ void Jit::Comp_JumpReg(MIPSOpcode op)
 		if (andLink)
 			gpr.SetImm(rd, GetCompilerPC() + 8);
 		CompileDelaySlot(DELAYSLOT_NICE);
-
-		if (!andLink && rs == MIPS_REG_RA && g_Config.bDiscardRegsOnJRRA) {
+		//TODO re-add this option maybe
+		if (!andLink && rs == MIPS_REG_RA /*&& g_Config.bDiscardRegsOnJRRA*/) {
 			// According to the MIPS ABI, there are some regs we don't need to preserve.
 			// Let's discard them so we don't need to write them back.
 			// NOTE: Not all games follow the MIPS ABI! Tekken 6, for example, will crash
@@ -755,7 +750,7 @@ void Jit::Comp_Syscall(MIPSOpcode op)
 		WARN_LOG(JIT, "Encountered bad syscall instruction at %08x (%08x)", js.compilerPC, op.encoding);
 	}
 
-	if (!g_Config.bSkipDeadbeefFilling)
+	if (/*!g_Config.bSkipDeadbeefFilling*/ true)
 	{
 		// All of these will be overwritten with DEADBEEF anyway.
 		gpr.DiscardR(MIPS_REG_COMPILER_SCRATCH);
@@ -781,7 +776,8 @@ void Jit::Comp_Syscall(MIPSOpcode op)
 	if (!js.inDelaySlot) {
 		MOV(32, MIPSSTATE_VAR(pc), Imm32(GetCompilerPC() + 4));
 	}
-
+	ERROR_LOG(JIT, "Got a syscall, OP: %x", op);
+/*
 #ifdef USE_PROFILER
 	// When profiling, we can't skip CallSyscall, since it times syscalls.
 	ABI_CallFunctionC(&CallSyscall, op.encoding);
@@ -796,6 +792,7 @@ void Jit::Comp_Syscall(MIPSOpcode op)
 
 	ApplyRoundingMode();
 	WriteSyscallExit();
+	*/
 	js.compiling = false;
 }
 
@@ -808,4 +805,4 @@ void Jit::Comp_Break(MIPSOpcode op)
 
 }	 // namespace Mipscomp
 
-#endif // PPSSPP_ARCH(X86) || PPSSPP_ARCH(AMD64)
+#endif // defined(ARCH_X86) || defined(ARCH_AMD64)

@@ -17,10 +17,10 @@
 
 #pragma once
 
-#include "Common/x64Emitter.h"
-#include "Core/MIPS/MIPS.h"
-#include "Core/MIPS/MIPSAnalyst.h"
-#include "Core/MIPS/MIPSVFPUUtils.h"
+#include "jit/Common/x64Emitter.h"
+#include "jit/MIPS.h"
+#include "jit/MIPSAnalyst.h"
+
 
 #undef MAP_NOINIT
 
@@ -48,9 +48,9 @@ enum {
 	NUM_MIPS_FPRS = 32 + 128 + NUM_X86_FPU_TEMPS,
 };
 
-#ifdef _M_X64
+#ifdef ARCH_64BIT
 #define NUM_X_FPREGS 16
-#elif _M_IX86
+#elif ARCH_32BIT
 #define NUM_X_FPREGS 8
 #endif
 
@@ -114,7 +114,7 @@ public:
 	int GetTempV() {
 		return GetTempR() - 32;
 	}
-	int GetTempVS(u8 *v, VectorSize vsz);
+	//int GetTempVS(u8 *v, VectorSize vsz);
 
 	void SetEmitter(Gen::XEmitter *emitter) {emit = emitter;}
 
@@ -174,6 +174,7 @@ public:
 	bool IsMappedVS(u8 v) {
 		return vregs[v].lane != 0 && VS(&v).IsSimpleReg();
 	}
+	/*
 	bool IsMappedVS(const u8 *v, VectorSize vsz);
 	bool CanMapVS(const u8 *v, VectorSize vsz);
 
@@ -201,6 +202,7 @@ public:
 
 	void SimpleRegsV(const u8 *v, VectorSize vsz, int flags);
 	void SimpleRegsV(const u8 *v, MatrixSize msz, int flags);
+	*/
 	void SimpleRegV(const u8 v, int flags);
 
 	void GetState(FPURegCacheState &state) const;
@@ -223,7 +225,7 @@ private:
 	void ReduceSpillLockV(int vreg) {
 		ReduceSpillLock(vreg + 32);
 	}
-	void ReduceSpillLockV(const u8 *vec, VectorSize sz);
+	//void ReduceSpillLockV(const u8 *vec, VectorSize sz);
 
 	Gen::X64Reg LoadRegsVS(const u8 *v, int n);
 

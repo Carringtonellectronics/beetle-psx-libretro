@@ -16,17 +16,16 @@
 // https://github.com/hrydgard/ppsspp and http://www.ppsspp.org/.
 
 
-#if PPSSPP_ARCH(X86) || PPSSPP_ARCH(AMD64)
+#if defined(ARCH_X86) || defined(ARCH_AMD64)
 
 #include <cstring>
 #include <emmintrin.h>
 
-#include "Common/Log.h"
-#include "Common/x64Emitter.h"
-#include "Core/MIPS/MIPSAnalyst.h"
-#include "Core/MIPS/x86/Jit.h"
-#include "Core/MIPS/x86/RegCache.h"
-#include "Core/MIPS/x86/RegCacheFPU.h"
+#include "jit/Common/x64Emitter.h"
+#include "jit/MIPSAnalyst.h"
+#include "jit/x86/Jit.h"
+#include "jit/x86/RegCache.h"
+#include "jit/x86/RegCacheFPU.h"
 
 using namespace Gen;
 using namespace X64JitConstants;
@@ -80,7 +79,7 @@ void FPURegCache::SpillLock(int p1, int p2, int p3, int p4) {
 	if (p3 != 0xFF) regs[p3].locked++;
 	if (p4 != 0xFF) regs[p4].locked++;
 }
-
+/*
 void FPURegCache::SpillLockV(const u8 *vec, VectorSize sz) {
 	for (int i = 0; i < GetNumVectorElements(sz); i++) {
 		vregs[vec[i]].locked++;
@@ -98,17 +97,17 @@ void FPURegCache::ReleaseSpillLockV(const u8 *vec, VectorSize sz) {
 		vregs[vec[i]].locked = 0;
 	}
 }
-
+*/
 void FPURegCache::ReduceSpillLock(int mipsreg) {
 	regs[mipsreg].locked--;
 }
-
+/*
 void FPURegCache::ReduceSpillLockV(const u8 *vec, VectorSize sz) {
 	for (int i = 0; i < GetNumVectorElements(sz); i++) {
 		vregs[vec[i]].locked--;
 	}
 }
-
+*/
 void FPURegCache::FlushRemap(int oldreg, int newreg) {
 	OpArg oldLocation = regs[oldreg].location;
 	if (!oldLocation.IsSimpleReg()) {
@@ -138,7 +137,7 @@ void FPURegCache::FlushRemap(int oldreg, int newreg) {
 	xregs[xr].mipsReg = newreg;
 	xregs[xr].dirty = true;
 }
-
+/*
 void FPURegCache::MapRegV(int vreg, int flags) {
 	MapReg(vreg + 32, (flags & MAP_NOINIT) != MAP_NOINIT, (flags & MAP_DIRTY) != 0);
 }
@@ -324,7 +323,7 @@ bool FPURegCache::TryMapRegsVS(const u8 *v, VectorSize vsz, int flags) {
 	Invariant();
 	return true;
 }
-
+*/
 X64Reg FPURegCache::LoadRegsVS(const u8 *v, int n) {
 	int regsAvail = 0;
 	int regsLoaded = 0;
@@ -499,7 +498,7 @@ X64Reg FPURegCache::LoadRegsVS(const u8 *v, int n) {
 
 	return res;
 }
-
+/*
 bool FPURegCache::TryMapDirtyInVS(const u8 *vd, VectorSize vdsz, const u8 *vs, VectorSize vssz, bool avoidLoad) {
 	// Don't waste time mapping if some will for sure fail.
 	if (!CanMapVS(vd, vdsz) || !CanMapVS(vs, vssz)) {
@@ -562,7 +561,7 @@ void FPURegCache::SimpleRegsV(const u8 *v, MatrixSize msz, int flags) {
 		}
 	}
 }
-
+*/
 void FPURegCache::SimpleRegV(const u8 v, int flags) {
 	MIPSCachedFPReg &vr = vregs[v];
 	// Special optimization: if it's in a single simd, we can keep it there.
@@ -816,7 +815,7 @@ int FPURegCache::GetTempR() {
 	_assert_msg_(JIT, 0, "Regcache ran out of temp regs, might need to DiscardR() some.");
 	return -1;
 }
-
+/*
 int FPURegCache::GetTempVS(u8 *v, VectorSize vsz) {
 	pendingFlush = true;
 	const int n = GetNumVectorElements(vsz);
@@ -862,7 +861,7 @@ int FPURegCache::GetTempVS(u8 *v, VectorSize vsz) {
 
 	return 0;  // ??
 }
-
+*/
 void FPURegCache::Flush() {
 	if (!pendingFlush) {
 		return;
@@ -1029,9 +1028,9 @@ int FPURegCache::SanityCheck() const {
 
 const int *FPURegCache::GetAllocationOrder(int &count) {
 	static const int allocationOrder[] = {
-#ifdef _M_X64
+#ifdef ARCH_64BIT
 		XMM6, XMM7, XMM8, XMM9, XMM10, XMM11, XMM12, XMM13, XMM14, XMM15, XMM2, XMM3, XMM4, XMM5
-#elif _M_IX86
+#elif ARCH_32BIT
 		XMM2, XMM3, XMM4, XMM5, XMM6, XMM7,
 #endif
 	};
@@ -1110,4 +1109,4 @@ void FPURegCache::RestoreState(const FPURegCacheState& state) {
 	pendingFlush = true;
 }
 
-#endif // PPSSPP_ARCH(X86) || PPSSPP_ARCH(AMD64)
+#endif // defined(ARCH_X86) || defined(ARCH_AMD64)

@@ -15,9 +15,8 @@
 // Official git repository and contact information can be found at
 // https://github.com/hrydgard/ppsspp and http://www.ppsspp.org/.
 
-#include "Common/CPUDetect.h"
-#include "Core/MIPS/JitCommon/JitState.h"
-#include "Common/MemoryUtil.h"
+#include "jit/JitCommon/JitState.h"
+#include "jit/Memory/MemoryUtil.h"
 
 namespace MIPSComp {
 	JitOptions::JitOptions() {
@@ -34,8 +33,6 @@ namespace MIPSComp {
 		// ARM only
 		downcountInRegister = true;
 		useNEONVFPU = false;  // true
-		if (!cpu_info.bNEON)
-			useNEONVFPU = false;
 
 		//ARM64
 		useASIMDVFPU = false;  // true
@@ -51,7 +48,7 @@ namespace MIPSComp {
 		continueMaxInstructions = 300;
 
 		useStaticAlloc = false;
-#if PPSSPP_ARCH(ARM64)
+#ifdef ARCH_ARM64
 		useStaticAlloc = true;
 #endif
 	}

@@ -19,11 +19,14 @@
 
 #include <cstddef>
 
-#include "util/random/rng.h"
 //TODO factor out CommonTypes.h
-#include "Common/CommonTypes.h"
-#include "Core/Opcode.h"
+#include "mednafen/mednafen-types.h"
+#include "jit/Common/Opcode.h"
+#include "mednafen/state.h"
+#include "mednafen/mednafen.h"
+#include "libretro.h"
 
+extern retro_log_printf_t log_cb;
 
 typedef Memory::Opcode MIPSOpcode;
 
@@ -146,7 +149,7 @@ extern uint8 fromvoffset[128];
 
 enum class CPUCore;
 
-#if defined(PPSSPP_ARCH_X86) || defined(PPSSPP_ARCH_AMD64)
+#if defined(ARCH_X86) || defined(ARCH_AMD64)
 
 // Note that CTXREG is offset to point at the first floating point register, intentionally. This is so that a byte offset
 // can reach both GPR and FPR regs.
@@ -169,7 +172,7 @@ enum {
 class MIPSState
 {
 public:
-	MIPSState(PS_CPU* cpu);
+	MIPSState();
 	~MIPSState();
 
 	void Init();
@@ -179,71 +182,71 @@ public:
 	int StateAction(StateMem *sm, int load, int data_only);
 
 	// MUST start with r and be followed by f, v, and t!
-	u32 r[32];
+	uint32 r[32];
 	union {
 		float f[32];
-		u32 fi[32];
+		uint32 fi[32];
 		int fs[32];
 	};
 	union {
 		float v[128];
-		u32 vi[128];
+		uint32 vi[128];
 	};
 
 	// Register-allocated JIT Temps don't get flushed so we don't reserve space for them.
 	// However, the IR interpreter needs some temps that can stick around between ops.
 	// Can be indexed through r[] using indices 192+.
-	u32 t[16];     //192
+	uint32 t[16];     //192
 
 	// If vfpuCtrl (prefixes) get mysterious values, check the VFPU regcache code.
-	u32 vfpuCtrl[16]; // 208
+	uint32 vfpuCtrl[16]; // 208
 
 	float vt[16];  //224  TODO: VFPU temp
 
 	// ARM64 wants lo/hi to be aligned to 64 bits from the base of this struct.
-	u32 padLoHi;    // 240
+	uint32 padLoHi;    // 240
 
 	union {
 		struct {
-			u32 pc;   //241
+			uint32 pc;   //241
 
-			u32 lo;   //242
-			u32 hi;   //243
+			uint32 lo;   //242
+			uint32 hi;   //243
 
-			u32 fcr31; //244 fpu control register
-			u32 fpcond;  //245 cache the cond flag of fcr31  (& 1 << 23)
+			uint32 fcr31; //244 fpu control register
+			uint32 fpcond;  //245 cache the cond flag of fcr31  (& 1 << 23)
 		};
-		u32 other[6];
+		uint32 other[6];
 	};
 
-	u32 nextPC;
+	uint32 nextPC;
 	int downcount;  // This really doesn't belong here, it belongs in timing.h. But you gotta do what you gotta do, this needs to be reachable in the ARM JIT.
 
 	bool inDelaySlot;
 	int llBit;  // ll/sc
-	u32 temp;  // can be used to save temporaries during calculations when we need more than R0 and R1
-	u32 mxcsrTemp;
+	uint32 temp;  // can be used to save temporaries during calculations when we need more than R0 and R1
+	uint32 mxcsrTemp;
 	// Temporary used around delay slots and similar.
 	u64 saved_flags;
 
-	GMRng rng;	// VFPU hardware random number generator. Probably not the right type.
+	//GMRng rng;	// VFPU hardware random number generator. Probably not the right type.
 
 	// Debug stuff
-	u32 debugCount;	// can be used to count basic blocks before crashes, etc.
+	uint32 debugCount;	// can be used to count basic blocks before crashes, etc.
 
 	// Temps needed for JitBranch.cpp experiments
-	u32 intBranchExit;
-	u32 jitBranchExit;
+	uint32 intBranchExit;
+	uint32 jitBranchExit;
 
-	u32 savedPC;
+	uint32 savedPC;
 
-	u32 MEMORY_ALIGNED16(vcmpResult[4]);
+	uint32 MEMORY_ALIGNED16(vcmpResult[4]);
 
 	float sincostemp[2];
 
-	static const u32 FCR0_VALUE = 0x00003351;
+	static const uint32 FCR0_VALUE = 0x00003351;
 
-#if defined(PPSSPP_ARCH_X86) || defined(PPSSPP_ARCH_AMD64)
+#if defined(ARCH_X86) || defined(ARCH_AMD64)
 	// FPU TEMP0, etc. are swapped in here if necessary (e.g. on x86.)
 	float tempValues[NUM_X86_FPU_TEMPS];
 #endif
@@ -260,11 +263,9 @@ public:
 	void SingleStep();
 	int RunLoopUntil(u64 globalTicks);
 	// To clear jit caches, etc.
-	void InvalidateICache(u32 address, int length = 4);
+	void InvalidateICache(uint32 address, int length = 4);
 
 	void ClearJitCache();
-
-	PS_CPU* currentCPU;
 };
 
 

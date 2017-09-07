@@ -20,7 +20,7 @@
 
 
 #ifdef _WIN32
-#include "CommonWindows.h"
+#include "Windows.h"
 #include <mmsystem.h>
 #include <sys/timeb.h>
 #else
@@ -33,7 +33,7 @@
 namespace Common
 {
 
-u32 Timer::GetTimeMs()
+uint32 Timer::GetTimeMs()
 {
 #if defined(_WIN32)
 #if defined(UWP)
@@ -137,11 +137,11 @@ std::string Timer::GetTimeElapsedFormatted() const
 	else
 		Milliseconds = m_LastTime - m_StartTime;
 	// Seconds
-	u32 Seconds = (u32)(Milliseconds / 1000);
+	uint32 Seconds = (u32)(Milliseconds / 1000);
 	// Minutes
-	u32 Minutes = Seconds / 60;
+	uint32 Minutes = Seconds / 60;
 	// Hours
-	u32 Hours = Minutes / 60;
+	uint32 Hours = Minutes / 60;
 
 	std::string TmpStr = StringFromFormat("%02d:%02d:%02d:%03d",
 		Hours, Minutes % 60, Seconds % 60, Milliseconds % 1000);
@@ -238,7 +238,7 @@ double Timer::GetDoubleTime()
 	TmpSeconds = TmpSeconds - (38 * 365 * 24 * 60 * 60);
 
 	// Make a smaller integer that fits in the double
-	u32 Seconds = (u32)TmpSeconds;
+	uint32 Seconds = (u32)TmpSeconds;
 #ifdef _WIN32
 	double ms = tp.millitm / 1000.0 / 1000.0;
 #else

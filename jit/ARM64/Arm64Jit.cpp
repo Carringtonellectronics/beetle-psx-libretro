@@ -29,16 +29,16 @@
 #include "jit/Debugger/SymbolMap.h"
 #include "Core/MemMap.h"
 
-#include "Core/MIPS/MIPS.h"
-#include "Core/MIPS/MIPSCodeUtils.h"
-#include "Core/MIPS/MIPSInt.h"
-#include "Core/MIPS/MIPSTables.h"
+#include "jit/MIPS.h"
+#include "jit/MIPSCodeUtils.h"
+#include "jit/MIPSInt.h"
+#include "jit/MIPSTables.h"
 #include "Core/HLE/ReplaceTables.h"
-#include "Core/MIPS/ARM64/Arm64RegCache.h"
-#include "Core/MIPS/ARM64/Arm64RegCacheFPU.h"
+#include "jit/ARM64/Arm64RegCache.h"
+#include "jit/ARM64/Arm64RegCacheFPU.h"
 
-#include "Core/MIPS/ARM64/Arm64Jit.h"
-#include "Core/MIPS/JitCommon/JitCommon.h"
+#include "jit/ARM64/Arm64Jit.h"
+#include "jit/JitCommon/JitCommon.h"
 
 using namespace Arm64JitConstants;
 

@@ -19,10 +19,10 @@
 
 #include "base/logging.h"
 #include "Common/CPUDetect.h"
-#include "Core/MIPS/MIPS.h"
-#include "Core/MIPS/ARM/ArmRegCacheFPU.h"
-#include "Core/MIPS/ARM/ArmJit.h"
-#include "Core/MIPS/MIPSTables.h"
+#include "jit/MIPS.h"
+#include "jit/ARM/ArmRegCacheFPU.h"
+#include "jit/ARM/ArmJit.h"
+#include "jit/MIPSTables.h"
 
 using namespace ArmGen;
 using namespace ArmJitConstants;

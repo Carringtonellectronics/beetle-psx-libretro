@@ -19,9 +19,9 @@
 #if PPSSPP_ARCH(ARM)
 
 #include "Core/MemMap.h"
-#include "Core/MIPS/ARM/ArmRegCache.h"
-#include "Core/MIPS/ARM/ArmJit.h"
-#include "Core/MIPS/MIPSAnalyst.h"
+#include "jit/ARM/ArmRegCache.h"
+#include "jit/ARM/ArmJit.h"
+#include "jit/MIPSAnalyst.h"
 #include "Core/Reporting.h"
 #include "Common/ArmEmitter.h"
 

@@ -3,9 +3,9 @@
 #include <utility>
 
 #include "Common/Log.h"
-#include "Core/MIPS/IR/IRInterpreter.h"
-#include "Core/MIPS/IR/IRPassSimplify.h"
-#include "Core/MIPS/IR/IRRegCache.h"
+#include "jit/IR/IRInterpreter.h"
+#include "jit/IR/IRPassSimplify.h"
+#include "jit/IR/IRRegCache.h"
 
 void WriteInstWithConstants(const IRWriter &in, IRWriter &out, const u32 *constants, IRInst inst) {
 	// Remap constants to the new reality

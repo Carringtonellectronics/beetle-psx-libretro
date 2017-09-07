@@ -15,9 +15,8 @@
 // Official SVN repository and contact information can be found at
 // http://code.google.com/p/dolphin-emu/
 
-#include "util/text/utf8.h"
-#include "Common.h"
-
+#include "jit/Common/utf8.h"
+#include "Misc.h"
 #include <string.h>
 
 #if defined(__APPLE__)
@@ -25,8 +24,9 @@
 #endif
 
 #ifdef _WIN32
-#include "CommonWindows.h"
+#include "Windows.h"
 #endif
+
 
 // Generic function to get last error message.
 // Call directly after the command or use the error num.
@@ -36,7 +36,7 @@ const char *GetLastErrorMsg()
 #ifdef _WIN32
 	return GetStringErrorMsg(GetLastError());
 #else
-	return GetStringErrorMsg(errno);
+	return GetStringErrorMsg(0);
 #endif
 }
 

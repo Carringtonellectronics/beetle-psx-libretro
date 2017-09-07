@@ -21,12 +21,11 @@
 #include "jit/Debugger/Breakpoints.h"
 #include "jit/Debugger/SymbolMap.h"
 #include "jit/Debugger/DebugInterface.h"
-#include "Core/MIPS/MIPSDebugInterface.h"
+#include "jit/MIPSDebugInterface.h"
 
-#include "Core/MemMap.h"
-#include "Core/MIPS/MIPSTables.h"
-#include "Core/MIPS/MIPS.h"
-#include "Core/System.h"
+#include "jit/MEmory/MemMap.h"
+#include "jit/MIPSTables.h"
+#include "jit/MIPS.h"
 
 enum ReferenceIndexType {
 	REF_INDEX_PC       = 32,
@@ -194,7 +193,9 @@ unsigned int MIPSDebugInterface::readMemory(unsigned int address)
 
 bool MIPSDebugInterface::isAlive()
 {
-	return PSP_IsInited() && coreState != CORE_ERROR && coreState != CORE_POWERDOWN;
+	//TODO fix this function
+	return true;
+	/*return PSP_IsInited() && coreState != CORE_ERROR && coreState != CORE_POWERDOWN;*/
 }
 
 bool MIPSDebugInterface::isBreakpoint(unsigned int address) 

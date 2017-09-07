@@ -1,6 +1,6 @@
 #include <cstring>
-#include "Core/MIPS/IR/IRRegCache.h"
-#include "Core/MIPS/IR/IRInst.h"
+#include "jit/IR/IRRegCache.h"
+#include "jit/IR/IRInst.h"
 
 void IRRegCache::Flush(int rd) {
 	if (rd == 0) {

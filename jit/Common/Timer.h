@@ -46,7 +46,7 @@ public:
 	std::string GetTimeElapsedFormatted() const;
 	u64 GetTimeElapsed() const;
 
-	static u32 GetTimeMs();
+	static uint32 GetTimeMs();
 
 private:
 	u64 m_LastTime;

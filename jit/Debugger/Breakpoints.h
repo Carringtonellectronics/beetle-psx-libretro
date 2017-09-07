@@ -34,7 +34,7 @@ static inline BreakAction &operator |= (BreakAction &lhs, const BreakAction &rhs
 }
 
 static inline BreakAction operator | (const BreakAction &lhs, const BreakAction &rhs) {
-	return BreakAction((u32)lhs | (u32)rhs);
+	return BreakAction((uint32)lhs | (uint32)rhs);
 }
 
 struct BreakPointCond
@@ -47,9 +47,9 @@ struct BreakPointCond
 	{
 	}
 
-	u32 Evaluate()
+	uint32 Evaluate()
 	{
-		u32 result;
+		uint32 result;
 		if (debug->parseExpression(expression,result) == false) return 0;
 		return result;
 	}
@@ -59,7 +59,7 @@ struct BreakPoint
 {
 	BreakPoint() : hasCond(false) {}
 
-	u32	addr;
+	uint32	addr;
 	bool temporary;
 
 	BreakAction result;
@@ -92,24 +92,24 @@ enum MemCheckCondition
 struct MemCheck
 {
 	MemCheck();
-	u32 start;
-	u32 end;
+	uint32 start;
+	uint32 end;
 
 	MemCheckCondition cond;
 	BreakAction result;
 	std::string logFormat;
 
-	u32 numHits;
+	uint32 numHits;
 
-	u32 lastPC;
-	u32 lastAddr;
+	uint32 lastPC;
+	uint32 lastAddr;
 	int lastSize;
 
-	BreakAction Action(u32 addr, bool write, int size, u32 pc);
-	void JitBefore(u32 addr, bool write, int size, u32 pc);
+	BreakAction Action(uint32 addr, bool write, int size, uint32 pc);
+	void JitBefore(uint32 addr, bool write, int size, uint32 pc);
 	void JitCleanup();
 
-	void Log(u32 addr, bool write, int size, u32 pc);
+	void Log(uint32 addr, bool write, int size, uint32 pc);
 
 	bool IsEnabled() const {
 		return (result & BREAK_ACTION_PAUSE) != 0;
@@ -129,43 +129,43 @@ public:
 	static const size_t INVALID_BREAKPOINT = -1;
 	static const size_t INVALID_MEMCHECK = -1;
 
-	static bool IsAddressBreakPoint(u32 addr);
-	static bool IsAddressBreakPoint(u32 addr, bool* enabled);
-	static bool IsTempBreakPoint(u32 addr);
-	static bool RangeContainsBreakPoint(u32 addr, u32 size);
-	static void AddBreakPoint(u32 addr, bool temp = false);
-	static void RemoveBreakPoint(u32 addr);
-	static void ChangeBreakPoint(u32 addr, bool enable);
-	static void ChangeBreakPoint(u32 addr, BreakAction result);
+	static bool IsAddressBreakPoint(uint32 addr);
+	static bool IsAddressBreakPoint(uint32 addr, bool* enabled);
+	static bool IsTempBreakPoint(uint32 addr);
+	static bool RangeContainsBreakPoint(uint32 addr, uint32 size);
+	static void AddBreakPoint(uint32 addr, bool temp = false);
+	static void RemoveBreakPoint(uint32 addr);
+	static void ChangeBreakPoint(uint32 addr, bool enable);
+	static void ChangeBreakPoint(uint32 addr, BreakAction result);
 	static void ClearAllBreakPoints();
 	static void ClearTemporaryBreakPoints();
 
 	// Makes a copy.  Temporary breakpoints can't have conditions.
-	static void ChangeBreakPointAddCond(u32 addr, const BreakPointCond &cond);
-	static void ChangeBreakPointRemoveCond(u32 addr);
-	static BreakPointCond *GetBreakPointCondition(u32 addr);
+	static void ChangeBreakPointAddCond(uint32 addr, const BreakPointCond &cond);
+	static void ChangeBreakPointRemoveCond(uint32 addr);
+	static BreakPointCond *GetBreakPointCondition(uint32 addr);
 
-	static void ChangeBreakPointLogFormat(u32 addr, const std::string &fmt);
+	static void ChangeBreakPointLogFormat(uint32 addr, const std::string &fmt);
 
-	static BreakAction ExecBreakPoint(u32 addr);
+	static BreakAction ExecBreakPoint(uint32 addr);
 
-	static void AddMemCheck(u32 start, u32 end, MemCheckCondition cond, BreakAction result);
-	static void RemoveMemCheck(u32 start, u32 end);
-	static void ChangeMemCheck(u32 start, u32 end, MemCheckCondition cond, BreakAction result);
+	static void AddMemCheck(uint32 start, uint32 end, MemCheckCondition cond, BreakAction result);
+	static void RemoveMemCheck(uint32 start, uint32 end);
+	static void ChangeMemCheck(uint32 start, uint32 end, MemCheckCondition cond, BreakAction result);
 	static void ClearAllMemChecks();
 
-	static void ChangeMemCheckLogFormat(u32 start, u32 end, const std::string &fmt);
+	static void ChangeMemCheckLogFormat(uint32 start, uint32 end, const std::string &fmt);
 
-	static MemCheck *GetMemCheck(u32 address, int size);
-	static BreakAction ExecMemCheck(u32 address, bool write, int size, u32 pc);
-	static BreakAction ExecOpMemCheck(u32 address, u32 pc);
+	static MemCheck *GetMemCheck(uint32 address, int size);
+	static BreakAction ExecMemCheck(uint32 address, bool write, int size, uint32 pc);
+	static BreakAction ExecOpMemCheck(uint32 address, uint32 pc);
 
 	// Executes memchecks but used by the jit.  Cleanup finalizes after jit is done.
-	static void ExecMemCheckJitBefore(u32 address, bool write, int size, u32 pc);
+	static void ExecMemCheckJitBefore(uint32 address, bool write, int size, uint32 pc);
 	static void ExecMemCheckJitCleanup();
 
-	static void SetSkipFirst(u32 pc);
-	static u32 CheckSkipFirst();
+	static void SetSkipFirst(uint32 pc);
+	static uint32 CheckSkipFirst();
 
 	// Includes uncached addresses.
 	static const std::vector<MemCheck> GetMemCheckRanges();
@@ -175,19 +175,19 @@ public:
 
 	static bool HasMemChecks();
 
-	static void Update(u32 addr = 0);
+	static void Update(uint32 addr = 0);
 
 	static bool ValidateLogFormat(DebugInterface *cpu, const std::string &fmt);
 	static bool EvaluateLogFormat(DebugInterface *cpu, const std::string &fmt, std::string &result);
 
 private:
-	static size_t FindBreakpoint(u32 addr, bool matchTemp = false, bool temp = false);
+	static size_t FindBreakpoint(uint32 addr, bool matchTemp = false, bool temp = false);
 	// Finds exactly, not using a range check.
-	static size_t FindMemCheck(u32 start, u32 end);
+	static size_t FindMemCheck(uint32 start, uint32 end);
 
 	static std::vector<BreakPoint> breakPoints_;
-	static u32 breakSkipFirstAt_;
-	static u64 breakSkipFirstTicks_;
+	static uint32 breakSkipFirstAt_;
+	static uint64 breakSkipFirstTicks_;
 
 	static std::vector<MemCheck> memChecks_;
 	static std::vector<MemCheck *> cleanupMemChecks_;

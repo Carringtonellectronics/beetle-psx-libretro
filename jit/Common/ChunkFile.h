@@ -334,7 +334,7 @@ public:
 	template<class T>
 	void DoVector(std::vector<T> &x, T &default_val)
 	{
-		u32 vec_size = (u32)x.size();
+		uint32 vec_size = (u32)x.size();
 		Do(vec_size);
 		x.resize(vec_size, default_val);
 		if (vec_size > 0)
@@ -359,10 +359,10 @@ public:
 	template<class T>
 	void DoDeque(std::deque<T> &x, T &default_val)
 	{
-		u32 deq_size = (u32)x.size();
+		uint32 deq_size = (u32)x.size();
 		Do(deq_size);
 		x.resize(deq_size, default_val);
-		u32 i;
+		uint32 i;
 		for(i = 0; i < deq_size; i++)
 			Do(x[i]);
 	}
@@ -391,7 +391,7 @@ public:
 	template<class T>
 	void DoList(std::list<T> &x, T &default_val)
 	{
-		u32 list_size = (u32)x.size();
+		uint32 list_size = (u32)x.size();
 		Do(list_size);
 		x.resize(list_size, default_val);
 
@@ -568,7 +568,7 @@ public:
 		}
 	}
 
-	void DoMarker(const char *prevName, u32 arbitraryNumber = 0x42);
+	void DoMarker(const char *prevName, uint32 arbitraryNumber = 0x42);
 };
 
 class CChunkFileReader
@@ -695,8 +695,8 @@ private:
 	{
 		int Revision;
 		int Compress;
-		u32 ExpectedSize;
-		u32 UncompressedSize;
+		uint32 ExpectedSize;
+		uint32 UncompressedSize;
 		char GitVersion[32];
 	};
 

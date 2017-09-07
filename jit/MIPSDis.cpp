@@ -16,12 +16,11 @@
 // https://github.com/hrydgard/ppsspp and http://www.ppsspp.org/.
 
 #include <cstring>
-#include "Core/HLE/HLE.h"
-#include "Core/MemMap.h"
-#include "Core/MIPS/MIPS.h"
-#include "Core/MIPS/MIPSDis.h"
-#include "Core/MIPS/MIPSTables.h"
-#include "Core/MIPS/MIPSDebugInterface.h"
+#include "jit/Memory/MemMap.h"
+#include "jit/MIPS.h"
+#include "jit/MIPSDis.h"
+#include "jit/MIPSTables.h"
+#include "jit/MIPSDebugInterface.h"
 
 #define _RS   ((op>>21) & 0x1F)
 #define _RT   ((op>>16) & 0x1F)
@@ -36,7 +35,7 @@
 #define FN(i) currentDebugMIPS->GetRegName(1,i)
 //#define VN(i) currentMIPS->GetRegName(2,i)
 
-u32 disPC;
+uint32 disPC;
 
 namespace MIPSDis
 {
@@ -112,7 +111,7 @@ namespace MIPSDis
 
 	void Dis_FPUBranch(MIPSOpcode op, char *out)
 	{
-		u32 off = disPC;
+		uint32 off = disPC;
 		int imm = (signed short)(op&0xFFFF)<<2;
 		off += imm + 4;
 		const char *name = MIPSGetName(op);
@@ -121,7 +120,7 @@ namespace MIPSDis
 
 	void Dis_RelBranch(MIPSOpcode op, char *out)
 	{
-		u32 off = disPC;
+		uint32 off = disPC;
 		int imm = (signed short)(op&0xFFFF)<<2;
 		int rs = _RS;
 		off += imm + 4;
@@ -132,10 +131,10 @@ namespace MIPSDis
 
 	void Dis_Syscall(MIPSOpcode op, char *out)
 	{
-		u32 callno = (op>>6) & 0xFFFFF; //20 bits
+		uint32 callno = (op>>6) & 0xFFFFF; //20 bits
 		int funcnum = callno & 0xFFF;
 		int modulenum = (callno & 0xFF000) >> 12;
-		sprintf(out, "syscall\t	%s",/*PSPHLE::GetModuleName(modulenum),*/GetFuncName(modulenum, funcnum));
+		sprintf(out, "syscall\t	%s",/*PSPHLE::GetModuleName(modulenum),GetFuncName(modulenum, funcnum)*/ "DISASEMBLY NOT IMPLEMENTED");
 	}
 
 	void Dis_ToHiloTransfer(MIPSOpcode op, char *out)
@@ -153,7 +152,7 @@ namespace MIPSDis
 
 	void Dis_RelBranch2(MIPSOpcode op, char *out)
 	{
-		u32 off = disPC;
+		uint32 off = disPC;
 		int imm = (signed short)(op&0xFFFF)<<2;
 		int rt = _RT;
 		int rs = _RS;
@@ -172,8 +171,8 @@ namespace MIPSDis
 	void Dis_IType(MIPSOpcode op, char *out)
 	{
 		s32 simm = (s32)(s16)(op & 0xFFFF);
-		u32 uimm = (u32)(u16)(op & 0xFFFF);
-		u32 suimm = (u32)simm;
+		uint32 uimm = (u32)(u16)(op & 0xFFFF);
+		uint32 suimm = (u32)simm;
 
 		int rt = _RT;
 		int rs = _RS;
@@ -195,7 +194,7 @@ namespace MIPSDis
 	}
 	void Dis_ori(MIPSOpcode op, char *out)
 	{
-		u32 uimm = (u32)(u16)(op & 0xFFFF);
+		uint32 uimm = (u32)(u16)(op & 0xFFFF);
 		int rt = _RT;
 		int rs = _RS;
 		const char *name = MIPSGetName(op);
@@ -207,7 +206,7 @@ namespace MIPSDis
 
 	void Dis_IType1(MIPSOpcode op, char *out)
 	{
-		u32 uimm = (u32)(u16)(op & 0xFFFF);
+		uint32 uimm = (u32)(u16)(op & 0xFFFF);
 		int rt = _RT;
 		const char *name = MIPSGetName(op);
 		sprintf(out, "%s\t%s, 0x%X",name,RN(rt),uimm);
@@ -328,8 +327,8 @@ namespace MIPSDis
 
 	void Dis_JumpType(MIPSOpcode op, char *out)
 	{
-		u32 off = ((op & 0x03FFFFFF) << 2);
-		u32 addr = (disPC & 0xF0000000) | off;
+		uint32 off = ((op & 0x03FFFFFF) << 2);
+		uint32 addr = (disPC & 0xF0000000) | off;
 		const char *name = MIPSGetName(op);
 		sprintf(out, "%s\t->$%08x",name,addr);
 	}

@@ -16,9 +16,7 @@
 // http://code.google.com/p/dolphin-emu/
 
 #pragma once
-
-#include "base/compat.h"
-#include "CommonTypes.h"
+#include "mednafen/mednafen-types.h"
 
 template <bool> struct CompileTimeAssert;
 template<> struct CompileTimeAssert<true> {};
@@ -28,7 +26,7 @@ template<> struct CompileTimeAssert<true> {};
 #include <unistd.h>
 #include <errno.h>
 
-#if defined(_M_IX86) || defined(_M_X86)
+#if defined(ARCH_32BIT) || defined(_M_X86)
 #define Crash() {asm ("int $3");}
 #else
 #include <signal.h>
@@ -37,24 +35,24 @@ template<> struct CompileTimeAssert<true> {};
 
 #define ARRAYSIZE(A) (sizeof(A)/sizeof((A)[0]))
 
-inline u32 __rotl(u32 x, int shift) {
+inline uint32 __rotl(uint32 x, int shift) {
 	shift &= 31;
 	if (!shift) return x;
 	return (x << shift) | (x >> (32 - shift));
 }
 
-inline u64 __rotl64(u64 x, unsigned int shift){
+inline u64 __rotl64(uint64 x, unsigned int shift){
 	unsigned int n = shift % 64;
 	return (x << n) | (x >> (64 - n));
 }
 
-inline u32 __rotr(u32 x, int shift) {
+inline uint32 __rotr(uint32 x, int shift) {
     shift &= 31;
     if (!shift) return x;
     return (x >> shift) | (x << (32 - shift));
 }
 
-inline u64 __rotr64(u64 x, unsigned int shift){
+inline u64 __rotr64(uint64 x, unsigned int shift){
 	unsigned int n = shift % 64;
 	return (x >> n) | (x << (64 - n));
 }
@@ -74,7 +72,7 @@ inline u64 __rotr64(u64 x, unsigned int shift){
 	#define fseeko _fseeki64
 	#define ftello _ftelli64
 	#define atoll _atoi64
-	#if _M_IX86
+	#if ARCH_32BIT
 		#define Crash() {__asm int 3}
 	#else
 		#define Crash() {__debugbreak();}

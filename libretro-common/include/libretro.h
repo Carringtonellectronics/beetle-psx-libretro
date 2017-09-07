@@ -46,7 +46,7 @@ extern "C" {
 #ifndef RETRO_CALLCONV
 #  if defined(__GNUC__) && defined(__i386__) && !defined(__x86_64__)
 #    define RETRO_CALLCONV __attribute__((cdecl))
-#  elif defined(_MSC_VER) && defined(_M_X86) && !defined(_M_X64)
+#  elif defined(_MSC_VER) && defined(_M_X86) && !defined(ARCH_64BIT)
 #    define RETRO_CALLCONV __cdecl
 #  else
 #    define RETRO_CALLCONV /* all other platforms only have one calling convention each */

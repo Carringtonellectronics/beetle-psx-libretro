@@ -3,8 +3,8 @@
 #include <vector>
 #include <utility>
 
-#include "Common/CommonTypes.h"
-#include "Core/MIPS/MIPS.h"
+#include "mednafen/mednafen-types.h"
+#include "jit/MIPS.h"
 
 // Basic IR
 //

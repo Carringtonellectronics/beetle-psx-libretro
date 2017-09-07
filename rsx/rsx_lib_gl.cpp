@@ -341,7 +341,8 @@ static void get_error(const char *msg)
    switch (error)
    {
       case GL_NO_ERROR:
-         log_cb(RETRO_LOG_INFO, "GL error flag: GL_NO_ERROR [%s]\n", msg);
+         //Let's NOT log if there isn't an error, OK?
+         //log_cb(RETRO_LOG_INFO, "GL error flag: GL_NO_ERROR [%s]\n", msg);
          return;
       case GL_INVALID_ENUM:
          log_cb(RETRO_LOG_ERROR, "GL error flag: GL_INVALID_ENUM [%s]\n", msg);

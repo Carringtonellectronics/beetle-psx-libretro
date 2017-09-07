@@ -17,12 +17,12 @@
 
 #include "Core/Config.h"
 #include "Core/MemMap.h"
-#include "Core/MIPS/MIPS.h"
-#include "Core/MIPS/MIPSCodeUtils.h"
-#include "Core/MIPS/MIPSTables.h"
+#include "jit/MIPS.h"
+#include "jit/MIPSCodeUtils.h"
+#include "jit/MIPSTables.h"
 
-#include "Core/MIPS/IR/IRFrontend.h"
-#include "Core/MIPS/IR/IRRegCache.h"
+#include "jit/IR/IRFrontend.h"
+#include "jit/IR/IRRegCache.h"
 #include "Common/CPUDetect.h"
 
 #define _RS MIPS_GET_RS(op)

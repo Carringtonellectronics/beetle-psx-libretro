@@ -35,17 +35,17 @@
 
 #include "Common/CPUDetect.h"
 #include "Core/MemMap.h"
-#include "Core/MIPS/MIPS.h"
-#include "Core/MIPS/MIPSAnalyst.h"
-#include "Core/MIPS/MIPSCodeUtils.h"
-#include "Core/MIPS/MIPSVFPUUtils.h"
+#include "jit/MIPS.h"
+#include "jit/MIPSAnalyst.h"
+#include "jit/MIPSCodeUtils.h"
+
 #include "Core/Config.h"
 #include "Core/Reporting.h"
 
-#include "Core/MIPS/ARM/ArmJit.h"
-#include "Core/MIPS/ARM/ArmRegCache.h"
-#include "Core/MIPS/ARM/ArmRegCacheFPU.h"
-#include "Core/MIPS/ARM/ArmCompVFPUNEONUtil.h"
+#include "jit/ARM/ArmJit.h"
+#include "jit/ARM/ArmRegCache.h"
+#include "jit/ARM/ArmRegCacheFPU.h"
+#include "jit/ARM/ArmCompVFPUNEONUtil.h"
 
 // TODO: Somehow #ifdef away on ARMv5eabi, without breaking the linker.
 

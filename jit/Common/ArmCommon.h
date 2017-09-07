@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "CommonTypes.h"
+#include "mednafen/mednafen-types.h"
 
 enum CCFlags
 {
@@ -26,7 +26,7 @@ enum CCFlags
 	CC_HS = CC_CS, // Alias of CC_CS  Unsigned higher or same
 	CC_LO = CC_CC, // Alias of CC_CC  Unsigned lower
 };
-const u32 NO_COND = 0xE0000000;
+const uint32 NO_COND = 0xE0000000;
 
 inline CCFlags InvertCond(CCFlags fl) {
 	int x = (int)fl;

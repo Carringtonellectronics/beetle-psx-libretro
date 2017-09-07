@@ -22,17 +22,17 @@
 #include "math/math_util.h"
 
 #include "Core/MemMap.h"
-#include "Core/MIPS/MIPS.h"
-#include "Core/MIPS/MIPSTables.h"
-#include "Core/MIPS/MIPSAnalyst.h"
-#include "Core/MIPS/MIPSCodeUtils.h"
+#include "jit/MIPS.h"
+#include "jit/MIPSTables.h"
+#include "jit/MIPSAnalyst.h"
+#include "jit/MIPSCodeUtils.h"
 #include "Common/CPUDetect.h"
 #include "Core/Config.h"
 #include "Core/Reporting.h"
 
 #include "Common/Arm64Emitter.h"
-#include "Core/MIPS/ARM64/Arm64Jit.h"
-#include "Core/MIPS/ARM64/Arm64RegCache.h"
+#include "jit/ARM64/Arm64Jit.h"
+#include "jit/ARM64/Arm64RegCache.h"
 
 // All functions should have CONDITIONAL_DISABLE, so we can narrow things down to a file quickly.
 // Currently known non working ones should have DISABLE.

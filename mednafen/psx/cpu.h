@@ -113,13 +113,7 @@ class PS_CPU
             };
          };
       } CP0;
-#ifdef JIT
-      Opcode ReadInstructionJIT(uint32_t address);
-#endif
     private:
-#ifdef JIT
-      MIPSState mips;
-#endif
 
       uint32_t BACKED_new_PC_mask;
 

@@ -20,7 +20,7 @@
 #include <string>
 #include <cstring>
 #include <cstdio>
-#include "Core/MIPS/MIPS.h"
+#include "jit/MIPS.h"
 #include "jit/Debugger/DebugInterface.h"
 
 class MIPSDebugInterface : public DebugInterface
@@ -49,10 +49,10 @@ public:
 	//overridden functions
 	const char *GetName() override;
 	int GetGPRSize() override { return GPR_SIZE_32; }
-	u32 GetGPR32Value(int reg) override { return cpu->r[reg]; }
-	u32 GetPC() override { return cpu->pc; }
-	u32 GetLR() override { return cpu->r[MIPS_REG_RA]; }
-	void SetPC(u32 _pc) override { cpu->pc = _pc; }
+	uint32 GetGPR32Value(int reg) override { return cpu->r[reg]; }
+	uint32 GetPC() override { return cpu->pc; }
+	uint32 GetLR() override { return cpu->r[MIPS_REG_RA]; }
+	void SetPC(uint32 _pc) override { cpu->pc = _pc; }
 
 	const char *GetCategoryName(int cat) override
 	{
@@ -77,29 +77,29 @@ public:
 		}
 	}
 
-	u32 GetHi() override
+	uint32 GetHi() override
 	{
 		return cpu->hi;
 	}
 
-	u32 GetLo() override
+	uint32 GetLo() override
 	{
 		return cpu->lo;
 	}
 	
-	void SetHi(u32 val) override
+	void SetHi(uint32 val) override
 	{
 		cpu->hi = val;
 	}
 
-	void SetLo(u32 val) override
+	void SetLo(uint32 val) override
 	{
 		cpu->lo = val;
 	}
 
-	u32 GetRegValue(int cat, int index) override
+	uint32 GetRegValue(int cat, int index) override
 	{
-		u32 temp;
+		uint32 temp;
 		switch (cat)
 		{
 		case 0:
@@ -118,7 +118,7 @@ public:
 		}
 	}
 
-	void SetRegValue(int cat, int index, u32 value) override
+	void SetRegValue(int cat, int index, uint32 value) override
 	{
 		switch (cat)
 		{

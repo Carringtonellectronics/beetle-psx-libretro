@@ -22,16 +22,16 @@
 #include "math/math_util.h"
 
 #include "Core/MemMap.h"
-#include "Core/MIPS/MIPS.h"
-#include "Core/MIPS/MIPSTables.h"
-#include "Core/MIPS/MIPSAnalyst.h"
-#include "Core/MIPS/MIPSCodeUtils.h"
+#include "jit/MIPS.h"
+#include "jit/MIPSTables.h"
+#include "jit/MIPSAnalyst.h"
+#include "jit/MIPSCodeUtils.h"
 #include "Common/CPUDetect.h"
 #include "Core/Config.h"
 #include "Core/Reporting.h"
 
-#include "Core/MIPS/ARM/ArmJit.h"
-#include "Core/MIPS/ARM/ArmRegCache.h"
+#include "jit/ARM/ArmJit.h"
+#include "jit/ARM/ArmRegCache.h"
 
 // Cool NEON references:
 // http://www.delmarnorth.com/microwave/requirements/neon-test-tutorial.pdf

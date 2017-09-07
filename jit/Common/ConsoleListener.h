@@ -60,8 +60,8 @@ private:
 	static CRITICAL_SECTION criticalSection;
 
 	static char *logPending;
-	static volatile u32 logPendingReadPos;
-	static volatile u32 logPendingWritePos;
+	static volatile uint32 logPendingReadPos;
+	static volatile uint32 logPendingWritePos;
 
 	int openWidth_;
 	int openHeight_;

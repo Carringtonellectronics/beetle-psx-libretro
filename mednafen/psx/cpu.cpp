@@ -18,6 +18,7 @@
 #include "psx.h"
 #include "cpu.h"
 #include "jit/Memory/MemMap.h"
+#include "jit/JitCommon/JitCommon.h"
 
 // iCB: PGXP STUFF
 #include "../pgxp/pgxp_cpu.h"
@@ -35,10 +36,7 @@ extern bool psx_cpu_overclock;
 #define BIU_INVALIDATE_MODE	0x00000002	// Enable Invalidate mode(IsC must be set to 1 as well presumably?)
 #define BIU_LOCK_MODE		   0x00000001	// Enable Lock mode(IsC must be set to 1 as well presumably?)
 
-PS_CPU::PS_CPU()  
-#ifdef JIT
-: mips(this)
-#endif
+PS_CPU::PS_CPU()
 {
    uint64_t a;
    unsigned i;
@@ -67,11 +65,10 @@ PS_CPU::PS_CPU()
 
       MULT_Tab24[i] = v;
    }
-#ifdef JIT
-   currentMIPS = &mips;
-#endif
     ScratchRAM = new MultiAccessSizeMem();
     ScratchRAM->data8 = Memory::m_pScratchPad;
+
+    currentMIPS->Init();
 }
 
 PS_CPU::~PS_CPU()
@@ -155,7 +152,8 @@ void PS_CPU::Power(void)
    GTE_Power();
 
 #ifdef JIT
-   mips.Reset();
+   currentMIPS->Reset();
+   currentMIPS->pc = 0xBFC00000;
 #endif
 }
 //TODO JIT savestate
@@ -463,14 +461,6 @@ INLINE uint32 PS_CPU::ReadInstruction(pscpu_timestamp_t &timestamp, uint32 addre
 	return instr;
 }
 
-#ifdef JIT
-//TODO replacements
-PS_CPU::ReadInstructionJIT(uint32_t address, bool resolve_replacements){
-    pscpu_timestamp_t cycles = 0;
-    return Opcode(ReadInstruction(&cycles, address));    
-}
-
-#endif
 uint32_t PS_CPU::Exception(uint32_t code, uint32_t PC, const uint32 NP, const uint32_t NPM, const uint32_t instr)
 {
    const bool AfterBranchInstr = !(NPM & 0x1);
@@ -1973,8 +1963,9 @@ int32_t PS_CPU::RunReal(int32_t timestamp_in)
     // SYSCALL
     //
     BEGIN_OPF(SYSCALL);
-	DO_LDS();
-
+    DO_LDS();
+    
+    log_cb(RETRO_LOG_DEBUG, "Syscall| instr: %u, v0: %u, t1: %u", instr, GPR[2], GPR[9]);
 	new_PC = Exception(EXCEPTION_SYSCALL, PC, new_PC, new_PC_mask, instr);
         new_PC_mask = 0;
     END_OPF;
@@ -2461,7 +2452,7 @@ SkipNPCStuff:	;
 int32_t PS_CPU::Run(int32_t timestamp_in)
 {
 #ifdef JIT
-    
+    MIPSComp::jit->RunLoopUntil(timestamp_in);
 #elif defined(HAVE_DEBUG)
    if(CPUHook || ADDBT)
       return(RunReal<true>(timestamp_in));

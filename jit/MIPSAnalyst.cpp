@@ -21,20 +21,18 @@
 #include <unordered_set>
 #include <mutex>
 
-#include "ext/cityhash/city.h"
-#include "Common/FileUtil.h"
-#include "Core/Config.h"
-#include "Core/MemMap.h"
-#include "Core/System.h"
-#include "Core/MIPS/MIPS.h"
-#include "Core/MIPS/MIPSVFPUUtils.h"
-#include "Core/MIPS/MIPSTables.h"
-#include "Core/MIPS/MIPSAnalyst.h"
-#include "Core/MIPS/MIPSCodeUtils.h"
+#include "jit/cityhash/city.h"
+#include "jit/Memory/MemMap.h"
+#include "jit/MIPS.h"
+
+#include "jit/MIPSTables.h"
+#include "jit/MIPSAnalyst.h"
+#include "jit/MIPSCodeUtils.h"
 #include "jit/Debugger/SymbolMap.h"
 #include "jit/Debugger/DebugInterface.h"
-#include "Core/HLE/ReplaceTables.h"
-#include "ext/xxhash.h"
+#include "jit/Common/xxhash.h"
+#include "jit/Common/FileUtil.h"
+#include "mednafen/settings.h"
 
 using namespace MIPSCodeUtils;
 
@@ -50,7 +48,7 @@ static std::unordered_multimap<u64, MIPSAnalyst::AnalyzedFunction *> hashToFunct
 struct HashMapFunc {
 	char name[64];
 	u64 hash;
-	u32 size; //number of bytes
+	uint32 size; //number of bytes
 	bool hardcoded;  // should not be saved
 
 	bool operator < (const HashMapFunc &other) const {
@@ -594,7 +592,7 @@ namespace MIPSAnalyst {
 		return (op & MIPSTABLE_IMM_MASK) == 0xF8000000;
 	}
 
-	int OpMemoryAccessSize(u32 pc) {
+	int OpMemoryAccessSize(uint32 pc) {
 		const auto op = Memory::Read_Instruction(pc, true);
 		MIPSInfo info = MIPSGetInfo(op);
 		if ((info & (IN_MEM | OUT_MEM)) == 0) {
@@ -617,19 +615,19 @@ namespace MIPSAnalyst {
 		return 0;
 	}
 
-	bool IsOpMemoryWrite(u32 pc) {
+	bool IsOpMemoryWrite(uint32 pc) {
 		const auto op = Memory::Read_Instruction(pc, true);
 		MIPSInfo info = MIPSGetInfo(op);
 		return (info & OUT_MEM) != 0;
 	}
 
-	bool OpHasDelaySlot(u32 pc) {
+	bool OpHasDelaySlot(uint32 pc) {
 		const auto op = Memory::Read_Instruction(pc, true);
 		MIPSInfo info = MIPSGetInfo(op);
 		return (info & DELAYSLOT) != 0;
 	}
 
-	bool OpWouldChangeMemory(u32 pc, u32 addr, u32 size) {
+	bool OpWouldChangeMemory(uint32 pc, uint32 addr, uint32 size) {
 		const auto op = Memory::Read_Instruction(pc, true);
 
 		// TODO: Trap sc/ll, svl.q, svr.q?
@@ -642,16 +640,16 @@ namespace MIPSAnalyst {
 		if (IsSBInstr(op))
 			gprMask = 0x000000FF;
 		if (IsSWLInstr(op)) {
-			const u32 shift = (addr & 3) * 8;
+			const uint32 shift = (addr & 3) * 8;
 			gprMask = 0xFFFFFFFF >> (24 - shift);
 		}
 		if (IsSWRInstr(op)) {
-			const u32 shift = (addr & 3) * 8;
+			const uint32 shift = (addr & 3) * 8;
 			gprMask = 0xFFFFFFFF << shift;
 		}
 
-		u32 writeVal = 0xFFFFFFFF;
-		u32 prevVal = 0x00000000;
+		uint32 writeVal = 0xFFFFFFFF;
+		uint32 prevVal = 0x00000000;
 
 		if (gprMask != 0)
 		{
@@ -671,19 +669,19 @@ namespace MIPSAnalyst {
 			writeVal = currentMIPS->vi[voffset[vt]];
 			prevVal = Memory::Read_U32(addr);
 		}
-
+		/*
 		if (IsSVQInstr(op)) {
 			int vt = (((op >> 16) & 0x1f)) | ((op & 1) << 5);
 			float rd[4];
 			ReadVector(rd, V_Quad, vt);
 			return memcmp(rd, Memory::GetPointer(addr), sizeof(float) * 4) != 0;
 		}
-
+		*/
 		// TODO: Technically, the break might be for 1 byte in the middle of a sw.
 		return writeVal != prevVal;
 	}
 
-	AnalysisResults Analyze(u32 address) {
+	AnalysisResults Analyze(uint32 address) {
 		const int MAX_ANALYZE = 10000;
 
 		AnalysisResults results;
@@ -697,7 +695,7 @@ namespace MIPSAnalyst {
 			results.r[i].readAsAddrCount = 0;
 		}
 
-		for (u32 addr = address, endAddr = address + MAX_ANALYZE; addr <= endAddr; addr += 4) {
+		for (uint32 addr = address, endAddr = address + MAX_ANALYZE; addr <= endAddr; addr += 4) {
 			MIPSOpcode op = Memory::Read_Instruction(addr, true);
 			MIPSInfo info = MIPSGetInfo(op);
 
@@ -737,7 +735,7 @@ namespace MIPSAnalyst {
 		}
 		totalUsedRegs += numUsedRegs;
 		numAnalyzings++;
-		VERBOSE_LOG(CPU, "[ %08x ] Used regs: %i Average: %f", address, numUsedRegs, (float)totalUsedRegs / (float)numAnalyzings);
+		log_cb(RETRO_LOG_INFO, "[ %08x ] Used regs: %i Average: %f\n", address, numUsedRegs, (float)totalUsedRegs / (float)numAnalyzings);
 
 		return results;
 	}
@@ -769,9 +767,9 @@ namespace MIPSAnalyst {
 		USAGE_UNKNOWN,
 	};
 
-	static RegisterUsage DetermineInOutUsage(u64 inFlag, u64 outFlag, u32 addr, int instrs) {
-		const u32 start = addr;
-		u32 end = addr + instrs * sizeof(u32);
+	static RegisterUsage DetermineInOutUsage(u64 inFlag, u64 outFlag, uint32 addr, int instrs) {
+		const uint32 start = addr;
+		uint32 end = addr + instrs * sizeof(u32);
 		bool canClobber = true;
 		while (addr < end) {
 			const MIPSOpcode op = Memory::Read_Instruction(addr, true);
@@ -801,7 +799,7 @@ namespace MIPSAnalyst {
 		return USAGE_UNKNOWN;
 	}
 
-	static RegisterUsage DetermineRegisterUsage(MIPSGPReg reg, u32 addr, int instrs) {
+	static RegisterUsage DetermineRegisterUsage(MIPSGPReg reg, uint32 addr, int instrs) {
 		switch (reg) {
 		case MIPS_REG_HI:
 			return DetermineInOutUsage(IN_HI, OUT_HI, addr, instrs);
@@ -819,8 +817,8 @@ namespace MIPSAnalyst {
 			return USAGE_UNKNOWN;
 		}
 
-		const u32 start = addr;
-		u32 end = addr + instrs * sizeof(u32);
+		const uint32 start = addr;
+		uint32 end = addr + instrs * sizeof(u32);
 		bool canClobber = true;
 		while (addr < end) {
 			const MIPSOpcode op = Memory::Read_Instruction(addr, true);
@@ -862,11 +860,11 @@ namespace MIPSAnalyst {
 		return USAGE_UNKNOWN;
 	}
 
-	bool IsRegisterUsed(MIPSGPReg reg, u32 addr, int instrs) {
+	bool IsRegisterUsed(MIPSGPReg reg, uint32 addr, int instrs) {
 		return DetermineRegisterUsage(reg, addr, instrs) == USAGE_INPUT;
 	}
 
-	bool IsRegisterClobbered(MIPSGPReg reg, u32 addr, int instrs) {
+	bool IsRegisterClobbered(MIPSGPReg reg, uint32 addr, int instrs) {
 		return DetermineRegisterUsage(reg, addr, instrs) == USAGE_CLOBBERED;
 	}
 
@@ -880,8 +878,8 @@ namespace MIPSAnalyst {
 			// This is unfortunate.  In case of emuhacks or relocs, we have to make a copy.
 			buffer.resize((f.end - f.start + 4) / 4);
 			size_t pos = 0;
-			for (u32 addr = f.start; addr <= f.end; addr += 4) {
-				u32 validbits = 0xFFFFFFFF;
+			for (uint32 addr = f.start; addr <= f.end; addr += 4) {
+				uint32 validbits = 0xFFFFFFFF;
 				MIPSOpcode instr = Memory::Read_Instruction(addr, true);
 				if (MIPS_IS_EMUHACK(instr)) {
 					f.hasHash = false;
@@ -903,7 +901,7 @@ skip:
 		}
 	}
 
-	static const char *DefaultFunctionName(char buffer[256], u32 startAddr) {
+	static const char *DefaultFunctionName(char buffer[256], uint32 startAddr) {
 		sprintf(buffer, "z_un_%08x", startAddr);
 		return buffer;
 	}
@@ -927,10 +925,10 @@ skip:
 		return IsDefaultFunction(name.c_str());
 	}
 
-	static u32 ScanAheadForJumpback(u32 fromAddr, u32 knownStart, u32 knownEnd) {
-		static const u32 MAX_AHEAD_SCAN = 0x1000;
+	static uint32 ScanAheadForJumpback(uint32 fromAddr, uint32 knownStart, uint32 knownEnd) {
+		static const uint32 MAX_AHEAD_SCAN = 0x1000;
 		// Maybe a bit high... just to make sure we don't get confused by recursive tail recursion.
-		static const u32 MAX_FUNC_SIZE = 0x20000;
+		static const uint32 MAX_FUNC_SIZE = 0x20000;
 
 		if (fromAddr > knownEnd + MAX_FUNC_SIZE) {
 			return INVALIDTARGET;
@@ -939,15 +937,15 @@ skip:
 		// Code might jump halfway up to before fromAddr, but after knownEnd.
 		// In that area, there could be another jump up to the valid range.
 		// So we track that for a second scan.
-		u32 closestJumpbackAddr = INVALIDTARGET;
-		u32 closestJumpbackTarget = fromAddr;
+		uint32 closestJumpbackAddr = INVALIDTARGET;
+		uint32 closestJumpbackTarget = fromAddr;
 
 		// We assume the furthest jumpback is within the func.
-		u32 furthestJumpbackAddr = INVALIDTARGET;
+		uint32 furthestJumpbackAddr = INVALIDTARGET;
 
-		for (u32 ahead = fromAddr; ahead < fromAddr + MAX_AHEAD_SCAN; ahead += 4) {
+		for (uint32 ahead = fromAddr; ahead < fromAddr + MAX_AHEAD_SCAN; ahead += 4) {
 			MIPSOpcode aheadOp = Memory::Read_Instruction(ahead, true);
-			u32 target = GetBranchTargetNoRA(ahead, aheadOp);
+			uint32 target = GetBranchTargetNoRA(ahead, aheadOp);
 			if (target == INVALIDTARGET && ((aheadOp & 0xFC000000) == 0x08000000)) {
 				target = GetJumpTarget(ahead);
 			}
@@ -969,9 +967,9 @@ skip:
 		}
 
 		if (closestJumpbackAddr != INVALIDTARGET && furthestJumpbackAddr == INVALIDTARGET) {
-			for (u32 behind = closestJumpbackTarget; behind < fromAddr; behind += 4) {
+			for (uint32 behind = closestJumpbackTarget; behind < fromAddr; behind += 4) {
 				MIPSOpcode behindOp = Memory::Read_Instruction(behind, true);
-				u32 target = GetBranchTargetNoRA(behind, behindOp);
+				uint32 target = GetBranchTargetNoRA(behind, behindOp);
 				if (target == INVALIDTARGET && ((behindOp & 0xFC000000) == 0x08000000)) {
 					target = GetJumpTarget(behind);
 				}
@@ -987,21 +985,21 @@ skip:
 		return furthestJumpbackAddr;
 	}
 
-	void ScanForFunctions(u32 startAddr, u32 endAddr, bool insertSymbols) {
+	void ScanForFunctions(uint32 startAddr, uint32 endAddr, bool insertSymbols) {
 		std::lock_guard<std::recursive_mutex> guard(functions_lock);
 
 		AnalyzedFunction currentFunction = {startAddr};
 
-		u32 furthestBranch = 0;
+		uint32 furthestBranch = 0;
 		bool looking = false;
 		bool end = false;
 		bool isStraightLeaf = true;
 		bool decreasedSp = false;
 
-		u32 addr;
+		uint32 addr;
 		for (addr = startAddr; addr <= endAddr; addr += 4) {
 			MIPSOpcode op = Memory::Read_Instruction(addr, true);
-			u32 target = GetBranchTargetNoRA(addr, op);
+			uint32 target = GetBranchTargetNoRA(addr, op);
 			if (target != INVALIDTARGET) {
 				isStraightLeaf = false;
 				if (target > furthestBranch) {
@@ -1009,7 +1007,7 @@ skip:
 				}
 			// j X
 			} else if ((op & 0xFC000000) == 0x08000000) {
-				u32 sureTarget = GetJumpTarget(addr);
+				uint32 sureTarget = GetJumpTarget(addr);
 				// Check for a tail call.  Might not even have a jr ra.
 				if (sureTarget != INVALIDTARGET && sureTarget < currentFunction.start) {
 					if (furthestBranch > addr) {
@@ -1019,7 +1017,7 @@ skip:
 						end = true;
 					}
 				} else if (sureTarget != INVALIDTARGET && sureTarget > addr && sureTarget > furthestBranch) {
-					static const u32 MAX_JUMP_FORWARD = 128;
+					static const uint32 MAX_JUMP_FORWARD = 128;
 					// If it's a nearby forward jump, and not a stackless leaf, assume not a tail call.
 					if (sureTarget <= addr + MAX_JUMP_FORWARD && decreasedSp) {
 						// But let's check the delay slot.
@@ -1033,8 +1031,8 @@ skip:
 
 					// A jump later.  Probably tail, but let's check if it jumps back.
 					// We use + 8 here in case it jumps right back to the delay slot.  We'll consider that inside the func.
-					u32 knownEnd = furthestBranch == 0 ? addr + 8 : furthestBranch;
-					u32 jumpback = ScanAheadForJumpback(sureTarget, currentFunction.start, knownEnd);
+					uint32 knownEnd = furthestBranch == 0 ? addr + 8 : furthestBranch;
+					uint32 jumpback = ScanAheadForJumpback(sureTarget, currentFunction.start, knownEnd);
 					if (jumpback != INVALIDTARGET && jumpback > addr && jumpback > knownEnd) {
 						furthestBranch = jumpback;
 					} else {
@@ -1071,7 +1069,7 @@ skip:
 
 			if (looking) {
 				if (addr >= furthestBranch) {
-					u32 sureTarget = GetSureBranchTarget(addr);
+					uint32 sureTarget = GetSureBranchTarget(addr);
 					// Regular j only, jals are to new funcs.
 					if (sureTarget == INVALIDTARGET && ((op & 0xFC000000) == 0x08000000)) {
 						sureTarget = GetJumpTarget(addr);
@@ -1082,8 +1080,8 @@ skip:
 					} else if (sureTarget != INVALIDTARGET) {
 						// Okay, we have a downward jump.  Might be an else or a tail call...
 						// If there's a jump back upward in spitting distance of it, it's an else.
-						u32 knownEnd = furthestBranch == 0 ? addr : furthestBranch;
-						u32 jumpback = ScanAheadForJumpback(sureTarget, currentFunction.start, knownEnd);
+						uint32 knownEnd = furthestBranch == 0 ? addr : furthestBranch;
+						uint32 jumpback = ScanAheadForJumpback(sureTarget, currentFunction.start, knownEnd);
 						if (jumpback != INVALIDTARGET && jumpback > addr && jumpback > knownEnd) {
 							furthestBranch = jumpback;
 						}
@@ -1098,13 +1096,13 @@ skip:
 				// Check if we already have symbol info starting here.  If so, skip insertion.
 				// We used to use the symbols to find the functions, but sometimes we'd find
 				// wrong ones due to two modules with the same name.
-				u32 existingSize = g_symbolMap->GetFunctionSize(currentFunction.start);
+				uint32 existingSize = g_symbolMap->GetFunctionSize(currentFunction.start);
 				if (existingSize != SymbolMap::INVALID_ADDRESS) {
 					currentFunction.foundInSymbolMap = true;
 
 					// If we run into a func with a different size, skip updating the hash map.
 					// This will prevent us saving incorrectly named funcs with wrong hashes.
-					u32 detectedSize = currentFunction.end - currentFunction.start + 4;
+					uint32 detectedSize = currentFunction.end - currentFunction.start + 4;
 					if (existingSize != detectedSize) {
 						insertSymbols = false;
 					}
@@ -1135,24 +1133,25 @@ skip:
 		}
 
 		HashFunctions();
-
-		std::string hashMapFilename = GetSysDirectory(DIRECTORY_SYSTEM) + "knownfuncs.ini";
-		if (g_Config.bFuncHashMap || g_Config.bFuncReplacements) {
+		//TODO have a good place for this file (make it an option?)
+		std::string hashMapFilename = MDFN_GetSettingS("filesys.path_state") + "knownfuncs.ini";
+		//TODO make this an option ?
+		if (/*g_Config.bFuncHashMap || g_Config.bFuncReplacements*/ true) {
 			LoadBuiltinHashMap();
-			if (g_Config.bFuncHashMap) {
+			if (/*g_Config.bFuncHashMap*/ true) {
 				LoadHashMap(hashMapFilename);
 				StoreHashMap(hashMapFilename);
 			}
 			if (insertSymbols) {
 				ApplyHashMap();
 			}
-			if (g_Config.bFuncReplacements) {
+			if (/*g_Config.bFuncReplacements*/ true) {
 				ReplaceFunctions();
 			}
 		}
 	}
 
-	void RegisterFunction(u32 startAddr, u32 size, const char *name) {
+	void RegisterFunction(uint32 startAddr, uint32 size, const char *name) {
 		std::lock_guard<std::recursive_mutex> guard(functions_lock);
 
 		// Check if we have this already
@@ -1168,7 +1167,7 @@ skip:
 					hashMap.insert(hfun);
 					return;
 				} else if (!iter->hasHash || size == 0) {
-					ERROR_LOG(HLE, "%s: %08x %08x : match but no hash (%i) or no size", name, startAddr, size, iter->hasHash);
+					log_cb(RETRO_LOG_ERROR, "%s: %08x %08x : match but no hash (%i) or no size", name, startAddr, size, iter->hasHash);
 				}
 			}
 		}
@@ -1185,7 +1184,7 @@ skip:
 		HashFunctions();
 	}
 
-	void ForgetFunctions(u32 startAddr, u32 endAddr) {
+	void ForgetFunctions(uint32 startAddr, uint32 endAddr) {
 		std::lock_guard<std::recursive_mutex> guard(functions_lock);
 
 		// It makes sense to forget functions as modules are unloaded but it breaks
@@ -1212,8 +1211,8 @@ skip:
 			// Cool, this is the fastest way.
 			functions.erase(prevMatch, functions.end());
 		}
-
-		RestoreReplacedInstructions(startAddr, endAddr);
+		//TODO reimplement
+		//RestoreReplacedInstructions(startAddr, endAddr);
 
 		if (functions.empty()) {
 			hashToFunction.clear();
@@ -1224,10 +1223,12 @@ skip:
 
 	void ReplaceFunctions() {
 		std::lock_guard<std::recursive_mutex> guard(functions_lock);
-
+		//TODO reimplement
+		/*
 		for (size_t i = 0; i < functions.size(); i++) {
 			WriteReplaceInstructions(functions[i].start, functions[i].hash, functions[i].size);
 		}
+		*/
 	}
 
 	void UpdateHashMap() {
@@ -1251,7 +1252,7 @@ skip:
 		}
 	}
 
-	const char *LookupHash(u64 hash, u32 funcsize) {
+	const char *LookupHash(u64 hash, uint32 funcsize) {
 		const HashMapFunc f = { "", hash, funcsize };
 		auto it = hashMap.find(f);
 		if (it != hashMap.end()) {
@@ -1262,7 +1263,7 @@ skip:
 
 	void SetHashMapFilename(const std::string& filename) {
 		if (filename.empty())
-			hashmapFileName = GetSysDirectory(DIRECTORY_SYSTEM) + "knownfuncs.ini";
+			hashmapFileName = MDFN_GetSettingS("filesys.path_state") + "knownfuncs.ini";
 		else
 			hashmapFileName = filename;
 	}
@@ -1278,7 +1279,7 @@ skip:
 
 		FILE *file = File::OpenCFile(filename, "wt");
 		if (!file) {
-			WARN_LOG(LOADER, "Could not store hash map: %s", filename.c_str());
+			log_cb(RETRO_LOG_ERROR, "Could not store hash map: %s", filename.c_str());
 			return;
 		}
 
@@ -1286,7 +1287,7 @@ skip:
 			const HashMapFunc &mf = *it;
 			if (!mf.hardcoded) {
 				if (fprintf(file, "%016llx:%d = %s\n", mf.hash, mf.size, mf.name) <= 0) {
-					WARN_LOG(LOADER, "Could not store hash map: %s", filename.c_str());
+					log_cb(RETRO_LOG_WARN, "Could not store hash map: %s", filename.c_str());
 					break;
 				}
 			}
@@ -1335,7 +1336,7 @@ skip:
 	void LoadHashMap(const std::string& filename) {
 		FILE *file = File::OpenCFile(filename, "rt");
 		if (!file) {
-			WARN_LOG(LOADER, "Could not load hash map: %s", filename.c_str());
+			log_cb(RETRO_LOG_ERROR, "Could not load hash map: %s", filename.c_str());
 			return;
 		}
 		hashmapFileName = filename;
@@ -1346,7 +1347,7 @@ skip:
 			if (fscanf(file, "%llx:%d = %63s\n", &mf.hash, &mf.size, mf.name) < 3) {
 				char temp[1024];
 				if (!fgets(temp, 1024, file)) {
-					WARN_LOG(LOADER, "Could not read from hash map: %s", filename.c_str());
+					log_cb(RETRO_LOG_ERROR, "Could not read from hash map: %s", filename.c_str());
 				}
 				continue;
 			}
@@ -1373,7 +1374,7 @@ skip:
 		return vec;
 	}
 
-	MipsOpcodeInfo GetOpcodeInfo(DebugInterface* cpu, u32 address) {
+	MipsOpcodeInfo GetOpcodeInfo(DebugInterface* cpu, uint32 address) {
 		MipsOpcodeInfo info;
 		memset(&info, 0, sizeof(info));
 
@@ -1433,7 +1434,7 @@ skip:
 		if (opInfo & IS_CONDMOVE) {
 			info.isConditional = true;
 
-			u32 rt = cpu->GetRegValue(0, (int)MIPS_GET_RT(op));
+			uint32 rt = cpu->GetRegValue(0, (int)MIPS_GET_RT(op));
 			switch (opInfo & CONDTYPE_MASK) {
 			case CONDTYPE_EQ:
 				info.conditionMet = (rt == 0);
@@ -1454,8 +1455,8 @@ skip:
 				info.isLinkedBranch = true;
 			}
 
-			u32 rt = cpu->GetRegValue(0, (int)MIPS_GET_RT(op));
-			u32 rs = cpu->GetRegValue(0, (int)MIPS_GET_RS(op));
+			uint32 rt = cpu->GetRegValue(0, (int)MIPS_GET_RT(op));
+			uint32 rs = cpu->GetRegValue(0, (int)MIPS_GET_RS(op));
 			switch (opInfo & CONDTYPE_MASK) {
 			case CONDTYPE_EQ:
 				if (opInfo & IN_FPUFLAG) {	// fpu branch
@@ -1511,7 +1512,7 @@ skip:
 				info.dataSize = 16;
 			}
 
-			u32 rs = cpu->GetRegValue(0, (int)MIPS_GET_RS(op));
+			uint32 rs = cpu->GetRegValue(0, (int)MIPS_GET_RS(op));
 			s16 imm16 = op & 0xFFFF;
 			info.dataAddress = rs + imm16;
 

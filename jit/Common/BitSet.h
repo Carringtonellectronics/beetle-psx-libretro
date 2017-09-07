@@ -3,8 +3,7 @@
 #pragma once
 
 #include <cstddef>
-#include "CommonTypes.h"
-
+#include "mednafen/mednafen-types.h"
 // Helper functions:
 
 #ifdef _WIN32
@@ -19,14 +18,14 @@ inline int CountSetBits(T v) {
 	v = (v + (v >> 4)) & (T)~(T)0/255*15;
 	return (T)(v * ((T)~(T)0/255)) >> (sizeof(T) - 1) * 8;
 }
-inline int LeastSignificantSetBit(u32 val)
+inline int LeastSignificantSetBit(uint32 val)
 {
 	unsigned long index;
 	_BitScanForward(&index, val);
 	return (int)index;
 }
-#ifdef _M_X64
-inline int LeastSignificantSetBit(u64 val)
+#ifdef ARCH_64BIT
+inline int LeastSignificantSetBit(uint64 val)
 {
 	unsigned long index;
 	_BitScanForward64(&index, val);
@@ -34,8 +33,8 @@ inline int LeastSignificantSetBit(u64 val)
 }
 #endif
 #else
-inline int CountSetBits(u32 val) { return __builtin_popcount(val); }
-inline int CountSetBits(u64 val) { return __builtin_popcountll(val); }
-inline int LeastSignificantSetBit(u32 val) { return __builtin_ctz(val); }
-inline int LeastSignificantSetBit(u64 val) { return __builtin_ctzll(val); }
+inline int CountSetBits(uint32 val) { return __builtin_popcount(val); }
+inline int CountSetBits(uint64 val) { return __builtin_popcountll(val); }
+inline int LeastSignificantSetBit(uint32 val) { return __builtin_ctz(val); }
+inline int LeastSignificantSetBit(uint64 val) { return __builtin_ctzll(val); }
 #endif

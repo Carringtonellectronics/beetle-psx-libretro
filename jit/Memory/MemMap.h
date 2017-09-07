@@ -25,9 +25,9 @@
 // Includes
 #include "mednafen/mednafen-types.h"
 #include "jit/Common/Opcode.h"
+#include "mednafen/mednafen.h"
 #include "libretro.h"
 //defines
-#define ARRAY_SIZE(ar) (sizeof(ar) / sizeof((ar)[0]))
 
 // PPSSPP is very aggressive about trying to do memory accesses directly, for speed.
 // This can be a problem when debugging though, as stray memory reads and writes will
@@ -131,16 +131,16 @@ public:
 // This doesn't lock memory access or anything, it just makes sure memory isn't freed.
 // Use it when accessing PSP memory from external threads.
 MemoryInitedLock Lock();
-
+#ifdef JIT
 // used by JIT to read instructions. Does not resolve replacements.
-//Opcode Read_Opcode_JIT(const uint32 _Address);
+Opcode Read_Opcode_JIT(const uint32 _Address);
 // used by JIT. Reads in the "Locked cache" mode
-//void Write_Opcode_JIT(const uint32 _Address, const Opcode& _Value);
+void Write_Opcode_JIT(const uint32 _Address, const Opcode& _Value);
 
 // Should be used by analyzers, disassemblers etc. Does resolve replacements.
-//Opcode Read_Instruction(const uint32 _Address, bool resolveReplacements = false);
-//Opcode ReadUnchecked_Instruction(const uint32 _Address, bool resolveReplacements = false);
-
+Opcode Read_Instruction(const uint32 _Address, bool resolveReplacements = false);
+Opcode ReadUnchecked_Instruction(const uint32 _Address, bool resolveReplacements = false);
+#endif
 uint8  Read_U8(const uint32 _Address);
 uint16 Read_U16(const uint32 _Address);
 uint32 Read_U32(const uint32 _Address);
@@ -283,13 +283,15 @@ inline void MemcpyUnchecked(const uint32 to_address, const uint32 from_address, 
 }
 
 inline bool IsValidAddress(const uint32 address) {
-	if ((address & 0x3E000000) == 0x08000000) {
+	if (address <= 0x001FFFFF || 
+		(address >= 0x80000000 && address <= 0x801FFFFF) ||
+		(address >= 0xa0000000 && address <= 0xa01FFFFF)) {
 		return true;
-	} else if ((address & 0x3F800000) == 0x04000000) {
+	} else if (address >= 0x1F000000 && address <= 0x1F00FFFF) {
 		return true;
-	} else if ((address & 0xBFFF0000) == 0x00010000) {
-		return (address & 0x0000FFFF) < SCRATCHPAD_SIZE;
-	} else if ((address & 0x3F000000) >= 0x08000000 && (address & 0x3F000000) < 0x08000000 + g_MemorySize) {
+	} else if (address >= 0x1F800000 && address <= 0x1F8003FF) {
+		return true;
+	} else if (address >= 0xBFC00000 && address <= 0xBFC7FFFF) {
 		return true;
 	} else {
 		return false;
@@ -298,19 +300,20 @@ inline bool IsValidAddress(const uint32 address) {
 
 inline uint32 ValidSize(const uint32 address, const uint32 requested_size) {
 	uint32 max_size;
-	if ((address & 0x3E000000) == 0x08000000) {
-		max_size = 0x08000000 + g_MemorySize - address;
-	}
-	else if ((address & 0x3F800000) == 0x04000000) {
-		max_size = 0x04800000 - address;
-	}
-	else if ((address & 0xBFFF0000) == 0x00010000) {
-		max_size = 0x00014000 - address;
-	}
-	else if ((address & 0x3F000000) >= 0x08000000 && (address & 0x3F000000) < 0x08000000 + g_MemorySize) {
-		max_size = 0x08000000 + g_MemorySize - address;
+	if (address <= 0x001FFFFF) {
+		max_size =  0x00200000 - address;
+	}else if(address >= 0x80000000 && address <= 0x801FFFFF){
+		max_size =  0x80200000 - address;
+	}else if((address >= 0xa0000000 && address <= 0xa01FFFFF)){
+		max_size =  0xa0200000 - address;
+	}else if (address >= 0x1F000000 && address <= 0x1F00FFFF) {
+		max_size = 0x1F010000 - address;
+	} else if (address >= 0x1F800000 && address <= 0x1F8003FF) {
+		max_size = 0x1F800400 - address;
+	} else if (address >= 0xBFC00000 && address <= 0xBFC7FFFF) {
+		max_size = 0xBFC80000 - address;
 	} else {
-		max_size = 0;
+		return false;
 	}
 
 	if (requested_size > max_size) {
@@ -447,20 +450,21 @@ struct PSPPointer
 	}
 };
 
-/*
-inline uint32 PSP_GetScratchpadMemoryBase() { return 0x00010000;}
-inline uint32 PSP_GetScratchpadMemoryEnd() { return 0x00014000;}
 
-inline uint32 PSP_GetKernelMemoryBase() { return 0x08000000;}
+inline uint32 PSP_GetScratchpadMemoryBase() { return 0x1f80000;}
+inline uint32 PSP_GetScratchpadMemoryEnd() { return 0x1f80000 + Memory::SCRATCHPAD_SIZE;}
+
+inline uint32 PSP_GetKernelMemoryBase() { return 0;}
 inline uint32 PSP_GetUserMemoryEnd() { return PSP_GetKernelMemoryBase() + Memory::g_MemorySize;}
-inline uint32 PSP_GetKernelMemoryEnd() { return 0x08400000;}
+inline uint32 PSP_GetKernelMemoryEnd() { return 0x0000ffff;}
 // "Volatile" RAM is between 0x08400000 and 0x08800000, can be requested by the
 // game through sceKernelVolatileMemTryLock.
 
-inline uint32 PSP_GetUserMemoryBase() { return 0x08800000;}
+inline uint32 PSP_GetUserMemoryBase() { return 0x00010000;}
 
 inline uint32 PSP_GetDefaultLoadAddress() { return 0;}
 //inline uint32 PSP_GetDefaultLoadAddress() { return 0x0898dab0;}
+/*
 inline uint32 PSP_GetVidMemBase() { return 0x04000000;}
 inline uint32 PSP_GetVidMemEnd() { return 0x04800000;}
 */

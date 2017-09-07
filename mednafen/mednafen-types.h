@@ -22,7 +22,7 @@ typedef uint64_t uint64;
 
   #define NO_INLINE __attribute__((noinline))
 
-  #if defined(__386__) || defined(__i386__) || defined(__i386) || defined(_M_IX86) || defined(_M_I386)
+  #if defined(__386__) || defined(__i386__) || defined(__i386) || defined(ARCH_32BIT) || defined(_M_I386)
     #define MDFN_FASTCALL __attribute__((fastcall))
   #else
     #define MDFN_FASTCALL
@@ -105,6 +105,5 @@ typedef struct
 #define require( expr ) assert( expr )
 
 #include "error.h"
-
 
 #endif

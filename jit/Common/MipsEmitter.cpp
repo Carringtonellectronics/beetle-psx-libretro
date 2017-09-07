@@ -34,8 +34,8 @@ void MIPSEmitter::SetCodePtr(u8 *ptr) {
 	lastCacheFlushEnd_ = ptr;
 }
 
-void MIPSEmitter::ReserveCodeSpace(u32 bytes) {
-	for (u32 i = 0; i < bytes / 4; ++i) {
+void MIPSEmitter::ReserveCodeSpace(uint32 bytes) {
+	for (uint32 i = 0; i < bytes / 4; ++i) {
 		BREAK(0);
 	}
 }
@@ -74,7 +74,7 @@ void MIPSEmitter::FlushIcacheSection(u8 *start, u8 *end) {
 #endif
 }
 
-void MIPSEmitter::BREAK(u32 code) {
+void MIPSEmitter::BREAK(uint32 code) {
 	// 000000 iiiiiiiiiiiiiiiiiiii 001101
 	_dbg_assert_msg_(JIT, code <= 0xfffff, "Bad emitter arguments");
 	Write32Fields(26, 0x00, 6, code & 0xfffff, 0, 0x0d);
@@ -198,7 +198,7 @@ bool MIPSEmitter::JInRange(const void *func) {
 void MIPSEmitter::SetJumpTarget(const FixupBranch &branch, const void *dst) {
 	const intptr_t srcp = (intptr_t)branch.ptr;
 	const intptr_t dstp = (intptr_t)dst;
-	u32 *fixup = (u32 *)branch.ptr;
+	uint32 *fixup = (uint32 *)branch.ptr;
 
 	_dbg_assert_msg_(JIT, (dstp & 3) == 0, "Destination should be aligned");
 
@@ -450,7 +450,7 @@ void MIPSEmitter::MOVI2R(MIPSReg reg, u64 imm) {
 	ORI(reg, reg, (imm >> 0) & 0x0000ffff);
 }
 
-void MIPSEmitter::MOVI2R(MIPSReg reg, u32 imm) {
+void MIPSEmitter::MOVI2R(MIPSReg reg, uint32 imm) {
 	_dbg_assert_msg_(JIT, reg < F_BASE, "Bad emitter arguments");
 
 	if ((imm & 0xffff0000) != 0) {
@@ -478,8 +478,8 @@ void MIPSCodeBlock::AllocCodeSpace(int size) {
 // uninitialized, it just breaks into the debugger.
 void MIPSCodeBlock::ClearCodeSpace() {
 	// Set BREAK instructions on all of it.
-	u32 *region32 = (u32 *)region;
-	for (u32 i = 0; i < region_size / 4; ++i) {
+	uint32 *region32 = (uint32 *)region;
+	for (uint32 i = 0; i < region_size / 4; ++i) {
 		*region32++ = 0x0000000d;
 	}
 	ResetCodePtr();

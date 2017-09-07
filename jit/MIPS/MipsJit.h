@@ -20,9 +20,9 @@
 #include "Common/MipsEmitter.h"
 using namespace MIPSGen;
 
-#include "Core/MIPS/JitCommon/JitCommon.h"
-#include "Core/MIPS/JitCommon/JitState.h"
-#include "Core/MIPS/JitCommon/JitBlockCache.h"
+#include "jit/JitCommon/JitCommon.h"
+#include "jit/JitCommon/JitState.h"
+#include "jit/JitCommon/JitBlockCache.h"
 #include "../MIPSVFPUUtils.h"
 
 #ifndef offsetof

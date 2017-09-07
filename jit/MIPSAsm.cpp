@@ -1,15 +1,13 @@
-#ifdef _WIN32
-#include "stdafx.h"
-#endif
 #include <cstdarg>
 #include <cstring>
 #include <vector>
 
-#include "Common/CommonTypes.h"
+#include "mednafen/mednafen-types.h"
 
 #if defined(_WIN32) || defined(__ANDROID__)
 // Temporarily turned off on Android
-#define USE_ARMIPS
+//TODO have this actually work the way it should
+//#define USE_ARMIPS
 #endif
 
 
@@ -18,9 +16,9 @@
 #include "ext/armips/Core/Assembler.h"
 #endif
 
-#include "Common/MemMapHelpers.h"
-#include "mednafen/jit/JitCommon/JitCommon.h"
-#include "mednafen/jit/MIPS/MIPSAsm.h"
+#include "jit/Memory/MemMapHelpers.h"
+#include "jit/JitCommon/JitCommon.h"
+#include "jit/MIPSAsm.h"
 
 namespace MIPSAsm
 {	
@@ -72,7 +70,7 @@ private:
 };
 #endif
 
-bool MipsAssembleOpcode(const char* line, DebugInterface* cpu, u32 address)
+bool MipsAssembleOpcode(const char* line, DebugInterface* cpu, uint32 address)
 {
 #ifdef USE_ARMIPS
 	PspAssemblerFile file;

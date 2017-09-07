@@ -20,12 +20,12 @@
 #include "Common/CPUDetect.h"
 #include "Common/ArmCommon.h"
 #include "Common/ArmEmitter.h"
-#include "Core/MIPS/JitCommon/JitState.h"
-#include "Core/MIPS/JitCommon/JitBlockCache.h"
-#include "Core/MIPS/JitCommon/JitCommon.h"
-#include "Core/MIPS/ARM/ArmRegCache.h"
-#include "Core/MIPS/ARM/ArmRegCacheFPU.h"
-#include "Core/MIPS/MIPSVFPUUtils.h"
+#include "jit/JitCommon/JitState.h"
+#include "jit/JitCommon/JitBlockCache.h"
+#include "jit/JitCommon/JitCommon.h"
+#include "jit/ARM/ArmRegCache.h"
+#include "jit/ARM/ArmRegCacheFPU.h"
+
 
 #ifndef offsetof
 #include "stddef.h"

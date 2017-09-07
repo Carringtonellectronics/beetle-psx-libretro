@@ -114,7 +114,7 @@ private:
 #define __chdir chdir
 #endif
 
-#if !defined(__GNUC__) && (defined(_M_X64) || defined(_M_IX86))
+#if !defined(__GNUC__) && (defined(ARCH_64BIT) || defined(ARCH_32BIT))
 # define _M_SSE 0x402
 #else
 # if defined __SSE4_2__

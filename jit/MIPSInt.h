@@ -17,7 +17,8 @@
 
 #pragma once
 
-#include "Common/CommonTypes.h"
+#include "mednafen/mednafen-types.h"
+
 
 int MIPS_SingleStep();
 

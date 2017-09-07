@@ -17,24 +17,23 @@
 
 #include <cstdlib>
 
-#include "ext/disarm.h"
-#include "ext/udis86/udis86.h"
+#include "jit/dis/disarm.h"
+#include "jit/dis/udis86.h"
 
-#include "Common/StringUtils.h"
-#include "Core/Util/DisArm64.h"
-#include "Core/Config.h"
+#include "jit/Common/StringUtils.h"
+#include "jit/dis/DisArm64.h"
 
-#include "Core/MIPS/JitCommon/JitCommon.h"
-#include "Core/MIPS/JitCommon/JitState.h"
-#include "Core/MIPS/IR/IRJit.h"
+#include "jit/JitCommon/JitCommon.h"
+#include "jit/JitCommon/JitState.h"
+#include "jit/IR/IRJit.h"
 
-#if PPSSPP_ARCH(ARM)
+#ifdef ARCH_ARM
 #include "../ARM/ArmJit.h"
-#elif PPSSPP_ARCH(ARM64)
+#elif defined(ARCH_ARM) && defined(ARCH_64BIT)
 #include "../ARM64/Arm64Jit.h"
-#elif PPSSPP_ARCH(X86) || PPSSPP_ARCH(AMD64)
+#elif defined(ARCH_X86) || defined(ARCH_AMD64)
 #include "../x86/Jit.h"
-#elif PPSSPP_ARCH(MIPS)
+#elif ARCH_MIPS
 #include "../MIPS/MipsJit.h"
 #else
 #include "../fake/FakeJit.h"
@@ -47,13 +46,13 @@ namespace MIPSComp {
 	}
 
 	JitInterface *CreateNativeJit(MIPSState *mips) {
-#if PPSSPP_ARCH(ARM)
+#ifdef ARCH_ARM
 		return new MIPSComp::ArmJit(mips);
-#elif PPSSPP_ARCH(ARM64)
+#elif defined(ARCH_ARM) && defined(ARCH_64BIT)
 		return new MIPSComp::Arm64Jit(mips);
-#elif PPSSPP_ARCH(X86) || PPSSPP_ARCH(AMD64)
+#elif defined(ARCH_X86) || defined(ARCH_AMD64)
 		return new MIPSComp::Jit(mips);
-#elif PPSSPP_ARCH(MIPS)
+#elif defined(ARCH_MIPS)
 		return new MIPSComp::MipsJit(mips);
 #else
 		return new MIPSComp::FakeJit(mips);
@@ -61,11 +60,11 @@ namespace MIPSComp {
 	}
 
 }
-#if PPSSPP_PLATFORM(WINDOWS)
+#ifdef OS_WINDOWS
 #define DISASM_ALL 1
 #endif
 
-#if PPSSPP_ARCH(ARM) || defined(DISASM_ALL)
+#if defined(ARCH_ARM) || defined(DISASM_ALL)
 // We compile this for x86 as well because it may be useful when developing the ARM JIT on a PC.
 std::vector<std::string> DisassembleArm2(const u8 *data, int size) {
 	std::vector<std::string> lines;
@@ -73,13 +72,13 @@ std::vector<std::string> DisassembleArm2(const u8 *data, int size) {
 	char temp[256];
 	int bkpt_count = 0;
 	for (int i = 0; i < size; i += 4) {
-		const u32 *codePtr = (const u32 *)(data + i);
-		u32 inst = codePtr[0];
-		u32 next = (i < size - 4) ? codePtr[1] : 0;
+		const uint32 *codePtr = (const uint32 *)(data + i);
+		uint32 inst = codePtr[0];
+		uint32 next = (i < size - 4) ? codePtr[1] : 0;
 		// MAGIC SPECIAL CASE for MOVW/MOVT readability!
 		if ((inst & 0x0FF00000) == 0x03000000 && (next & 0x0FF00000) == 0x03400000) {
-			u32 low = ((inst & 0x000F0000) >> 4) | (inst & 0x0FFF);
-			u32 hi = ((next & 0x000F0000) >> 4) | (next & 0x0FFF);
+			uint32 low = ((inst & 0x000F0000) >> 4) | (inst & 0x0FFF);
+			uint32 hi = ((next & 0x000F0000) >> 4) | (next & 0x0FFF);
 			int reg0 = (inst & 0x0000F000) >> 12;
 			int reg1 = (next & 0x0000F000) >> 12;
 			if (reg0 == reg1) {
@@ -114,7 +113,7 @@ std::string AddAddress(const std::string &buf, uint64_t addr) {
 	return std::string(buf2) + " " + buf;
 }
 
-#if PPSSPP_ARCH(ARM64) || defined(DISASM_ALL)
+#if (defined(ARCH_ARM) && defined(ARCH_64BIT)) || defined(DISASM_ALL)
 
 static bool Arm64SymbolCallback(char *buffer, int bufsize, uint8_t *address) {
 	if (MIPSComp::jit) {
@@ -133,14 +132,14 @@ std::vector<std::string> DisassembleArm64(const u8 *data, int size) {
 	char temp[256];
 	int bkpt_count = 0;
 	for (int i = 0; i < size; i += 4) {
-		const u32 *codePtr = (const u32 *)(data + i);
+		const uint32 *codePtr = (const uint32 *)(data + i);
 		uint64_t addr = (intptr_t)codePtr;
-		u32 inst = codePtr[0];
-		u32 next = (i < size - 4) ? codePtr[1] : 0;
+		uint32 inst = codePtr[0];
+		uint32 next = (i < size - 4) ? codePtr[1] : 0;
 		// MAGIC SPECIAL CASE for MOVZ+MOVK readability!
 		if (((inst >> 21) & 0x3FF) == 0x294 && ((next >> 21) & 0x3FF) == 0x395) {
-			u32 low = (inst >> 5) & 0xFFFF;
-			u32 hi = (next >> 5) & 0xFFFF;
+			uint32 low = (inst >> 5) & 0xFFFF;
+			uint32 hi = (next >> 5) & 0xFFFF;
 			int reg0 = inst & 0x1F;
 			int reg1 = next & 0x1F;
 			char r = (inst >> 31) ? 'x' : 'w';
@@ -173,7 +172,7 @@ std::vector<std::string> DisassembleArm64(const u8 *data, int size) {
 }
 #endif
 
-#if PPSSPP_ARCH(X86) || PPSSPP_ARCH(AMD64)
+#if defined(ARCH_X86) || defined(ARCH_AMD64)
 
 const char *ppsspp_resolver(struct ud*,
 	uint64_t addr,

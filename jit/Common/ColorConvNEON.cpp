@@ -25,12 +25,12 @@
 
 // TODO: More NEON color conversion funcs.
 
-void ConvertRGBA4444ToABGR4444NEON(u16 *dst, const u16 *src, u32 numPixels) {
+void ConvertRGBA4444ToABGR4444NEON(u16 *dst, const u16 *src, uint32 numPixels) {
 	const uint16x8_t mask0040 = vdupq_n_u16(0x00F0);
 
 	if (((uintptr_t)dst & 15) == 0 && ((uintptr_t)src & 15) == 0) {
-		u32 simdable = (numPixels / 8) * 8;
-		for (u32 i = 0; i < simdable; i += 8) {
+		uint32 simdable = (numPixels / 8) * 8;
+		for (uint32 i = 0; i < simdable; i += 8) {
 			uint16x8_t c = vld1q_u16(src);
 
 			const uint16x8_t a = vshrq_n_u16(c, 12);
@@ -54,13 +54,13 @@ void ConvertRGBA4444ToABGR4444NEON(u16 *dst, const u16 *src, u32 numPixels) {
 	}
 }
 
-void ConvertRGBA5551ToABGR1555NEON(u16 *dst, const u16 *src, u32 numPixels) {
+void ConvertRGBA5551ToABGR1555NEON(u16 *dst, const u16 *src, uint32 numPixels) {
 	const uint16x8_t maskB = vdupq_n_u16(0x003E);
 	const uint16x8_t maskG = vdupq_n_u16(0x07C0);
 
 	if (((uintptr_t)dst & 15) == 0 && ((uintptr_t)src & 15) == 0) {
-		u32 simdable = (numPixels / 8) * 8;
-		for (u32 i = 0; i < simdable; i += 8) {
+		uint32 simdable = (numPixels / 8) * 8;
+		for (uint32 i = 0; i < simdable; i += 8) {
 			uint16x8_t c = vld1q_u16(src);
 
 			const uint16x8_t a = vshrq_n_u16(c, 15);
@@ -84,12 +84,12 @@ void ConvertRGBA5551ToABGR1555NEON(u16 *dst, const u16 *src, u32 numPixels) {
 	}
 }
 
-void ConvertRGB565ToBGR565NEON(u16 *dst, const u16 *src, u32 numPixels) {
+void ConvertRGB565ToBGR565NEON(u16 *dst, const u16 *src, uint32 numPixels) {
 	const uint16x8_t maskG = vdupq_n_u16(0x07E0);
 
 	if (((uintptr_t)dst & 15) == 0 && ((uintptr_t)src & 15) == 0) {
-		u32 simdable = (numPixels / 8) * 8;
-		for (u32 i = 0; i < simdable; i += 8) {
+		uint32 simdable = (numPixels / 8) * 8;
+		for (uint32 i = 0; i < simdable; i += 8) {
 			uint16x8_t c = vld1q_u16(src);
 
 			const uint16x8_t b = vshrq_n_u16(c, 11);

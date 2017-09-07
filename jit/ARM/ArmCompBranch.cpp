@@ -26,14 +26,14 @@
 #include "Core/HLE/HLE.h"
 #include "Core/HLE/HLETables.h"
 
-#include "Core/MIPS/MIPS.h"
-#include "Core/MIPS/MIPSCodeUtils.h"
-#include "Core/MIPS/MIPSAnalyst.h"
-#include "Core/MIPS/MIPSTables.h"
+#include "jit/MIPS.h"
+#include "jit/MIPSCodeUtils.h"
+#include "jit/MIPSAnalyst.h"
+#include "jit/MIPSTables.h"
 
-#include "Core/MIPS/ARM/ArmJit.h"
-#include "Core/MIPS/ARM/ArmRegCache.h"
-#include "Core/MIPS/JitCommon/JitBlockCache.h"
+#include "jit/ARM/ArmJit.h"
+#include "jit/ARM/ArmRegCache.h"
+#include "jit/JitCommon/JitBlockCache.h"
 
 #include "Common/ArmEmitter.h"
 

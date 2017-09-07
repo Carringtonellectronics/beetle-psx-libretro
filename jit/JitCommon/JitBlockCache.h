@@ -22,10 +22,11 @@
 #include <vector>
 #include <string>
 
-#include "Common/CommonTypes.h"
-#include "Common/CodeBlock.h"
-#include "Core/MIPS/MIPSAnalyst.h"
-#include "Core/MIPS/MIPS.h"
+#include "mednafen/mednafen-types.h"
+#include "jit/Common/CodeBlock.h"
+#include "jit/MIPSAnalyst.h"
+#include "jit/MIPS.h"
+#include "mednafen/mednafen.h"
 
 #if defined(ARM) || defined(ARM64)
 const int MAX_JIT_BLOCK_EXITS = 2;
@@ -37,9 +38,9 @@ struct BlockCacheStats {
 	int numBlocks;
 	float avgBloat;  // In code bytes, not instructions!
 	float minBloat;
-	u32 minBloatBlock;
+	uint32 minBloatBlock;
 	float maxBloat;
-	u32 maxBloatBlock;
+	uint32 maxBloatBlock;
 	std::map<float, u32> bloatMap;
 };
 
@@ -50,15 +51,15 @@ struct BlockCacheStats {
 // We should be careful not to access these block structures during runtime as they are large.
 // Fine to mess with them at block compile time though.
 struct JitBlock {
-	bool ContainsAddress(u32 em_address);
+	bool ContainsAddress(uint32 em_address);
 
 	u8 *checkedEntry;  // not const, may need to write through this to unlink
 	const u8 *normalEntry;
 
 	u8 *exitPtrs[MAX_JIT_BLOCK_EXITS];      // to be able to rewrite the exit jump
-	u32 exitAddress[MAX_JIT_BLOCK_EXITS];   // 0xFFFFFFFF == unknown
+	uint32 exitAddress[MAX_JIT_BLOCK_EXITS];   // 0xFFFFFFFF == unknown
 
-	u32 originalAddress;
+	uint32 originalAddress;
 	MIPSOpcode originalFirstOpcode; //to be able to restore
 	u16 codeSize;
 	u16 originalSize;
@@ -91,9 +92,9 @@ public:
 	JitBlockCache(MIPSState *mips_, CodeBlockCommon *codeBlock);
 	~JitBlockCache();
 
-	int AllocateBlock(u32 em_address);
+	int AllocateBlock(uint32 em_address);
 	// When a proxy block is invalidated, the block located at the rootAddress is invalidated too.
-	void ProxyBlock(u32 rootAddress, u32 startAddress, u32 size, const u8 *codePtr);
+	void ProxyBlock(uint32 rootAddress, uint32 startAddress, uint32 size, const u8 *codePtr);
 	void FinalizeBlock(int block_num, bool block_link);
 
 	void Clear();
@@ -108,23 +109,23 @@ public:
 	JitBlock *GetBlock(int block_num);
 
 	// Fast way to get a block. Only works on the first source-cpu instruction of a block.
-	int GetBlockNumberFromStartAddress(u32 em_address, bool realBlocksOnly = true);
+	int GetBlockNumberFromStartAddress(uint32 em_address, bool realBlocksOnly = true);
 
 	// slower, but can get numbers from within blocks, not just the first instruction.
 	// WARNING! WILL NOT WORK WITH JIT INLINING ENABLED (not yet a feature but will be soon)
 	// Returns a list of block numbers - only one block can start at a particular address, but they CAN overlap.
 	// This one is slow so should only be used for one-shots from the debugger UI, not for anything during runtime.
-	void GetBlockNumbersFromAddress(u32 em_address, std::vector<int> *block_numbers);
+	void GetBlockNumbersFromAddress(uint32 em_address, std::vector<int> *block_numbers);
 	int GetBlockNumberFromEmuHackOp(MIPSOpcode inst, bool ignoreBad = false) const;
 
-	u32 GetAddressFromBlockPtr(const u8 *ptr) const;
+	uint32 GetAddressFromBlockPtr(const u8 *ptr) const;
 
 	MIPSOpcode GetOriginalFirstOp(int block_num);
 
-	bool RangeMayHaveEmuHacks(u32 start, u32 end) const;
+	bool RangeMayHaveEmuHacks(uint32 start, uint32 end) const;
 
 	// DOES NOT WORK CORRECTLY WITH JIT INLINING
-	void InvalidateICache(u32 address, const u32 length);
+	void InvalidateICache(uint32 address, const uint32 length);
 	void InvalidateChangedBlocks();
 	void DestroyBlock(int block_num, bool invalidate);
 

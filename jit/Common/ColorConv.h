@@ -38,17 +38,17 @@ inline u8 Convert6To8(u8 v) {
 	return (v << 2) | (v >> 4);
 }
 
-inline u32 RGBA4444ToRGBA8888(u16 src) {
-	const u32 r = (src & 0x000F) << 0;
-	const u32 g = (src & 0x00F0) << 4;
-	const u32 b = (src & 0x0F00) << 8;
-	const u32 a = (src & 0xF000) << 12;
+inline uint32 RGBA4444ToRGBA8888(u16 src) {
+	const uint32 r = (src & 0x000F) << 0;
+	const uint32 g = (src & 0x00F0) << 4;
+	const uint32 b = (src & 0x0F00) << 8;
+	const uint32 a = (src & 0xF000) << 12;
 
-	const u32 c = r | g | b | a;
+	const uint32 c = r | g | b | a;
 	return c | (c << 4);
 }
 
-inline u32 RGBA5551ToRGBA8888(u16 src) {
+inline uint32 RGBA5551ToRGBA8888(u16 src) {
 	u8 r = Convert5To8((src >> 0) & 0x1F);
 	u8 g = Convert5To8((src >> 5) & 0x1F);
 	u8 b = Convert5To8((src >> 10) & 0x1F);
@@ -57,7 +57,7 @@ inline u32 RGBA5551ToRGBA8888(u16 src) {
 	return (a << 24) | (b << 16) | (g << 8) | r;
 }
 
-inline u32 RGB565ToRGBA8888(u16 src) {
+inline uint32 RGB565ToRGBA8888(u16 src) {
 	u8 r = Convert5To8((src >> 0) & 0x1F);
 	u8 g = Convert6To8((src >> 5) & 0x3F);
 	u8 b = Convert5To8((src >> 11) & 0x1F);
@@ -65,7 +65,7 @@ inline u32 RGB565ToRGBA8888(u16 src) {
 	return (a << 24) | (b << 16) | (g << 8) | r;
 }
 
-inline u16 RGBA8888ToRGB565(u32 value) {
+inline u16 RGBA8888ToRGB565(uint32 value) {
 	u8 r = value & 0xFF;
 	u8 g = (value >> 8) & 0xFF;
 	u8 b = (value >> 16) & 0xFF;
@@ -75,7 +75,7 @@ inline u16 RGBA8888ToRGB565(u32 value) {
 	return (u16)r | ((u16)g << 5) | ((u16)b << 11);
 }
 
-inline u16 RGBA8888ToRGBA5551(u32 value) {
+inline u16 RGBA8888ToRGBA5551(uint32 value) {
 	u8 r = value & 0xFF;
 	u8 g = (value >> 8) & 0xFF;
 	u8 b = (value >> 16) & 0xFF;
@@ -87,8 +87,8 @@ inline u16 RGBA8888ToRGBA5551(u32 value) {
 	return (u16)r | ((u16)g << 5) | ((u16)b << 10) | ((u16)a << 15);
 }
 
-inline u16 RGBA8888ToRGBA4444(u32 value) {
-	const u32 c = value >> 4;
+inline u16 RGBA8888ToRGBA4444(uint32 value) {
+	const uint32 c = value >> 4;
 	const u16 r = (c >> 0) & 0x000F;
 	const u16 g = (c >> 4) & 0x00F0;
 	const u16 b = (c >> 8) & 0x0F00;
@@ -107,37 +107,37 @@ void convert5551_dx9(u16* data, u32* out, int width, int l, int u);
 
 // "Complete" set of color conversion functions between the usual formats.
 
-typedef void (*Convert16bppTo16bppFunc)(u16 *dst, const u16 *src, u32 numPixels);
-typedef void (*Convert16bppTo32bppFunc)(u32 *dst, const u16 *src, u32 numPixels);
-typedef void (*Convert32bppTo16bppFunc)(u16 *dst, const u32 *src, u32 numPixels);
-typedef void (*Convert32bppTo32bppFunc)(u32 *dst, const u32 *src, u32 numPixels);
+typedef void (*Convert16bppTo16bppFunc)(u16 *dst, const u16 *src, uint32 numPixels);
+typedef void (*Convert16bppTo32bppFunc)(uint32 *dst, const u16 *src, uint32 numPixels);
+typedef void (*Convert32bppTo16bppFunc)(u16 *dst, const uint32 *src, uint32 numPixels);
+typedef void (*Convert32bppTo32bppFunc)(uint32 *dst, const uint32 *src, uint32 numPixels);
 
-void ConvertBGRA8888ToRGBA8888(u32 *dst, const u32 *src, u32 numPixels);
+void ConvertBGRA8888ToRGBA8888(uint32 *dst, const uint32 *src, uint32 numPixels);
 #define ConvertRGBA8888ToBGRA8888 ConvertBGRA8888ToRGBA8888
 
-void ConvertRGBA8888ToRGBA5551(u16 *dst, const u32 *src, u32 numPixels);
-void ConvertRGBA8888ToRGB565(u16 *dst, const u32 *src, u32 numPixels);
-void ConvertRGBA8888ToRGBA4444(u16 *dst, const u32 *src, u32 numPixels);
+void ConvertRGBA8888ToRGBA5551(u16 *dst, const uint32 *src, uint32 numPixels);
+void ConvertRGBA8888ToRGB565(u16 *dst, const uint32 *src, uint32 numPixels);
+void ConvertRGBA8888ToRGBA4444(u16 *dst, const uint32 *src, uint32 numPixels);
 
-void ConvertBGRA8888ToRGBA5551(u16 *dst, const u32 *src, u32 numPixels);
-void ConvertBGRA8888ToRGB565(u16 *dst, const u32 *src, u32 numPixels);
-void ConvertBGRA8888ToRGBA4444(u16 *dst, const u32 *src, u32 numPixels);
+void ConvertBGRA8888ToRGBA5551(u16 *dst, const uint32 *src, uint32 numPixels);
+void ConvertBGRA8888ToRGB565(u16 *dst, const uint32 *src, uint32 numPixels);
+void ConvertBGRA8888ToRGBA4444(u16 *dst, const uint32 *src, uint32 numPixels);
 
-void ConvertRGBA565ToRGBA8888(u32 *dst, const u16 *src, u32 numPixels);
-void ConvertRGBA5551ToRGBA8888(u32 *dst, const u16 *src, u32 numPixels);
-void ConvertRGBA4444ToRGBA8888(u32 *dst, const u16 *src, u32 numPixels);
+void ConvertRGBA565ToRGBA8888(uint32 *dst, const u16 *src, uint32 numPixels);
+void ConvertRGBA5551ToRGBA8888(uint32 *dst, const u16 *src, uint32 numPixels);
+void ConvertRGBA4444ToRGBA8888(uint32 *dst, const u16 *src, uint32 numPixels);
 
-void ConvertABGR565ToRGBA8888(u32 *dst, const u16 *src, u32 numPixels);
-void ConvertABGR1555ToRGBA8888(u32 *dst, const u16 *src, u32 numPixels);
-void ConvertABGR4444ToRGBA8888(u32 *dst, const u16 *src, u32 numPixels);
+void ConvertABGR565ToRGBA8888(uint32 *dst, const u16 *src, uint32 numPixels);
+void ConvertABGR1555ToRGBA8888(uint32 *dst, const u16 *src, uint32 numPixels);
+void ConvertABGR4444ToRGBA8888(uint32 *dst, const u16 *src, uint32 numPixels);
 
-void ConvertRGBA4444ToBGRA8888(u32 *dst, const u16 *src, u32 numPixels);
-void ConvertRGBA5551ToBGRA8888(u32 *dst, const u16 *src, u32 numPixels);
-void ConvertRGB565ToBGRA8888(u32 *dst, const u16 *src, u32 numPixels);
+void ConvertRGBA4444ToBGRA8888(uint32 *dst, const u16 *src, uint32 numPixels);
+void ConvertRGBA5551ToBGRA8888(uint32 *dst, const u16 *src, uint32 numPixels);
+void ConvertRGB565ToBGRA8888(uint32 *dst, const u16 *src, uint32 numPixels);
 
-void ConvertRGBA4444ToABGR4444Basic(u16 *dst, const u16 *src, u32 numPixels);
-void ConvertRGBA5551ToABGR1555Basic(u16 *dst, const u16 *src, u32 numPixels);
-void ConvertRGB565ToBGR565Basic(u16 *dst, const u16 *src, u32 numPixels);
+void ConvertRGBA4444ToABGR4444Basic(u16 *dst, const u16 *src, uint32 numPixels);
+void ConvertRGBA5551ToABGR1555Basic(u16 *dst, const u16 *src, uint32 numPixels);
+void ConvertRGB565ToBGR565Basic(u16 *dst, const u16 *src, uint32 numPixels);
 
 #if PPSSPP_ARCH(ARM64)
 #define ConvertRGBA4444ToABGR4444 ConvertRGBA4444ToABGR4444NEON

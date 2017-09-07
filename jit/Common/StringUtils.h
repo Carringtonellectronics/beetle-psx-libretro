@@ -17,9 +17,7 @@
 
 #pragma once
 
-#include <base/stringutil.h>
-
-#include "Common.h"
+#include "jit/Common/base/stringutil.h"
 
 
 void truncate_cpy(char *dest, size_t destSize, const char *src);

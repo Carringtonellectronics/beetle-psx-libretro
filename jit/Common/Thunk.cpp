@@ -15,7 +15,7 @@
 // Official SVN repository and contact information can be found at
 // http://code.google.com/p/dolphin-emu/
 
-#include "MemoryUtil.h"
+#include "jit/Memory/MemoryUtil.h"
 #include "ABI.h"
 #include "Thunk.h"
 
@@ -24,9 +24,9 @@
 namespace
 {
 
-#ifndef _M_X64
-static u8 GC_ALIGNED32(saved_fp_state[16 * 4 * 4]);
-static u8 GC_ALIGNED32(saved_gpr_state[16 * 8]);
+#ifndef ARCH_64BIT
+static uint8 GC_ALIGNED32(saved_fp_state[16 * 4 * 4]);
+static uint8 GC_ALIGNED32(saved_gpr_state[16 * 8]);
 static u16 saved_mxcsr;
 #endif
 
@@ -36,7 +36,7 @@ using namespace Gen;
 
 void ThunkManager::Init()
 {
-#ifdef _M_X64
+#ifdef ARCH_64BIT
 	// Account for the return address and "home space" on Windows (which needs to be at the bottom.)
 	const int stackOffset = ThunkStackOffset();
 	int stackPosition;
@@ -45,7 +45,7 @@ void ThunkManager::Init()
 	AllocCodeSpace(THUNK_ARENA_SIZE);
 	BeginWrite();
 	save_regs = GetCodePtr();
-#ifdef _M_X64
+#ifdef ARCH_64BIT
 	for (int i = 2; i < ABI_GetNumXMMRegs(); i++)
 		MOVAPS(MDisp(RSP, stackOffset + (i - 2) * 16), (X64Reg)(XMM0 + i));
 	stackPosition = (ABI_GetNumXMMRegs() - 2) * 2;
@@ -71,7 +71,7 @@ void ThunkManager::Init()
 	RET();
 
 	load_regs = GetCodePtr();
-#ifdef _M_X64
+#ifdef ARCH_64BIT
 	for (int i = 2; i < ABI_GetNumXMMRegs(); i++)
 		MOVAPS((X64Reg)(XMM0 + i), MDisp(RSP, stackOffset + (i - 2) * 16));
 	stackPosition = (ABI_GetNumXMMRegs() - 2) * 2;
@@ -113,7 +113,7 @@ void ThunkManager::Shutdown()
 int ThunkManager::ThunkBytesNeeded()
 {
 	int space = (ABI_GetNumXMMRegs() - 2) * 16;
-#ifdef _M_X64
+#ifdef ARCH_64BIT
 	// MXCSR
 	space += 8;
 	space += 7 * 8;
@@ -132,7 +132,7 @@ int ThunkManager::ThunkBytesNeeded()
 
 int ThunkManager::ThunkStackOffset()
 {
-#ifdef _M_X64
+#ifdef ARCH_64BIT
 #ifdef _WIN32
 	return 0x28;
 #else
@@ -144,7 +144,7 @@ int ThunkManager::ThunkStackOffset()
 }
 
 const void *ThunkManager::ProtectFunction(const void *function, int num_params) {
-	std::map<const void *, const u8 *>::iterator iter;
+	std::map<const void *, const uint8 *>::iterator iter;
 	iter = thunks.find(function);
 	if (iter != thunks.end())
 		return (const void *)iter->second;
@@ -152,10 +152,10 @@ const void *ThunkManager::ProtectFunction(const void *function, int num_params) 
 		PanicAlert("Trying to protect functions before the emu is started. Bad bad bad.");
 
 	BeginWrite();
-	const u8 *call_point = GetCodePtr();
+	const uint8 *call_point = GetCodePtr();
 	Enter(this, true);
 
-#ifdef _M_X64
+#ifdef ARCH_64BIT
 	ABI_CallFunction(function);
 #else
 	// Since parameters are in the previous stack frame, not in registers, this takes some
@@ -181,7 +181,7 @@ const void *ThunkManager::ProtectFunction(const void *function, int num_params) 
 
 void ThunkManager::Enter(ThunkEmitter *emit, bool withinCall)
 {
-#ifdef _M_X64
+#ifdef ARCH_64BIT
 	// Make sure to align stack.
 	emit->SUB(64, R(ESP), Imm32(ThunkStackOffset() + ThunkBytesNeeded() + (withinCall ? 0 : 8)));
 	emit->ABI_CallFunction(save_regs);
@@ -192,7 +192,7 @@ void ThunkManager::Enter(ThunkEmitter *emit, bool withinCall)
 
 void ThunkManager::Leave(ThunkEmitter *emit, bool withinCall)
 {
-#ifdef _M_X64
+#ifdef ARCH_64BIT
 	emit->ABI_CallFunction(load_regs);
 	emit->ADD(64, R(ESP), Imm32(ThunkStackOffset() + ThunkBytesNeeded() + (withinCall ? 0 : 8)));
 #else

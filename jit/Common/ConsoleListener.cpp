@@ -46,8 +46,8 @@ HANDLE ConsoleListener::hTriggerEvent = NULL;
 CRITICAL_SECTION ConsoleListener::criticalSection;
 
 char *ConsoleListener::logPending = NULL;
-volatile u32 ConsoleListener::logPendingReadPos = 0;
-volatile u32 ConsoleListener::logPendingWritePos = 0;
+volatile uint32 ConsoleListener::logPendingReadPos = 0;
+volatile uint32 ConsoleListener::logPendingWritePos = 0;
 #endif
 
 ConsoleListener::ConsoleListener() : bHidden(true)
@@ -313,7 +313,7 @@ void ConsoleListener::LogWriterThread()
 		WaitForSingleObject(hTriggerEvent, INFINITE);
 		Sleep(LOG_LATENCY_DELAY_MS);
 
-		u32 logRemotePos = Common::AtomicLoadAcquire(logPendingWritePos);
+		uint32 logRemotePos = Common::AtomicLoadAcquire(logPendingWritePos);
 		if (logRemotePos == (u32) -1)
 			break;
 		else if (logRemotePos == logPendingReadPos)
@@ -396,8 +396,8 @@ void ConsoleListener::SendToThread(LogTypes::LOG_LEVELS Level, const char *Text)
 	}
 
 	EnterCriticalSection(&criticalSection);
-	u32 logWritePos = Common::AtomicLoad(logPendingWritePos);
-	u32 prevLogWritePos = logWritePos;
+	uint32 logWritePos = Common::AtomicLoad(logPendingWritePos);
+	uint32 prevLogWritePos = logWritePos;
 	if (logWritePos + ColorLen + Len >= LOG_PENDING_MAX)
 	{
 		for (int i = 0; i < ColorLen; ++i)

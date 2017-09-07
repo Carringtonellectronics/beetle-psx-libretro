@@ -27,26 +27,26 @@ struct Opcode {
 	Opcode() {
 	}
 
-	explicit Opcode(u32 v) : encoding(v) {
+	explicit Opcode(uint32 v) : encoding(v) {
 	}
 
-	u32 operator & (const u32 &arg) const {
+	uint32 operator & (const uint32 &arg) const {
 		return encoding & arg;
 	}
 
-	u32 operator >> (const u32 &arg) const {
+	uint32 operator >> (const uint32 &arg) const {
 		return encoding >> arg;
 	}
 
-	bool operator == (const u32 &arg) const {
+	bool operator == (const uint32 &arg) const {
 		return encoding == arg;
 	}
 
-	bool operator != (const u32 &arg) const {
+	bool operator != (const uint32 &arg) const {
 		return encoding != arg;
 	}
 
-	u32 encoding;
+	uint32 encoding;
 };
 
 }

@@ -15,11 +15,10 @@
 // Official git repository and contact information can be found at
 // https://github.com/hrydgard/ppsspp and http://www.ppsspp.org/.
 
-#include "Core/MIPS/MIPS.h"
-#include "Core/MIPS/MIPSTables.h"
-#include "Core/MIPS/MIPSCodeUtils.h"
-#include "Core/Host.h"
-#include "Core/MemMap.h"
+#include "jit/MIPS.h"
+#include "jit/MIPSTables.h"
+#include "jit/MIPSCodeUtils.h"
+#include "jit/Memory/MemMap.h"
 
 namespace MIPSCodeUtils
 {
@@ -29,7 +28,7 @@ namespace MIPSCodeUtils
 #define _RS   ((op>>21) & 0x1F)
 #define _RT   ((op>>16) & 0x1F)
 
-	u32 GetJumpTarget(u32 addr)
+	uint32 GetJumpTarget(uint32 addr)
 	{
 		MIPSOpcode op = Memory::Read_Instruction(addr, true);
 		if (op != 0)
@@ -37,7 +36,7 @@ namespace MIPSCodeUtils
 			MIPSInfo info = MIPSGetInfo(op);
 			if ((info & IS_JUMP) && (info & IN_IMM26))
 			{
-				u32 target = (addr & 0xF0000000) | ((op&0x03FFFFFF) << 2);
+				uint32 target = (addr & 0xF0000000) | ((op&0x03FFFFFF) << 2);
 				return target;
 			}
 			else
@@ -47,7 +46,7 @@ namespace MIPSCodeUtils
 			return INVALIDTARGET;
 	}
 
-	u32 GetBranchTarget(u32 addr)
+	uint32 GetBranchTarget(uint32 addr)
 	{
 		MIPSOpcode op = Memory::Read_Instruction(addr, true);
 		if (op != 0)
@@ -64,13 +63,13 @@ namespace MIPSCodeUtils
 			return INVALIDTARGET;
 	}
 
-	u32 GetBranchTargetNoRA(u32 addr)
+	uint32 GetBranchTargetNoRA(uint32 addr)
 	{
 		MIPSOpcode op = Memory::Read_Instruction(addr, true);
 		return GetBranchTargetNoRA(addr, op);
 	}
 
-	u32 GetBranchTargetNoRA(u32 addr, MIPSOpcode op)
+	uint32 GetBranchTargetNoRA(uint32 addr, MIPSOpcode op)
 	{
 		if (op != 0)
 		{
@@ -86,7 +85,7 @@ namespace MIPSCodeUtils
 			return INVALIDTARGET;
 	}
 
-	u32 GetSureBranchTarget(u32 addr)
+	uint32 GetSureBranchTarget(uint32 addr)
 	{
 		MIPSOpcode op = Memory::Read_Instruction(addr, true);
 		if (op != 0)

@@ -20,9 +20,9 @@
 
 #include "Common/CPUDetect.h"
 #include "Core/MemMap.h"
-#include "Core/MIPS/JitCommon/JitCommon.h"
-#include "Core/MIPS/ARM/ArmJit.h"
-#include "Core/MIPS/ARM/ArmRegCache.h"
+#include "jit/JitCommon/JitCommon.h"
+#include "jit/ARM/ArmJit.h"
+#include "jit/ARM/ArmRegCache.h"
 
 namespace MIPSComp {
 

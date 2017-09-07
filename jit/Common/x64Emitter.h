@@ -21,10 +21,11 @@
 //
 
 #include <cstddef>
-#include "jit/Common/Common.h"
 #include "CodeBlock.h"
+#include "mednafen/mednafen.h"
+#include "mednafen/mednafen-types.h"
 
-#if PPSSPP_ARCH(64BIT)
+#ifdef ARCH_64BIT
 #define PTRBITS 64
 #else
 #define PTRBITS 32
@@ -33,7 +34,7 @@
 namespace Gen
 {
 
-enum X64Reg : u32
+enum X64Reg : uint32
 {
 	EAX = 0, EBX = 3, ECX = 1, EDX = 2,
 	ESI = 6, EDI = 7, EBP = 5, ESP = 4,
@@ -156,12 +157,12 @@ class XEmitter;
 struct OpArg
 {
 	OpArg() {}  // dummy op arg, used for storage
-	OpArg(u64 _offset, int _scale, X64Reg rmReg = RAX, X64Reg scaledReg = RAX)
+	OpArg(uint64 _offset, int _scale, X64Reg rmReg = RAX, X64Reg scaledReg = RAX)
 	{
 		operandReg = 0;
-		scale = (u8)_scale;
-		offsetOrBaseReg = (u16)rmReg;
-		indexReg = (u16)scaledReg;
+		scale = (uint8)_scale;
+		offsetOrBaseReg = (uint16)rmReg;
+		indexReg = (uint16)scaledReg;
 		//if scale == 0 never mind offsetting
 		offset = _offset;
 	}
@@ -174,10 +175,10 @@ struct OpArg
 	void WriteVex(XEmitter* emit, X64Reg regOp1, X64Reg regOp2, int L, int pp, int mmmmm, int W = 0) const;
 	void WriteRest(XEmitter *emit, int extraBytes=0, X64Reg operandReg=INVALID_REG, bool warn_64bit_offset = true) const;
 	void WriteFloatModRM(XEmitter *emit, FloatOp op);
-	void WriteSingleByteOp(XEmitter *emit, u8 op, X64Reg operandReg, int bits);
+	void WriteSingleByteOp(XEmitter *emit, uint8 op, X64Reg operandReg, int bits);
 	// This one is public - must be written to
-	u64 offset;  // use RIP-relative as much as possible - 64-bit immediates are not available.
-	u16 operandReg;
+	uint64 offset;  // use RIP-relative as much as possible - 64-bit immediates are not available.
+	uint16 operandReg;
 
 	void WriteNormalOp(XEmitter *emit, bool toRM, NormalOp op, const OpArg &operand, int bits) const;
 	bool IsImm() const {return scale == SCALE_IMM8 || scale == SCALE_IMM16 || scale == SCALE_IMM32 || scale == SCALE_IMM64;}
@@ -226,8 +227,8 @@ struct OpArg
 			return INVALID_REG;
 	}
 
-	u32 GetImmValue() const {
-		return (u32)offset;
+	uint32 GetImmValue() const {
+		return (uint32)offset;
 	}
 
 	// For loops.
@@ -236,20 +237,20 @@ struct OpArg
 	}
 
 private:
-	u8 scale;
-	u16 offsetOrBaseReg;
-	u16 indexReg;
+	uint8 scale;
+	uint16 offsetOrBaseReg;
+	uint16 indexReg;
 };
 
-inline OpArg M(const void *ptr) {return OpArg((u64)ptr, (int)SCALE_RIP);}
+inline OpArg M(const void *ptr) {return OpArg((uint64)ptr, (int)SCALE_RIP);}
 template <typename T>
-inline OpArg M(const T *ptr)    {return OpArg((u64)(const void *)ptr, (int)SCALE_RIP);}
+inline OpArg M(const T *ptr)    {return OpArg((uint64)(const void *)ptr, (int)SCALE_RIP);}
 inline OpArg R(X64Reg value)    {return OpArg(0, SCALE_NONE, value);}
 inline OpArg MatR(X64Reg value) {return OpArg(0, SCALE_ATREG, value);}
 
 inline OpArg MDisp(X64Reg value, int offset)
 {
-	return OpArg((u32)offset, SCALE_ATREG, value);
+	return OpArg((uint32)offset, SCALE_ATREG, value);
 }
 
 inline OpArg MComplex(X64Reg base, X64Reg scaled, int scale, int offset)
@@ -270,26 +271,26 @@ inline OpArg MRegSum(X64Reg base, X64Reg offset)
 	return MComplex(base, offset, 1, 0);
 }
 
-inline OpArg Imm8 (u8 imm)  {return OpArg(imm, SCALE_IMM8);}
-inline OpArg Imm16(u16 imm) {return OpArg(imm, SCALE_IMM16);} //rarely used
-inline OpArg Imm32(u32 imm) {return OpArg(imm, SCALE_IMM32);}
-inline OpArg Imm64(u64 imm) {return OpArg(imm, SCALE_IMM64);}
+inline OpArg Imm8 (uint8 imm)  {return OpArg(imm, SCALE_IMM8);}
+inline OpArg Imm16(uint16 imm) {return OpArg(imm, SCALE_IMM16);} //rarely used
+inline OpArg Imm32(uint32 imm) {return OpArg(imm, SCALE_IMM32);}
+inline OpArg Imm64(uint64 imm) {return OpArg(imm, SCALE_IMM64);}
 
 template<int N> OpArg ImmPtrTpl(const void *imm);
-template<> inline OpArg ImmPtrTpl<8>(const void *imm) {return Imm64((u64)imm);}
-template<> inline OpArg ImmPtrTpl<4>(const void *imm) {return Imm32((u32)(uintptr_t)imm);}
+template<> inline OpArg ImmPtrTpl<8>(const void *imm) {return Imm64((uint64)imm);}
+template<> inline OpArg ImmPtrTpl<4>(const void *imm) {return Imm32((uint32)(uintptr_t)imm);}
 inline OpArg ImmPtr(const void* imm) {return ImmPtrTpl<sizeof(void*)>(imm);}
 
-inline OpArg UImmAuto(u32 imm) {
+inline OpArg UImmAuto(uint32 imm) {
 	return OpArg(imm, imm >= 128 ? SCALE_IMM32 : SCALE_IMM8);
 }
-inline OpArg SImmAuto(s32 imm) {
+inline OpArg SImmAuto(int32 imm) {
 	return OpArg(imm, (imm >= 128 || imm < -128) ? SCALE_IMM32 : SCALE_IMM8);
 }
 
-template<int N> u32 PtrOffsetTpl(const void* ptr, const void* base);
-template<> inline u32 PtrOffsetTpl<8>(const void *ptr, const void* base) {
-	s64 distance = (s64)ptr-(s64)base;
+template<int N> uint32 PtrOffsetTpl(const void* ptr, const void* base);
+template<> inline uint32 PtrOffsetTpl<8>(const void *ptr, const void* base) {
+	int64 distance = (int64)ptr-(int64)base;
 	if (distance >= 0x80000000LL ||
 	    distance < -0x80000000LL)
 	{
@@ -297,23 +298,23 @@ template<> inline u32 PtrOffsetTpl<8>(const void *ptr, const void* base) {
 		return 0;
 	}
 
-	return (u32)distance;
+	return (uint32)distance;
 }
-template<> inline u32 PtrOffsetTpl<4>(const void *ptr, const void* base) {
-	return (u32)(uintptr_t)ptr-(u32)(uintptr_t)base;
+template<> inline uint32 PtrOffsetTpl<4>(const void *ptr, const void* base) {
+	return (uint32)(uintptr_t)ptr-(uint32)(uintptr_t)base;
 }
-inline u32 PtrOffset(const void* ptr, const void* base) {
+inline uint32 PtrOffset(const void* ptr, const void* base) {
     return PtrOffsetTpl<sizeof(void*)>(ptr, base);
 }
 
 //usage: int a[]; ARRAY_OFFSET(a,10)
-#define ARRAY_OFFSET(array,index) ((u32)((u64)&(array)[index]-(u64)&(array)[0]))
+#define ARRAY_OFFSET(array,index) ((uint32)((uint64)&(array)[index]-(uint64)&(array)[0]))
 //usage: struct {int e;} s; STRUCT_OFFSET(s,e)
-#define STRUCT_OFFSET(str,elem) ((u32)((u64)&(str).elem-(u64)&(str)))
+#define STRUCT_OFFSET(str,elem) ((uint32)((uint64)&(str).elem-(uint64)&(str)))
 
 struct FixupBranch
 {
-	u8 *ptr;
+	uint8 *ptr;
 	int type; //0 = 8bit 1 = 32bit
 };
 
@@ -329,58 +330,58 @@ enum SSECompare
 	ORD,
 };
 
-typedef const u8* JumpTarget;
+typedef const uint8 *JumpTarget;
 
 class XEmitter
 {
 	friend struct OpArg;  // for Write8 etc
 private:
-	u8 *code;
+	uint8 *code;
 	bool flags_locked;
 
 	void CheckFlags();
 
 	void Rex(int w, int r, int x, int b);
-	void WriteSimple1Byte(int bits, u8 byte, X64Reg reg);
-	void WriteSimple2Byte(int bits, u8 byte1, u8 byte2, X64Reg reg);
+	void WriteSimple1Byte(int bits, uint8 byte, X64Reg reg);
+	void WriteSimple2Byte(int bits, uint8 byte1, uint8 byte2, X64Reg reg);
 	void WriteMulDivType(int bits, OpArg src, int ext);
-	void WriteBitSearchType(int bits, X64Reg dest, OpArg src, u8 byte2, bool rep = false);
+	void WriteBitSearchType(int bits, X64Reg dest, OpArg src, uint8 byte2, bool rep = false);
 	void WriteShift(int bits, OpArg dest, OpArg &shift, int ext);
 	void WriteBitTest(int bits, OpArg &dest, OpArg &index, int ext);
 	void WriteMXCSR(OpArg arg, int ext);
-	void WriteSSEOp(u8 opPrefix, u16 op, X64Reg regOp, OpArg arg, int extrabytes = 0);
-	void WriteSSSE3Op(u8 opPrefix, u16 op, X64Reg regOp, OpArg arg, int extrabytes = 0);
-	void WriteSSE41Op(u8 opPrefix, u16 op, X64Reg regOp, OpArg arg, int extrabytes = 0);
-	void WriteAVXOp(u8 opPrefix, u16 op, X64Reg regOp, OpArg arg, int extrabytes = 0);
-	void WriteAVXOp(u8 opPrefix, u16 op, X64Reg regOp1, X64Reg regOp2, OpArg arg, int extrabytes = 0);
-	void WriteVEXOp(int size, u8 opPrefix, u16 op, X64Reg regOp1, X64Reg regOp2, OpArg arg, int extrabytes = 0);
-	void WriteBMI1Op(int size, u8 opPrefix, u16 op, X64Reg regOp1, X64Reg regOp2, OpArg arg, int extrabytes = 0);
-	void WriteBMI2Op(int size, u8 opPrefix, u16 op, X64Reg regOp1, X64Reg regOp2, OpArg arg, int extrabytes = 0);
+	void WriteSSEOp(uint8 opPrefix, uint16 op, X64Reg regOp, OpArg arg, int extrabytes = 0);
+	void WriteSSSE3Op(uint8 opPrefix, uint16 op, X64Reg regOp, OpArg arg, int extrabytes = 0);
+	void WriteSSE41Op(uint8 opPrefix, uint16 op, X64Reg regOp, OpArg arg, int extrabytes = 0);
+	void WriteAVXOp(uint8 opPrefix, uint16 op, X64Reg regOp, OpArg arg, int extrabytes = 0);
+	void WriteAVXOp(uint8 opPrefix, uint16 op, X64Reg regOp1, X64Reg regOp2, OpArg arg, int extrabytes = 0);
+	void WriteVEXOp(int size, uint8 opPrefix, uint16 op, X64Reg regOp1, X64Reg regOp2, OpArg arg, int extrabytes = 0);
+	void WriteBMI1Op(int size, uint8 opPrefix, uint16 op, X64Reg regOp1, X64Reg regOp2, OpArg arg, int extrabytes = 0);
+	void WriteBMI2Op(int size, uint8 opPrefix, uint16 op, X64Reg regOp1, X64Reg regOp2, OpArg arg, int extrabytes = 0);
 	void WriteFloatLoadStore(int bits, FloatOp op, FloatOp op_80b, OpArg arg);
 	void WriteNormalOp(XEmitter *emit, int bits, NormalOp op, const OpArg &a1, const OpArg &a2);
 
 protected:
-	inline void Write8(u8 value)   {*code++ = value;}
-	inline void Write16(u16 value) {*(u16*)code = (value); code += 2;}
-	inline void Write32(u32 value) {*(u32*)code = (value); code += 4;}
-	inline void Write64(u64 value) {*(u64*)code = (value); code += 8;}
+	inline void Write8(uint8 value)   {*code++ = value;}
+	inline void Write16(uint16 value) {*(uint16*)code = (value); code += 2;}
+	inline void Write32(uint32 value) {*(uint32*)code = (value); code += 4;}
+	inline void Write64(uint64 value) {*(uint64*)code = (value); code += 8;}
 
 public:
 	XEmitter() { code = nullptr; flags_locked = false; }
-	XEmitter(u8 *code_ptr) { code = code_ptr; flags_locked = false; }
+	XEmitter(uint8 *code_ptr) { code = code_ptr; flags_locked = false; }
 	virtual ~XEmitter() {}
 
 	void WriteModRM(int mod, int rm, int reg);
 	void WriteSIB(int scale, int index, int base);
 
-	void SetCodePointer(u8 *ptr);
-	const u8 *GetCodePointer() const;
+	void SetCodePointer(uint8 *ptr);
+	const uint8 *GetCodePointer() const;
 
 	void ReserveCodeSpace(int bytes);
-	const u8 *AlignCode4();
-	const u8 *AlignCode16();
-	const u8 *AlignCodePage();
-	u8 *GetWritableCodePtr();
+	const uint8 *AlignCode4();
+	const uint8 *AlignCode16();
+	const uint8 *AlignCodePage();
+	uint8 *GetWritableCodePtr();
 
 	void LockFlags() { flags_locked = true; }
 	void UnlockFlags() { flags_locked = false; }
@@ -424,7 +425,7 @@ public:
 	void UD2();
 	FixupBranch J(bool force5bytes = false);
 
-	void JMP(const u8 * addr, bool force5Bytes = false);
+	void JMP(const uint8 * addr, bool force5Bytes = false);
 	void JMP(OpArg arg);
 	void JMPptr(const OpArg &arg);
 	void JMPself(); //infinite loop!
@@ -436,7 +437,7 @@ public:
 
 	FixupBranch J_CC(CCFlags conditionCode, bool force5bytes = false);
 	//void J_CC(CCFlags conditionCode, JumpTarget target);
-	void J_CC(CCFlags conditionCode, const u8 * addr, bool force5Bytes = false);
+	void J_CC(CCFlags conditionCode, const uint8 * addr, bool force5Bytes = false);
 
 	void SetJumpTarget(const FixupBranch &branch);
 
@@ -594,8 +595,8 @@ public:
 	void RSQRTSS(X64Reg regOp, OpArg arg);
 
 	// SSE/SSE2: Floating point bitwise (yes)
-	void CMPSS(X64Reg regOp, OpArg arg, u8 compare);
-	void CMPSD(X64Reg regOp, OpArg arg, u8 compare);
+	void CMPSS(X64Reg regOp, OpArg arg, uint8 compare);
+	void CMPSD(X64Reg regOp, OpArg arg, uint8 compare);
 
 	inline void CMPEQSS(X64Reg regOp, OpArg arg) { CMPSS(regOp, arg, CMP_EQ); }
 	inline void CMPLTSS(X64Reg regOp, OpArg arg) { CMPSS(regOp, arg, CMP_LT); }
@@ -610,8 +611,8 @@ public:
 	void ADDPD(X64Reg regOp, OpArg arg);
 	void SUBPS(X64Reg regOp, OpArg arg);
 	void SUBPD(X64Reg regOp, OpArg arg);
-	void CMPPS(X64Reg regOp, OpArg arg, u8 compare);
-	void CMPPD(X64Reg regOp, OpArg arg, u8 compare);
+	void CMPPS(X64Reg regOp, OpArg arg, uint8 compare);
+	void CMPPD(X64Reg regOp, OpArg arg, uint8 compare);
 	void MULPS(X64Reg regOp, OpArg arg);
 	void MULPD(X64Reg regOp, OpArg arg);
 	void DIVPS(X64Reg regOp, OpArg arg);
@@ -636,8 +637,8 @@ public:
 	void XORPD(X64Reg regOp, OpArg arg);
 
 	// SSE/SSE2: Shuffle components. These are tricky - see Intel documentation.
-	void SHUFPS(X64Reg regOp, OpArg arg, u8 shuffle);
-	void SHUFPD(X64Reg regOp, OpArg arg, u8 shuffle);
+	void SHUFPS(X64Reg regOp, OpArg arg, uint8 shuffle);
+	void SHUFPD(X64Reg regOp, OpArg arg, uint8 shuffle);
 
 	// SSE/SSE2: Useful alternative to shuffle in some cases.
 	void MOVDDUP(X64Reg regOp, OpArg arg);
@@ -652,18 +653,18 @@ public:
 	void HSUBPD(X64Reg dest, OpArg src);
 
 	// SSE4: Further horizontal operations - dot products. These are weirdly flexible, the arg contains both a read mask and a write "mask".
-	void DPPD(X64Reg dest, OpArg src, u8 arg);
+	void DPPD(X64Reg dest, OpArg src, uint8 arg);
 
 	// These are probably useful for VFPU emulation.
-	void INSERTPS(X64Reg dest, OpArg src, u8 arg);
-	void EXTRACTPS(OpArg dest, X64Reg src, u8 arg);
+	void INSERTPS(X64Reg dest, OpArg src, uint8 arg);
+	void EXTRACTPS(OpArg dest, X64Reg src, uint8 arg);
 #endif
 
 	// SSE3: Horizontal operations in SIMD registers. Very slow! shufps-based code beats it handily on Ivy.
 	void HADDPS(X64Reg dest, OpArg src);
 
 	// SSE4: Further horizontal operations - dot products. These are weirdly flexible, the arg contains both a read mask and a write "mask".
-	void DPPS(X64Reg dest, OpArg src, u8 arg);
+	void DPPS(X64Reg dest, OpArg src, uint8 arg);
 
 	void UNPCKLPS(X64Reg dest, OpArg src);
 	void UNPCKHPS(X64Reg dest, OpArg src);
@@ -797,8 +798,8 @@ public:
 	void PCMPGTW(X64Reg dest, OpArg arg);
 	void PCMPGTD(X64Reg dest, OpArg arg);
 
-	void PEXTRW(X64Reg dest, OpArg arg, u8 subreg);
-	void PINSRW(X64Reg dest, OpArg arg, u8 subreg);
+	void PEXTRW(X64Reg dest, OpArg arg, uint8 subreg);
+	void PINSRW(X64Reg dest, OpArg arg, uint8 subreg);
 
 	void PMADDWD(X64Reg dest, OpArg arg);
 	void PSADBW(X64Reg dest, OpArg arg);
@@ -818,11 +819,11 @@ public:
 	void PMAXUD(X64Reg dest, OpArg arg);
 
 	void PMOVMSKB(X64Reg dest, OpArg arg);
-	void PSHUFD(X64Reg dest, OpArg arg, u8 shuffle);
+	void PSHUFD(X64Reg dest, OpArg arg, uint8 shuffle);
 	void PSHUFB(X64Reg dest, OpArg arg);
 
-	void PSHUFLW(X64Reg dest, OpArg arg, u8 shuffle);
-	void PSHUFHW(X64Reg dest, OpArg arg, u8 shuffle);
+	void PSHUFLW(X64Reg dest, OpArg arg, uint8 shuffle);
+	void PSHUFHW(X64Reg dest, OpArg arg, uint8 shuffle);
 
 	void PSRLW(X64Reg reg, int shift);
 	void PSRLD(X64Reg reg, int shift);
@@ -863,10 +864,10 @@ public:
 	void BLENDVPD(X64Reg dest, OpArg arg);
 
 	// SSE4: rounding (see FloatRound for mode or use ROUNDNEARSS, etc. helpers.)
-	void ROUNDSS(X64Reg dest, OpArg arg, u8 mode);
-	void ROUNDSD(X64Reg dest, OpArg arg, u8 mode);
-	void ROUNDPS(X64Reg dest, OpArg arg, u8 mode);
-	void ROUNDPD(X64Reg dest, OpArg arg, u8 mode);
+	void ROUNDSS(X64Reg dest, OpArg arg, uint8 mode);
+	void ROUNDSD(X64Reg dest, OpArg arg, uint8 mode);
+	void ROUNDPS(X64Reg dest, OpArg arg, uint8 mode);
+	void ROUNDPD(X64Reg dest, OpArg arg, uint8 mode);
 
 	inline void ROUNDNEARSS(X64Reg dest, OpArg arg) { ROUNDSS(dest, arg, FROUND_NEAREST); }
 	inline void ROUNDFLOORSS(X64Reg dest, OpArg arg) { ROUNDSS(dest, arg, FROUND_FLOOR); }
@@ -898,7 +899,7 @@ public:
 	void VMULPD(X64Reg regOp1, X64Reg regOp2, OpArg arg);
 	void VDIVPD(X64Reg regOp1, X64Reg regOp2, OpArg arg);
 	void VSQRTSD(X64Reg regOp1, X64Reg regOp2, OpArg arg);
-	void VSHUFPD(X64Reg regOp1, X64Reg regOp2, OpArg arg, u8 shuffle);
+	void VSHUFPD(X64Reg regOp1, X64Reg regOp2, OpArg arg, uint8 shuffle);
 	void VUNPCKLPD(X64Reg regOp1, X64Reg regOp2, OpArg arg);
 	void VUNPCKHPD(X64Reg regOp1, X64Reg regOp2, OpArg arg);
 
@@ -982,7 +983,7 @@ public:
 	void SARX(int bits, X64Reg regOp1, OpArg arg, X64Reg regOp2);
 	void SHLX(int bits, X64Reg regOp1, OpArg arg, X64Reg regOp2);
 	void SHRX(int bits, X64Reg regOp1, OpArg arg, X64Reg regOp2);
-	void RORX(int bits, X64Reg regOp, OpArg arg, u8 rotate);
+	void RORX(int bits, X64Reg regOp, OpArg arg, uint8 rotate);
 	void PEXT(int bits, X64Reg regOp1, X64Reg regOp2, OpArg arg);
 	void PDEP(int bits, X64Reg regOp1, X64Reg regOp2, OpArg arg);
 	void MULX(int bits, X64Reg regOp1, X64Reg regOp2, OpArg arg);
@@ -1004,26 +1005,26 @@ public:
 		ABI_CallFunction((const void *)func);
 	}
 
-	void ABI_CallFunction(const u8 *func) {
+	void ABI_CallFunction(const uint8 *func) {
 		ABI_CallFunction((const void *)func);
 	}
-	void ABI_CallFunctionC16(const void *func, u16 param1);
-	void ABI_CallFunctionCC16(const void *func, u32 param1, u16 param2);
+	void ABI_CallFunctionC16(const void *func, uint16 param1);
+	void ABI_CallFunctionCC16(const void *func, uint32 param1, uint16 param2);
 
 
-	// These only support u32 parameters, but that's enough for a lot of uses.
+	// These only support uint32 parameters, but that's enough for a lot of uses.
 	// These will destroy the 1 or 2 first "parameter regs".
-	void ABI_CallFunctionC(const void *func, u32 param1);
-	void ABI_CallFunctionCC(const void *func, u32 param1, u32 param2);
-	void ABI_CallFunctionCCC(const void *func, u32 param1, u32 param2, u32 param3);
-	void ABI_CallFunctionCCP(const void *func, u32 param1, u32 param2, void *param3);
-	void ABI_CallFunctionCCCP(const void *func, u32 param1, u32 param2, u32 param3, void *param4);
+	void ABI_CallFunctionC(const void *func, uint32 param1);
+	void ABI_CallFunctionCC(const void *func, uint32 param1, uint32 param2);
+	void ABI_CallFunctionCCC(const void *func, uint32 param1, uint32 param2, uint32 param3);
+	void ABI_CallFunctionCCP(const void *func, uint32 param1, uint32 param2, void *param3);
+	void ABI_CallFunctionCCCP(const void *func, uint32 param1, uint32 param2, uint32 param3, void *param4);
 	void ABI_CallFunctionP(const void *func, void *param1);
 	void ABI_CallFunctionPA(const void *func, void *param1, const Gen::OpArg &arg2);
 	void ABI_CallFunctionPAA(const void *func, void *param1, const Gen::OpArg &arg2, const Gen::OpArg &arg3);
-	void ABI_CallFunctionPPC(const void *func, void *param1, void *param2, u32 param3);
-	void ABI_CallFunctionAC(const void *func, const Gen::OpArg &arg1, u32 param2);
-	void ABI_CallFunctionACC(const void *func, const Gen::OpArg &arg1, u32 param2, u32 param3);
+	void ABI_CallFunctionPPC(const void *func, void *param1, void *param2, uint32 param3);
+	void ABI_CallFunctionAC(const void *func, const Gen::OpArg &arg1, uint32 param2);
+	void ABI_CallFunctionACC(const void *func, const Gen::OpArg &arg1, uint32 param2, uint32 param3);
 	void ABI_CallFunctionA(const void *func, const Gen::OpArg &arg1);
 	void ABI_CallFunctionAA(const void *func, const Gen::OpArg &arg1, const Gen::OpArg &arg2);
 
@@ -1032,7 +1033,7 @@ public:
 	void ABI_CallFunctionRR(const void *func, X64Reg reg1, X64Reg reg2);
 
 	template <typename Tr, typename T1>
-	void ABI_CallFunctionC(Tr (*func)(T1), u32 param1) {
+	void ABI_CallFunctionC(Tr (*func)(T1), uint32 param1) {
 		ABI_CallFunctionC((const void *)func, param1);
 	}
 
@@ -1056,7 +1057,7 @@ public:
 	void ABI_EmitPrologue(int maxCallParams);
 	void ABI_EmitEpilogue(int maxCallParams);
 
-	#ifdef _M_IX86
+	#ifdef ARCH_32BIT
 	inline int ABI_GetNumXMMRegs() { return 8; }
 	#else
 	inline int ABI_GetNumXMMRegs() { return 16; }
@@ -1074,7 +1075,7 @@ public:
 	bool RipAccessible(const void *ptr) const {
 		// For debugging
 		// return false;
-#ifdef _M_IX86
+#ifdef ARCH_32BIT
 		return true;
 #else
 		ptrdiff_t diff = GetCodePtr() - (const uint8_t *)ptr;

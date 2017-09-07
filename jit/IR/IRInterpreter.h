@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Common/CommonTypes.h"
+#include "mednafen/mednafen-types.h"
 
 class MIPSState;
 struct IRInst;

@@ -160,7 +160,6 @@ static int32_t CalcNextEvent(int32_t next_event)
             next_event = tmp_clocks;
       }
    }
-   
    return(next_event);
 }
 
@@ -319,6 +318,9 @@ int32_t TIMER_Update(const int32_t timestamp)
    lastts = timestamp;
    globalTimer = timestamp;
    nexteventts = timestamp + CalcNextEvent(1024);
+
+   currentMIPS->downcount = nexteventts - timestamp;
+
    return(nexteventts);
 }
 
@@ -530,11 +532,11 @@ void TIMER_SetRegister(unsigned int which, uint32_t value)
 void TIMER_Advance(){
       int cyclesEx = slicelength - currentMIPS->downcount;
 
-      globalTimer += cyclesExecuted;
+      globalTimer += cyclesEx;
       
       slicelength = nexteventts - globalTimer;
       //TODO max slice length?
-
+      INFO_LOG(JIT, "TIMER_Advance called\n");
       currentMIPS->downcount = slicelength;
 }
 

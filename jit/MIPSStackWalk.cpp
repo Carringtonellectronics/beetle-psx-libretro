@@ -15,10 +15,10 @@
 // Official git repository and contact information can be found at
 // https://github.com/hrydgard/ppsspp and http://www.ppsspp.org/.
 
-#include "Core/MemMap.h"
+#include "jit/Memory/MemMap.h"
 #include "jit/Debugger/SymbolMap.h"
-#include "Core/MIPS/MIPSCodeUtils.h"
-#include "Core/MIPS/MIPSStackWalk.h"
+#include "jit/MIPSCodeUtils.h"
+#include "jit/MIPSStackWalk.h"
 
 #define _RS ((op >> 21) & 0x1F)
 #define _RT ((op >> 16) & 0x1F)
@@ -36,7 +36,7 @@ namespace MIPSStackWalk {
 	// After this we assume we're stuck.
 	const size_t MAX_DEPTH = 1024;
 
-	static u32 GuessEntry(u32 pc) {
+	static uint32 GuessEntry(uint32 pc) {
 		SymbolInfo info;
 		if (g_symbolMap->GetSymbolInfo(&info, pc)) {
 			return info.address;
@@ -60,12 +60,12 @@ namespace MIPSStackWalk {
 		return false;
 	}
 
-	bool ScanForAllocaSignature(u32 pc) {
+	bool ScanForAllocaSignature(uint32 pc) {
 		// In God Eater Burst, for example, after 0880E750, there's what looks like an alloca().
 		// It's surrounded by "mov fp, sp" and "mov sp, fp", which is unlikely to be used for other reasons.
 
 		// It ought to be pretty close.
-		u32 stop = pc - 32 * 4;
+		uint32 stop = pc - 32 * 4;
 		for (; Memory::IsValidAddress(pc) && pc >= stop; pc -= 4) {
 			MIPSOpcode op = Memory::Read_Instruction(pc, true);
 
@@ -77,14 +77,14 @@ namespace MIPSStackWalk {
 		return false;
 	}
 
-	bool ScanForEntry(StackFrame &frame, u32 entry, u32 &ra) {
+	bool ScanForEntry(StackFrame &frame, uint32 entry, uint32 &ra) {
 		// Let's hope there are no > 1MB functions on the PSP, for the sake of humanity...
-		const u32 LONGEST_FUNCTION = 1024 * 1024;
+		const uint32 LONGEST_FUNCTION = 1024 * 1024;
 		// TODO: Check if found entry is in the same symbol?  Might be wrong sometimes...
 
 		int ra_offset = -1;
-		const u32 start = frame.pc;
-		u32 stop = entry;
+		const uint32 start = frame.pc;
+		uint32 stop = entry;
 		if (entry == INVALIDTARGET) {
 			if (start >= PSP_GetUserMemoryBase()) {
 				stop = PSP_GetUserMemoryBase();
@@ -97,7 +97,7 @@ namespace MIPSStackWalk {
 		if (stop < start - LONGEST_FUNCTION) {
 			stop = start - LONGEST_FUNCTION;
 		}
-		for (u32 pc = start; Memory::IsValidAddress(pc) && pc >= stop; pc -= 4) {
+		for (uint32 pc = start; Memory::IsValidAddress(pc) && pc >= stop; pc -= 4) {
 			MIPSOpcode op = Memory::Read_Instruction(pc, true);
 
 			// Here's where they store the ra address.
@@ -126,7 +126,7 @@ namespace MIPSStackWalk {
 		return false;
 	}
 
-	bool DetermineFrameInfo(StackFrame &frame, u32 possibleEntry, u32 threadEntry, u32 &ra) {
+	bool DetermineFrameInfo(StackFrame &frame, uint32 possibleEntry, uint32 threadEntry, uint32 &ra) {
 		if (ScanForEntry(frame, possibleEntry, ra)) {
 			// Awesome, found one that looks right.
 			return true;
@@ -139,7 +139,7 @@ namespace MIPSStackWalk {
 
 		// Okay, we failed to get one.  Our possibleEntry could be wrong, it often is.
 		// Let's just scan upward.
-		u32 newPossibleEntry = frame.pc > threadEntry ? threadEntry : frame.pc - MAX_FUNC_SIZE;
+		uint32 newPossibleEntry = frame.pc > threadEntry ? threadEntry : frame.pc - MAX_FUNC_SIZE;
 		if (ScanForEntry(frame, newPossibleEntry, ra)) {
 			return true;
 		} else {
@@ -147,7 +147,7 @@ namespace MIPSStackWalk {
 		}
 	}
 
-	std::vector<StackFrame> Walk(u32 pc, u32 ra, u32 sp, u32 threadEntry, u32 threadStackTop) {
+	std::vector<StackFrame> Walk(uint32 pc, uint32 ra, uint32 sp, uint32 threadEntry, uint32 threadStackTop) {
 		std::vector<StackFrame> frames;
 		StackFrame current;
 		current.pc = pc;
@@ -155,9 +155,9 @@ namespace MIPSStackWalk {
 		current.entry = INVALIDTARGET;
 		current.stackSize = -1;
 
-		u32 prevEntry = INVALIDTARGET;
+		uint32 prevEntry = INVALIDTARGET;
 		while (pc != threadEntry) {
-			u32 possibleEntry = GuessEntry(current.pc);
+			uint32 possibleEntry = GuessEntry(current.pc);
 			if (DetermineFrameInfo(current, possibleEntry, threadEntry, ra)) {
 				frames.push_back(current);
 				if (current.entry == threadEntry || GuessEntry(current.entry) == threadEntry) {

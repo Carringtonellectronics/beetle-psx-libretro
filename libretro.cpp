@@ -2493,6 +2493,8 @@ void retro_init(void)
 
    //Initialize memory
    Memory::Init();
+   Memory::Clear();
+
    MainRAM = new MultiAccessSizeMem();
    MainRAM->data8 = Memory::m_pPhysicalRAM;
 }

@@ -15,7 +15,7 @@
 // Official SVN repository and contact information can be found at
 // http://code.google.com/p/dolphin-emu/
 
-#if defined(_M_IX86) || defined(_M_X64)
+#if defined(ARCH_32BIT) || defined(ARCH_64BIT)
 
 #ifdef __ANDROID__
 #include <sys/stat.h>
@@ -23,16 +23,17 @@
 #endif
 
 #include <memory.h>
-#include "base/logging.h"
-#include "base/basictypes.h"
-
-#include "Common.h"
 #include "CPUDetect.h"
 #include "StringUtils.h"
+#include "mednafen/mednafen-types.h"
 
 #ifdef _WIN32
-#define WIN32_LEAN_AND_MEAN
+
 #include <Windows.h>
+#define WIN32_LEAN_AND_MEAN
+//TODO: ?????
+#define _XCR_XFEATURE_ENABLED_MASK 0
+
 #define _interlockedbittestandset workaround_ms_header_bug_platform_sdk6_set
 #define _interlockedbittestandreset workaround_ms_header_bug_platform_sdk6_reset
 #define _interlockedbittestandset64 workaround_ms_header_bug_platform_sdk6_set64
@@ -43,12 +44,13 @@
 #undef _interlockedbittestandset64
 #undef _interlockedbittestandreset64
 
-void do_cpuidex(u32 regs[4], u32 cpuid_leaf, u32 ecxval) {
+void do_cpuidex(uint32 regs[4], uint32 cpuid_leaf, uint32 ecxval) {
 	__cpuidex((int *)regs, cpuid_leaf, ecxval);
 }
-void do_cpuid(u32 regs[4], u32 cpuid_leaf) {
+void do_cpuid(uint32 regs[4], uint32 cpuid_leaf) {
 	__cpuid((int *)regs, cpuid_leaf);
 }
+
 #else
 
 #ifdef _M_SSE
@@ -68,7 +70,7 @@ static unsigned long long _xgetbv(unsigned int index)
 
 #if !defined(MIPS)
 
-void do_cpuidex(u32 regs[4], u32 cpuid_leaf, u32 ecxval) {
+void do_cpuidex(uint32 regs[4], uint32 cpuid_leaf, uint32 ecxval) {
 #if defined(__i386__) && defined(__PIC__)
 	asm (
 		"xchgl %%ebx, %1;\n\t"
@@ -83,7 +85,7 @@ void do_cpuidex(u32 regs[4], u32 cpuid_leaf, u32 ecxval) {
 		:"a" (cpuid_leaf), "c" (ecxval));
 #endif
 }
-void do_cpuid(u32 regs[4], u32 cpuid_leaf)
+void do_cpuid(uint32 regs[4], uint32 cpuid_leaf)
 {
 	do_cpuidex(regs, cpuid_leaf, 0);
 }
@@ -100,9 +102,9 @@ CPUInfo::CPUInfo() {
 // Detects the various cpu features
 void CPUInfo::Detect() {
 	memset(this, 0, sizeof(*this));
-#ifdef _M_IX86
+#ifdef ARCH_32BIT
 	Mode64bit = false;
-#elif defined (_M_X64)
+#elif defined (ARCH_64BIT)
 	Mode64bit = true;
 	OS64bit = true;
 #endif
@@ -110,7 +112,7 @@ void CPUInfo::Detect() {
 
 #if defined(UWP)
 	OS64bit = Mode64bit;  // TODO: Not always accurate!
-#elif defined(_WIN32) && defined(_M_IX86)
+#elif defined(_WIN32) && defined(ARCH_32BIT)
 	BOOL f64 = false;
 	IsWow64Process(GetCurrentProcess(), &f64);
 	OS64bit = (f64 == TRUE) ? true : false;
@@ -124,17 +126,17 @@ void CPUInfo::Detect() {
 
 	// Assume CPU supports the CPUID instruction. Those that don't can barely
 	// boot modern OS:es anyway.
-	u32 cpu_id[4];
+	uint32 cpu_id[4];
 	memset(cpu_string, 0, sizeof(cpu_string));
 
 	// Detect CPU's CPUID capabilities, and grab cpu string
 	do_cpuid(cpu_id, 0x00000000);
-	u32 max_std_fn = cpu_id[0];  // EAX
+	uint32 max_std_fn = cpu_id[0];  // EAX
 	*((int *)cpu_string) = cpu_id[1];
 	*((int *)(cpu_string + 4)) = cpu_id[3];
 	*((int *)(cpu_string + 8)) = cpu_id[2];
 	do_cpuid(cpu_id, 0x80000000);
-	u32 max_ex_fn = cpu_id[0];
+	uint32 max_ex_fn = cpu_id[0];
 	if (!strcmp(cpu_string, "GenuineIntel"))
 		vendor = VENDOR_INTEL;
 	else if (!strcmp(cpu_string, "AuthenticAMD"))
@@ -287,4 +289,4 @@ std::string CPUInfo::Summarize()
 	return sum;
 }
 
-#endif // defined(_M_IX86) || defined(_M_X64)
+#endif // defined(ARCH_32BIT) || defined(ARCH_64BIT)

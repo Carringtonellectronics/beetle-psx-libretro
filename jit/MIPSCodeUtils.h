@@ -17,8 +17,8 @@
 
 #pragma once
 
-#include "Common/CommonTypes.h"
-#include "Core/MIPS/MIPS.h"
+#include "mednafen/mednafen-types.h"
+#include "jit/MIPS.h"
 
 // Invalid branch target address
 #define INVALIDTARGET 0xFFFFFFFF
@@ -55,13 +55,13 @@
 
 namespace MIPSCodeUtils
 {
-	u32 GetCallTarget(u32 addr);
-	u32 GetBranchTarget(u32 addr);
+	uint32 GetCallTarget(uint32 addr);
+	uint32 GetBranchTarget(uint32 addr);
 	// Ignores bltzal/etc. instructions that change RA.
-	u32 GetBranchTargetNoRA(u32 addr);
-	u32 GetBranchTargetNoRA(u32 addr, MIPSOpcode op);
-	u32 GetJumpTarget(u32 addr);
-	u32 GetSureBranchTarget(u32 addr);
+	uint32 GetBranchTargetNoRA(uint32 addr);
+	uint32 GetBranchTargetNoRA(uint32 addr, MIPSOpcode op);
+	uint32 GetJumpTarget(uint32 addr);
+	uint32 GetSureBranchTarget(uint32 addr);
 	bool IsVFPUBranch(MIPSOpcode op);
 	bool IsBranch(MIPSOpcode op);
 }

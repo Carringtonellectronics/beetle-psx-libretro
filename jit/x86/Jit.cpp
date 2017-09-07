@@ -16,31 +16,27 @@
 // https://github.com/hrydgard/ppsspp and http://www.ppsspp.org/.
 
 
-#if PPSSPP_ARCH(X86) || PPSSPP_ARCH(AMD64)
+#if defined(ARCH_X86) || defined(ARCH_AMD64)
 
 #include <algorithm>
 #include <iterator>
 
-#include "math/math_util.h"
-#include "profiler/profiler.h"
+#include "jit/Common/math_util.h"
+#include "jit/profiler/profiler.h"
 
-#include "Core/Core.h"
-#include "Core/MemMap.h"
-#include "Core/System.h"
-#include "Core/Config.h"
-#include "Core/Reporting.h"
+#include "jit/Memory/MemMap.h"
 #include "jit/Debugger/SymbolMap.h"
-#include "Core/MIPS/MIPS.h"
-#include "Core/MIPS/MIPSCodeUtils.h"
-#include "Core/MIPS/MIPSInt.h"
-#include "Core/MIPS/MIPSTables.h"
-#include "Core/HLE/ReplaceTables.h"
+#include "jit/MIPS.h"
+#include "jit/MIPSCodeUtils.h"
+#include "jit/MIPSInt.h"
+#include "jit/MIPSTables.h"
 
 #include "RegCache.h"
 #include "Jit.h"
 
-#include "Core/Host.h"
 #include "jit/Debugger/Breakpoints.h"
+
+#include "jit/Common/DumbCoreStuff.h"
 
 namespace MIPSComp
 {
@@ -53,6 +49,7 @@ template<typename A, typename B>
 std::pair<B,A> flip_pair(const std::pair<A,B> &p) {
 	return std::pair<B, A>(p.second, p.first);
 }
+
 
 u32 JitBreakpoint()
 {
@@ -81,7 +78,7 @@ u32 JitBreakpoint()
 		if (message.size() > 2)
 			message.resize(message.size() - 2);
 
-		NOTICE_LOG(JIT, "Top ops compiled to interpreter: %s", message.c_str());
+		INFO_LOG(JIT, "Top ops compiled to interpreter: %s", message.c_str());
 	}
 
 	return 1;
@@ -140,6 +137,7 @@ int Jit::StateAction(StateMem *sm, int load, int data_only) {
 	// But if they load a state, we can end up hitting it by mistake, since it's based on PC and ticks.
 	CBreakPoints::SetSkipFirst(0);
 	*/
+	return 0;
 }
 
 // This is here so the savestate matches between jit and non-jit.
@@ -156,6 +154,7 @@ int Jit::DummyStateAction(StateMem *sm, int load, int data_only) {
 		p.Do(dummy);
 	}
 	*/
+	return 0;
 }
 
 
@@ -225,7 +224,7 @@ void Jit::ClearCache()
 
 void Jit::SaveFlags() {
 	PUSHF();
-#if defined(_M_X64)
+#if defined(ARCH_64BIT)
 	// On X64, the above misaligns the stack. However there might be a cheaper solution than this.
 	POP(64, R(EAX));
 	MOV(64, MIPSSTATE_VAR(saved_flags), R(EAX));
@@ -233,7 +232,7 @@ void Jit::SaveFlags() {
 }
 
 void Jit::LoadFlags() {
-#if defined(_M_X64)
+#if defined(ARCH_64BIT)
 	MOV(64, R(EAX), MIPSSTATE_VAR(saved_flags));
 	PUSH(64, R(EAX));
 #endif
@@ -265,10 +264,10 @@ void Jit::CompileDelaySlot(int flags, RegCacheState *state) {
 void Jit::EatInstruction(MIPSOpcode op) {
 	MIPSInfo info = MIPSGetInfo(op);
 	if (info & DELAYSLOT) {
-		ERROR_LOG_REPORT_ONCE(ateDelaySlot, JIT, "Ate a branch op.");
+		ERROR_LOG_REPORT(JIT, "Ate a branch op.");
 	}
 	if (js.inDelaySlot) {
-		ERROR_LOG_REPORT_ONCE(ateInDelaySlot, JIT, "Ate an instruction inside a delay slot.");
+		ERROR_LOG_REPORT(JIT, "Ate an instruction inside a delay slot.");
 	}
 
 	CheckJitBreakpoint(GetCompilerPC() + 4, 0);
@@ -377,10 +376,10 @@ const u8 *Jit::DoJit(u32 em_address, JitBlock *b) {
 			// It doesn't really matter either way if we're not rewinding.
 			// CORE_RUNNING is <= CORE_NEXTFRAME.
 			if (RipAccessible((const void *)&coreState)) {
-				CMP(32, M(&coreState), Imm32(CORE_NEXTFRAME));  // rip accessible
+				CMP(32, M(&coreState), Imm32(CORE_STEPPING));  // rip accessible
 			} else {
 				MOV(PTRBITS, R(RAX), ImmPtr((const void *)&coreState));
-				CMP(32, MatR(RAX), Imm32(CORE_NEXTFRAME));
+				CMP(32, MatR(RAX), Imm32(CORE_STEPPING));
 			}
 			FixupBranch skipCheck = J_CC(CC_LE);
 			if (js.afterOp & JitState::AFTER_REWIND_PC_BAD_STATE)
@@ -402,6 +401,7 @@ const u8 *Jit::DoJit(u32 em_address, JitBlock *b) {
 		// Safety check, in case we get a bunch of really large jit ops without a lot of branching.
 		if (GetSpaceLeft() < 0x800 || js.numInstructions >= JitBlockCache::MAX_BLOCK_INSTRUCTIONS) {
 			FlushAll();
+			WARN_LOG(JIT, "Is space too small? %d. Is numInstructions too big? %d.", GetSpaceLeft() < 0x800, js.numInstructions >= JitBlockCache::MAX_BLOCK_INSTRUCTIONS);
 			WriteExit(GetCompilerPC(), js.nextExit++);
 			js.compiling = false;
 		}
@@ -521,6 +521,7 @@ void Jit::UnlinkBlock(u8 *checkedEntry, u32 originalAddress) {
 }
 
 bool Jit::ReplaceJalTo(u32 dest) {
+	/*
 	const ReplacementTableEntry *entry = nullptr;
 	u32 funcSize = 0;
 	if (!CanReplaceJalTo(dest, &entry, &funcSize)) {
@@ -554,14 +555,18 @@ bool Jit::ReplaceJalTo(u32 dest) {
 	// Add a trigger so that if the inlined code changes, we invalidate this block.
 	blocks.ProxyBlock(js.blockStart, dest, funcSize / sizeof(u32), GetCodePtr());
 	return true;
+	*/
+	return false;
 }
 
 void Jit::Comp_ReplacementFunc(MIPSOpcode op) {
+	//Right now, replacement functions aren't implemented, so this should never be called.
+
 	// We get here if we execute the first instruction of a replaced function. This means
 	// that we do need to return to RA.
 
 	// Inlined function calls (caught in jal) are handled differently.
-
+	/*
 	int index = op.encoding & MIPS_EMUHACK_VALUE_MASK;
 
 	const ReplacementTableEntry *entry = GetReplacementFunc(index);
@@ -630,6 +635,9 @@ void Jit::Comp_ReplacementFunc(MIPSOpcode op) {
 	} else {
 		ERROR_LOG(HLE, "Replacement function %s has neither jit nor regular impl", entry->name);
 	}
+	*/
+
+	ERROR_LOG(JIT, "Comp_ReplacementFunc called, but the functionality was removed!");
 }
 
 void Jit::Comp_Generic(MIPSOpcode op) {
@@ -670,10 +678,10 @@ void Jit::WriteExit(u32 destination, int exit_num) {
 	if (js.afterOp & (JitState::AFTER_CORE_STATE | JitState::AFTER_REWIND_PC_BAD_STATE)) {
 		// CORE_RUNNING is <= CORE_NEXTFRAME.
 		if (RipAccessible((const void *)&coreState)) {
-			CMP(32, M(&coreState), Imm32(CORE_NEXTFRAME));  // rip accessible
+			CMP(32, M(&coreState), Imm32(CORE_STEPPING));  // rip accessible
 		} else {
 			MOV(PTRBITS, R(RAX), ImmPtr((const void *)&coreState));
-			CMP(32, MatR(RAX), Imm32(CORE_NEXTFRAME));
+			CMP(32, MatR(RAX), Imm32(CORE_STEPPING));
 		}
 		FixupBranch skipCheck = J_CC(CC_LE);
 		MOV(32, MIPSSTATE_VAR(pc), Imm32(GetCompilerPC()));
@@ -713,12 +721,12 @@ void Jit::WriteExitDestInReg(X64Reg reg) {
 	// If we need to verify coreState and rewind, we may not jump yet.
 	if (js.afterOp & (JitState::AFTER_CORE_STATE | JitState::AFTER_REWIND_PC_BAD_STATE)) {
 		// CORE_RUNNING is <= CORE_NEXTFRAME.
-		if (RipAccessible((const void *)coreState)) {
-			CMP(32, M(&coreState), Imm32(CORE_NEXTFRAME));  // rip accessible
+		if (RipAccessible((const void *)&coreState)) {
+			CMP(32, M(&coreState), Imm32(CORE_STEPPING));  // rip accessible
 		} else {
 			X64Reg temp = reg == RAX ? RDX : RAX;
 			MOV(PTRBITS, R(temp), ImmPtr((const void *)&coreState));
-			CMP(32, MatR(temp), Imm32(CORE_NEXTFRAME));
+			CMP(32, MatR(temp), Imm32(CORE_STEPPING));
 		}
 		FixupBranch skipCheck = J_CC(CC_LE);
 		MOV(32, MIPSSTATE_VAR(pc), Imm32(GetCompilerPC()));
@@ -730,7 +738,8 @@ void Jit::WriteExitDestInReg(X64Reg reg) {
 	WriteDowncount();
 
 	// Validate the jump to avoid a crash?
-	if (!g_Config.bFastMemory) {
+	//TODO maybe change this or add an option?
+	if (/*!g_Config.bFastMemory*/ false) {
 		CMP(32, R(reg), Imm32(PSP_GetKernelMemoryBase()));
 		FixupBranch tooLow = J_CC(CC_B);
 		CMP(32, R(reg), Imm32(PSP_GetUserMemoryEnd()));
@@ -748,9 +757,10 @@ void Jit::WriteExitDestInReg(X64Reg reg) {
 		ABI_CallFunctionA((const void *)&Memory::GetPointer, R(reg));
 
 		// If we're ignoring, coreState didn't trip - so trip it now.
-		if (g_Config.bIgnoreBadMemAccess) {
+		if (/*g_Config.bIgnoreBadMemAccess*/ true) {
 			CMP(32, R(EAX), Imm32(0));
 			FixupBranch skip = J_CC(CC_NE);
+			//Update core state to be > 1. 5 is just what it was in PPSSPP, no real reason this couldn't be any other number.
 			ABI_CallFunctionA((const void *)&Core_UpdateState, Imm32(CORE_ERROR));
 			SetJumpTarget(skip);
 		}
@@ -839,4 +849,4 @@ MIPSOpcode Jit::GetOriginalOp(MIPSOpcode op) {
 
 } // namespace
 
-#endif // PPSSPP_ARCH(X86) || PPSSPP_ARCH(AMD64)
+#endif // defined(ARCH_X86) || defined(ARCH_AMD64)

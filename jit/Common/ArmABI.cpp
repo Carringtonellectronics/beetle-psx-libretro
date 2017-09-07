@@ -31,7 +31,7 @@ void ARMXEmitter::ARMABI_CallFunction(void *func)
 	BL(R14);
 	POP(5, R0, R1, R2, R3, _LR);
 }
-void ARMXEmitter::ARMABI_CallFunctionC(void *func, u32 Arg)
+void ARMXEmitter::ARMABI_CallFunctionC(void *func, uint32 Arg)
 {
 	PUSH(5, R0, R1, R2, R3, _LR);
 	ARMABI_MOVI2R(R14, (u32)func);	
@@ -40,7 +40,7 @@ void ARMXEmitter::ARMABI_CallFunctionC(void *func, u32 Arg)
 	POP(5, R0, R1, R2, R3, _LR);
 }
 
-void ARMXEmitter::ARMABI_CallFunctionCNoSave(void *func, u32 Arg)
+void ARMXEmitter::ARMABI_CallFunctionCNoSave(void *func, uint32 Arg)
 {
 	PUSH(1, _LR);
 	ARMABI_MOVI2R(R14, (u32)func);	
@@ -49,7 +49,7 @@ void ARMXEmitter::ARMABI_CallFunctionCNoSave(void *func, u32 Arg)
 	POP(1, _LR);
 }
 
-void ARMXEmitter::ARMABI_CallFunctionCC(void *func, u32 Arg1, u32 Arg2)
+void ARMXEmitter::ARMABI_CallFunctionCC(void *func, uint32 Arg1, uint32 Arg2)
 {
 	PUSH(5, R0, R1, R2, R3, _LR);
 	ARMABI_MOVI2R(R14, (u32)func);	
@@ -59,7 +59,7 @@ void ARMXEmitter::ARMABI_CallFunctionCC(void *func, u32 Arg1, u32 Arg2)
 	POP(5, R0, R1, R2, R3, _LR);
 
 }
-void ARMXEmitter::ARMABI_CallFunctionCCC(void *func, u32 Arg1, u32 Arg2, u32 Arg3)
+void ARMXEmitter::ARMABI_CallFunctionCCC(void *func, uint32 Arg1, uint32 Arg2, uint32 Arg3)
 {
 	PUSH(5, R0, R1, R2, R3, _LR);
 	ARMABI_MOVI2R(R14, (u32)func);	
@@ -80,7 +80,7 @@ void ARMXEmitter::ARMABI_PopAllCalleeSavedRegsAndAdjustStack() {
 }
 
 const char *conditions[] = {"EQ", "NEQ", "CS", "CC", "MI", "PL", "VS", "VC", "HI", "LS", "GE", "LT", "GT", "LE", "AL" };      
-static void ShowCondition(u32 cond)
+static void ShowCondition(uint32 cond)
 {
 	printf("Condition: %s[%d]\n", conditions[cond], (int)cond);
 }
@@ -88,10 +88,10 @@ void ARMXEmitter::ARMABI_ShowConditions()
 {
 	const u8 *ptr = GetCodePtr();
 	FixupBranch cc[15];
-	for(u32 a = 0; a < 15; ++a)
+	for(uint32 a = 0; a < 15; ++a)
 		cc[a] = B_CC((CCFlags)a);  
 
-	for(u32 a = 0; a < 15; ++a)
+	for(uint32 a = 0; a < 15; ++a)
 	{
 		SetJumpTarget(cc[a]);
 		ARMABI_CallFunctionC((void*)&ShowCondition, a);
@@ -108,7 +108,7 @@ void ARMXEmitter::UpdateAPSR(bool NZCVQ, u8 Flags, bool GE, u8 GEval)
 	{
 		// Can't update GE with the other ones with a immediate
 		// Got to use a scratch register
-		u32 Imm = (Flags << 27) | ((GEval & 0xF) << 16);
+		uint32 Imm = (Flags << 27) | ((GEval & 0xF) << 16);
 		ARMABI_MOVI2R(R14, Imm);
 		_MSR(true, true, R14);
 	}

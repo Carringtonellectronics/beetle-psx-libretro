@@ -1,10 +1,10 @@
 #pragma once
 
-#include "Common/CommonTypes.h"
-#include "Core/MIPS/JitCommon/JitCommon.h"
-#include "Core/MIPS/JitCommon/JitState.h"
-#include "Core/MIPS/MIPSVFPUUtils.h"
-#include "Core/MIPS/IR/IRInst.h"
+#include "mednafen/mednafen-types.h"
+#include "jit/JitCommon/JitCommon.h"
+#include "jit/JitCommon/JitState.h"
+
+#include "jit/IR/IRInst.h"
 
 namespace MIPSComp {
 
@@ -39,13 +39,13 @@ public:
 	void Comp_VBranch(MIPSOpcode op) override;
 	void Comp_MulDivType(MIPSOpcode op) override;
 	void Comp_Special3(MIPSOpcode op) override;
-
+	
 	void Comp_FPU3op(MIPSOpcode op) override;
 	void Comp_FPU2op(MIPSOpcode op) override;
 	void Comp_mxc1(MIPSOpcode op) override;
 
 	void Comp_DoNothing(MIPSOpcode op) override;
-
+	/*
 	void Comp_SV(MIPSOpcode op) override;
 	void Comp_SVQ(MIPSOpcode op) override;
 	void Comp_VPFX(MIPSOpcode op) override;
@@ -83,7 +83,7 @@ public:
 	void Comp_Vocp(MIPSOpcode op) override;
 	void Comp_ColorConv(MIPSOpcode op) override;
 	void Comp_Vbfy(MIPSOpcode op) override;
-
+*/
 	int Replace_fabsf() override;
 	int StateAction(StateMem *sm, int load, int data_only);
 	bool CheckRounding();  // returns true if we need a do-over
@@ -119,7 +119,7 @@ private:
 	// Utilities to reduce duplicated code
 	void CompShiftImm(MIPSOpcode op, IROp shiftType, int sa);
 	void CompShiftVar(MIPSOpcode op, IROp shiftType, IROp shiftTypeConst);
-
+/*
 	void ApplyPrefixST(u8 *vregs, u32 prefix, VectorSize sz, int tempReg);
 	void ApplyPrefixD(const u8 *vregs, VectorSize sz);
 	void GetVectorRegsPrefixS(u8 *regs, VectorSize sz, int vectorReg);
@@ -127,7 +127,7 @@ private:
 	void GetVectorRegsPrefixD(u8 *regs, VectorSize sz, int vectorReg);
 	void GetVectorRegs(u8 regs[4], VectorSize N, int vectorReg);
 	void GetMatrixRegs(u8 regs[16], MatrixSize N, int matrixReg);
-
+*/
 	// Utils
 	void Comp_ITypeMemLR(MIPSOpcode op, bool load);
 

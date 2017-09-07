@@ -17,10 +17,9 @@
 
 #pragma once
 
-#include "Common/CommonTypes.h"
-#include "Core/Debugger/Breakpoints.h"
-#include "Core/MemMap.h"
-#include "Core/MIPS/MIPS.h"
+#include "jit/Debugger/Breakpoints.h"
+#include "jit/Memory/MemMap.h"
+#include "jit/MIPS.h"
 
 // To avoid pulling in the entire HLE.h.
 extern MIPSState *currentMIPS;

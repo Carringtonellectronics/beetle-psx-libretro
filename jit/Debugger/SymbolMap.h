@@ -23,7 +23,7 @@
 #include <string>
 #include <mutex>
 
-#include "Common/CommonTypes.h"
+#include "mednafen/mednafen-types.h"
 
 enum SymbolType {
 	ST_NONE     = 0,
@@ -34,21 +34,21 @@ enum SymbolType {
 
 struct SymbolInfo {
 	SymbolType type;
-	u32 address;
-	u32 size;
-	u32 moduleAddress;
+	uint32 address;
+	uint32 size;
+	uint32 moduleAddress;
 };
 
 struct SymbolEntry {
 	std::string name;
-	u32 address;
-	u32 size;
+	uint32 address;
+	uint32 size;
 };
 
 struct LoadedModuleInfo {
 	std::string name;
-	u32 address;
-	u32 size;
+	uint32 address;
+	uint32 size;
 	bool active;
 };
 
@@ -56,7 +56,17 @@ enum DataType {
 	DATATYPE_NONE, DATATYPE_BYTE, DATATYPE_HALFWORD, DATATYPE_WORD, DATATYPE_ASCII
 };
 
-struct LabelDefinition;
+struct LabelDefinition{
+#if defined(OS_WINDOWS) && !defined(UNICODE)
+	std::string value;	
+	std::string name;
+#else
+	std::wstring value;
+	std::wstring name;
+#endif
+	
+	
+};
 
 #ifdef _WIN32
 struct HWND__;
@@ -74,9 +84,9 @@ public:
 	bool LoadNocashSym(const char *ilename);
 	void SaveNocashSym(const char *filename) const;
 
-	SymbolType GetSymbolType(u32 address) const;
-	bool GetSymbolInfo(SymbolInfo *info, u32 address, SymbolType symmask = ST_FUNCTION) const;
-	u32 GetNextSymbolAddress(u32 address, SymbolType symmask);
+	SymbolType GetSymbolType(uint32 address) const;
+	bool GetSymbolInfo(SymbolInfo *info, uint32 address, SymbolType symmask = ST_FUNCTION) const;
+	uint32 GetNextSymbolAddress(uint32 address, SymbolType symmask);
 	std::string GetDescription(unsigned int address) const;
 	std::vector<SymbolEntry> GetAllSymbols(SymbolType symmask);
 
@@ -85,82 +95,82 @@ public:
 #endif
 	void GetLabels(std::vector<LabelDefinition> &dest) const;
 
-	void AddModule(const char *name, u32 address, u32 size);
-	void UnloadModule(u32 address, u32 size);
-	u32 GetModuleRelativeAddr(u32 address, int moduleIndex = -1) const;
-	u32 GetModuleAbsoluteAddr(u32 relative, int moduleIndex) const;
-	int GetModuleIndex(u32 address) const;
+	void AddModule(const char *name, uint32 address, uint32 size);
+	void UnloadModule(uint32 address, uint32 size);
+	uint32 GetModuleRelativeAddr(uint32 address, int moduleIndex = -1) const;
+	uint32 GetModuleAbsoluteAddr(uint32 relative, int moduleIndex) const;
+	int GetModuleIndex(uint32 address) const;
 	bool IsModuleActive(int moduleIndex) const;
 	std::vector<LoadedModuleInfo> getAllModules() const;
 
-	void AddFunction(const char* name, u32 address, u32 size, int moduleIndex = -1);
-	u32 GetFunctionStart(u32 address) const;
-	int GetFunctionNum(u32 address) const;
-	u32 GetFunctionSize(u32 startAddress) const;
-	u32 GetFunctionModuleAddress(u32 startAddress) const;
-	bool SetFunctionSize(u32 startAddress, u32 newSize);
-	bool RemoveFunction(u32 startAddress, bool removeName);
+	void AddFunction(const char* name, uint32 address, uint32 size, int moduleIndex = -1);
+	uint32 GetFunctionStart(uint32 address) const;
+	int GetFunctionNum(uint32 address) const;
+	uint32 GetFunctionSize(uint32 startAddress) const;
+	uint32 GetFunctionModuleAddress(uint32 startAddress) const;
+	bool SetFunctionSize(uint32 startAddress, uint32 newSize);
+	bool RemoveFunction(uint32 startAddress, bool removeName);
 	// Search for the first address their may be a function after address.
 	// Only valid for currently loaded modules.  Not guaranteed there will be a function.
-	u32 FindPossibleFunctionAtAfter(u32 address) const;
+	uint32 FindPossibleFunctionAtAfter(uint32 address) const;
 
-	void AddLabel(const char* name, u32 address, int moduleIndex = -1);
-	std::string GetLabelString(u32 address) const;
-	void SetLabelName(const char* name, u32 address);
-	bool GetLabelValue(const char* name, u32& dest);
+	void AddLabel(const char* name, uint32 address, int moduleIndex = -1);
+	std::string GetLabelString(uint32 address) const;
+	void SetLabelName(const char* name, uint32 address);
+	bool GetLabelValue(const char* name, uint32& dest);
 
-	void AddData(u32 address, u32 size, DataType type, int moduleIndex = -1);
-	u32 GetDataStart(u32 address) const;
-	u32 GetDataSize(u32 startAddress) const;
-	u32 GetDataModuleAddress(u32 startAddress) const;
-	DataType GetDataType(u32 startAddress) const;
+	void AddData(uint32 address, uint32 size, DataType type, int moduleIndex = -1);
+	uint32 GetDataStart(uint32 address) const;
+	uint32 GetDataSize(uint32 startAddress) const;
+	uint32 GetDataModuleAddress(uint32 startAddress) const;
+	DataType GetDataType(uint32 startAddress) const;
 
-	static const u32 INVALID_ADDRESS = (u32)-1;
+	static const uint32 INVALID_ADDRESS = (uint32)-1;
 
 	void UpdateActiveSymbols();
 
 private:
 	void AssignFunctionIndices();
-	const char *GetLabelName(u32 address) const;
-	const char *GetLabelNameRel(u32 relAddress, int moduleIndex) const;
+	const char *GetLabelName(uint32 address) const;
+	const char *GetLabelNameRel(uint32 relAddress, int moduleIndex) const;
 
 	struct FunctionEntry {
-		u32 start;
-		u32 size;
+		uint32 start;
+		uint32 size;
 		int index;
 		int module;
 	};
 
 	struct LabelEntry {
-		u32 addr;
+		uint32 addr;
 		int module;
 		char name[128];
 	};
 
 	struct DataEntry {
 		DataType type;
-		u32 start;
-		u32 size;
+		uint32 start;
+		uint32 size;
 		int module;
 	};
 
 	struct ModuleEntry {
 		// Note: this index is +1, 0 matches any for backwards-compat.
 		int index;
-		u32 start;
-		u32 size;
+		uint32 start;
+		uint32 size;
 		char name[128];
 	};
 
 	// These are flattened, read-only copies of the actual data in active modules only.
-	std::map<u32, const FunctionEntry> activeFunctions;
-	std::map<u32, const LabelEntry> activeLabels;
-	std::map<u32, const DataEntry> activeData;
+	std::map<uint32, const FunctionEntry> activeFunctions;
+	std::map<uint32, const LabelEntry> activeLabels;
+	std::map<uint32, const DataEntry> activeData;
 
 	// This is indexed by the end address of the module.
-	std::map<u32, const ModuleEntry> activeModuleEnds;
+	std::map<uint32, const ModuleEntry> activeModuleEnds;
 
-	typedef std::pair<int, u32> SymbolKey;
+	typedef std::pair<int, uint32> SymbolKey;
 
 	// These are indexed by the module id and relative address in the module.
 	std::map<SymbolKey, FunctionEntry> functions;

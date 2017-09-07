@@ -16,13 +16,14 @@
 // http://code.google.com/p/dolphin-emu/
 
 #include "x64Analyzer.h"
+#include "mednafen/mednafen.h"
 
 bool DisassembleMov(const unsigned char *codePtr, InstructionInfo &info, int accessType)
 {
 	unsigned const char *startCodePtr = codePtr;
-	u8 rex = 0;
-	u8 codeByte = 0;
-	u8 codeByte2 = 0;
+	uint8 rex = 0;
+	uint8 codeByte = 0;
+	uint8 codeByte2 = 0;
 	
 	//Check for regular prefix
 	info.operandSize = 4;
@@ -32,8 +33,8 @@ bool DisassembleMov(const unsigned char *codePtr, InstructionInfo &info, int acc
 	info.isMemoryWrite = false;
 
 	int addressSize = 8;
-	u8 modRMbyte = 0;
-	u8 sibByte = 0;
+	uint8 modRMbyte = 0;
+	uint8 sibByte = 0;
     bool hasModRM = false;
 	bool hasSIBbyte = false;
 	bool hasDisplacement = false;
@@ -131,9 +132,9 @@ bool DisassembleMov(const unsigned char *codePtr, InstructionInfo &info, int acc
 	}
 
 	if (displacementSize == 1)
-		info.displacement = (s32)(s8)*codePtr;
+		info.displacement = (int32)(int8)*codePtr;
 	else
-		info.displacement = *((s32 *)codePtr);
+		info.displacement = *((int32 *)codePtr);
 	codePtr += displacementSize;
 
 	
@@ -156,19 +157,19 @@ bool DisassembleMov(const unsigned char *codePtr, InstructionInfo &info, int acc
 				if (info.operandSize == 2)
 				{
 					info.hasImmediate = true;
-					info.immediate = *(u16*)codePtr;
+					info.immediate = *(uint16*)codePtr;
 					codePtr += 2;
 				}
 				else if (info.operandSize == 4)
 				{
 					info.hasImmediate = true;
-					info.immediate = *(u32*)codePtr;
+					info.immediate = *(uint32*)codePtr;
 					codePtr += 4;
 				}
 				else if (info.operandSize == 8)
 				{
 					info.zeroExtend = true;
-					info.immediate = *(u32*)codePtr;
+					info.immediate = *(uint32*)codePtr;
 					codePtr += 4;
 				}
 			}

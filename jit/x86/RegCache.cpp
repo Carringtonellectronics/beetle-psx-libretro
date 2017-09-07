@@ -16,17 +16,16 @@
 // https://github.com/hrydgard/ppsspp and http://www.ppsspp.org/.
 
 
-#if PPSSPP_ARCH(X86) || PPSSPP_ARCH(AMD64)
+#if defined(ARCH_X86) || defined(ARCH_AMD64)
 
 #include <cstring>
 
-#include "Common/x64Emitter.h"
-#include "Core/Reporting.h"
-#include "Core/MIPS/MIPS.h"
-#include "Core/MIPS/MIPSTables.h"
-#include "Core/MIPS/MIPSAnalyst.h"
-#include "Core/MIPS/x86/Jit.h"
-#include "Core/MIPS/x86/RegCache.h"
+#include "jit/Common/x64Emitter.h"
+#include "jit/MIPS.h"
+#include "jit/MIPSTables.h"
+#include "jit/MIPSAnalyst.h"
+#include "jit/x86/Jit.h"
+#include "jit/x86/RegCache.h"
 
 using namespace Gen;
 using namespace X64JitConstants;
@@ -34,18 +33,18 @@ using namespace X64JitConstants;
 static const X64Reg allocationOrder[] = {
 	// R12, when used as base register, for example in a LEA, can generate bad code! Need to look into this.
 	// On x64, RCX and RDX are the first args.  CallProtectedFunction() assumes they're not regcached.
-#ifdef _M_X64
+#ifdef ARCH_64BIT
 #ifdef _WIN32
 	RSI, RDI, R8, R9, R10, R11, R12, R13,
 #else
 	RBP, R8, R9, R10, R11, R12, R13,
 #endif
-#elif _M_IX86
+#elif ARCH_32BIT
 	ESI, EDI, EDX, ECX, EBX,
 #endif
 };
 
-#ifdef _M_X64
+#ifdef ARCH_64BIT
 static X64Reg allocationOrderR15[ARRAY_SIZE(allocationOrder) + 1] = {INVALID_REG};
 #endif
 
@@ -60,7 +59,7 @@ GPRRegCache::GPRRegCache() : mips(0), emit(0) {
 }
 
 void GPRRegCache::Start(MIPSState *mips, MIPSComp::JitState *js, MIPSComp::JitOptions *jo, MIPSAnalyst::AnalysisResults &stats) {
-#ifdef _M_X64
+#ifdef ARCH_64BIT
 	if (allocationOrderR15[0] == INVALID_REG) {
 		memcpy(allocationOrderR15, allocationOrder, sizeof(allocationOrder));
 		allocationOrderR15[ARRAY_SIZE(allocationOrderR15) - 1] = R15;
@@ -204,10 +203,11 @@ X64Reg GPRRegCache::GetFreeXReg()
 
 void GPRRegCache::FlushR(X64Reg reg)
 {
-	if (reg >= NUM_X_REGS)
+	if (reg >= NUM_X_REGS){
 		PanicAlert("Flushing non existent reg");
-	else if (!xregs[reg].free)
+	}else if (!xregs[reg].free){
 		StoreFromRegister(xregs[reg].mipsReg);
+	}
 }
 
 void GPRRegCache::FlushRemap(MIPSGPReg oldreg, MIPSGPReg newreg) {
@@ -310,7 +310,7 @@ u32 GPRRegCache::GetImm(MIPSGPReg preg) const {
 }
 
 const X64Reg *GPRRegCache::GetAllocationOrder(int &count) {
-#ifdef _M_X64
+#ifdef ARCH_64BIT
 	if (!jo_->reserveR15ForAsm) {
 		count = ARRAY_SIZE(allocationOrderR15);
 		return allocationOrderR15;
@@ -372,7 +372,9 @@ void GPRRegCache::MapReg(MIPSGPReg i, bool doLoad, bool makeDirty) {
 		for (int j = 0; j < 32; j++) {
 			if (i != MIPSGPReg(j) && regs[j].location.IsSimpleReg(xr)) {
 				ERROR_LOG(JIT, "BindToRegister: Strange condition");
-				Crash();
+				//Crash();
+				//TODO is this the same as Crash()?
+				exit(-1);
 			}
 		}
 		regs[i].away = true;
@@ -445,4 +447,4 @@ void GPRRegCache::RestoreState(const GPRRegCacheState& state) {
 	memcpy(xregs, state.xregs, sizeof(xregs));
 }
 
-#endif // PPSSPP_ARCH(X86) || PPSSPP_ARCH(AMD64)
+#endif // defined(ARCH_X86) || defined(ARCH_AMD64)

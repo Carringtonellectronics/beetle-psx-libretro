@@ -79,7 +79,7 @@ public:
 	}
 
 	void SetCodePtr(u8 *ptr);
-	void ReserveCodeSpace(u32 bytes);
+	void ReserveCodeSpace(uint32 bytes);
 	const u8 *AlignCode16();
 	const u8 *AlignCodePage();
 	const u8 *GetCodePtr() const;
@@ -88,7 +88,7 @@ public:
 	void FlushIcacheSection(u8 *start, u8 *end);
 
 	// 20 bits valid in code.
-	void BREAK(u32 code);
+	void BREAK(uint32 code);
 
 	void NOP() {
 		SLL(R_ZERO, R_ZERO, 0);
@@ -217,7 +217,7 @@ public:
 	void MOVI2R(MIPSReg reg, s64 val) {
 		MOVI2R(reg, (u64)val);
 	}
-	void MOVI2R(MIPSReg reg, u32 val);
+	void MOVI2R(MIPSReg reg, uint32 val);
 	void MOVI2R(MIPSReg reg, s32 val) {
 		MOVI2R(reg, (u32)val);
 	}
@@ -230,27 +230,27 @@ public:
 	}
 
 protected:
-	inline void Write32(u32 value) {
+	inline void Write32(uint32 value) {
 		*code32_++ = value;
 	}
 
 	// Less parenthesis.
-	inline void Write32Fields(u8 pos1, u32 v1) {
+	inline void Write32Fields(u8 pos1, uint32 v1) {
 		*code32_++ = (v1 << pos1);
 	}
-	inline void Write32Fields(u8 pos1, u32 v1, u8 pos2, u32 v2) {
+	inline void Write32Fields(u8 pos1, uint32 v1, u8 pos2, uint32 v2) {
 		*code32_++ = (v1 << pos1) | (v2 << pos2);
 	}
-	inline void Write32Fields(u8 pos1, u32 v1, u8 pos2, u32 v2, u8 pos3, u32 v3) {
+	inline void Write32Fields(u8 pos1, uint32 v1, u8 pos2, uint32 v2, u8 pos3, uint32 v3) {
 		*code32_++ = (v1 << pos1) | (v2 << pos2) | (v3 << pos3);
 	}
-	inline void Write32Fields(u8 pos1, u32 v1, u8 pos2, u32 v2, u8 pos3, u32 v3, u8 pos4, u32 v4) {
+	inline void Write32Fields(u8 pos1, uint32 v1, u8 pos2, uint32 v2, u8 pos3, uint32 v3, u8 pos4, uint32 v4) {
 		*code32_++ = (v1 << pos1) | (v2 << pos2) | (v3 << pos3) | (v4 << pos4);
 	}
-	inline void Write32Fields(u8 pos1, u32 v1, u8 pos2, u32 v2, u8 pos3, u32 v3, u8 pos4, u32 v4, u8 pos5, u32 v5) {
+	inline void Write32Fields(u8 pos1, uint32 v1, u8 pos2, uint32 v2, u8 pos3, uint32 v3, u8 pos4, uint32 v4, u8 pos5, uint32 v5) {
 		*code32_++ = (v1 << pos1) | (v2 << pos2) | (v3 << pos3) | (v4 << pos5) | (v5 << pos5);
 	}
-	inline void Write32Fields(u8 pos1, u32 v1, u8 pos2, u32 v2, u8 pos3, u32 v3, u8 pos4, u32 v4, u8 pos5, u32 v5, u8 pos6, u32 v6) {
+	inline void Write32Fields(u8 pos1, uint32 v1, u8 pos2, uint32 v2, u8 pos3, uint32 v3, u8 pos4, uint32 v4, u8 pos5, uint32 v5, u8 pos6, uint32 v6) {
 		*code32_++ = (v1 << pos1) | (v2 << pos2) | (v3 << pos3) | (v4 << pos5) | (v5 << pos5) | (v6 << pos6);
 	}
 
@@ -263,7 +263,7 @@ protected:
 private:
 	union {
 		u8 *code_;
-		u32 *code32_;
+		uint32 *code32_;
 	};
 	u8 *lastCacheFlushEnd_;
 };

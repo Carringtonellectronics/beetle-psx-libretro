@@ -14,11 +14,11 @@
 #include "Core/HLE/ReplaceTables.h"
 #include "Core/Host.h"
 #include "Core/MemMap.h"
-#include "Core/MIPS/MIPS.h"
-#include "Core/MIPS/MIPSTables.h"
-#include "Core/MIPS/MIPSVFPUUtils.h"
-#include "Core/MIPS/IR/IRInst.h"
-#include "Core/MIPS/IR/IRInterpreter.h"
+#include "jit/MIPS.h"
+#include "jit/MIPSTables.h"
+
+#include "jit/IR/IRInst.h"
+#include "jit/IR/IRInterpreter.h"
 #include "Core/System.h"
 
 alignas(16) float vec4InitValues[8][4] = {

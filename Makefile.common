@@ -41,6 +41,80 @@ CFLAGS += -DARCH_32BIT
 CXXFLAGS += -DARCH_32BIT
 endif
 
+ifeq ($(HAVE_JIT), 1)
+CFLAGS += -DJIT
+CXXFLAGS += -DJIT
+#JIT Common files
+SOURCES_CXX += $(CORE_DIR)/jit/MIPS.cpp \
+				$(CORE_DIR)/jit/MIPSAnalyst.cpp \
+				$(CORE_DIR)/jit/MIPSAsm.cpp \
+				$(CORE_DIR)/jit/MIPSCodeUtils.cpp \
+				$(CORE_DIR)/jit/MIPSDebugInterface.cpp \
+				$(CORE_DIR)/jit/MIPSDis.cpp \
+				$(CORE_DIR)/jit/MIPSInt.cpp \
+				$(CORE_DIR)/jit/MIPSStackWalk.cpp \
+				$(CORE_DIR)/jit/MIPSTables.cpp \
+				$(CORE_DIR)/jit/JitCommon/JitBlockCache.cpp \
+				$(CORE_DIR)/jit/JitCommon/JitCommon.cpp \
+				$(CORE_DIR)/jit/JitCommon/JitState.cpp \
+				$(CORE_DIR)/jit/dis/disarm.cpp \
+				$(CORE_DIR)/jit/dis/DisArm64.cpp \
+				$(CORE_DIR)/jit/Debugger/Breakpoints.cpp \
+				$(CORE_DIR)/jit/Debugger/DisassemblyManager.cpp \
+				$(CORE_DIR)/jit/Debugger/SymbolMap.cpp \
+				$(CORE_DIR)/jit/Common/CPUDetect.cpp \
+				$(CORE_DIR)/jit/Common/x64Emitter.cpp \
+				$(CORE_DIR)/jit/Common/ArmEmitter.cpp \
+				$(CORE_DIR)/jit/Common/Arm64Emitter.cpp 
+
+SOURCES_CXX += $(CORE_DIR)/jit/Common/math_util.cpp  \
+				$(CORE_DIR)/jit/Common/expression_parser.cpp \
+				$(CORE_DIR)/jit/Common/xxhash.cpp \
+				$(CORE_DIR)/jit/cityhash/city.cpp \
+				$(CORE_DIR)/jit/Common/FileUtil.cpp \
+				$(CORE_DIR)/jit/Common/StringUtils.cpp \
+				$(CORE_DIR)/jit/Common/base/stringutil.cpp \
+				$(CORE_DIR)/jit/Common/Misc.cpp \
+				$(CORE_DIR)/jit/Common/utf8.cpp
+
+SOURCES_C += $(CORE_DIR)/jit/dis/decode.c \
+				$(CORE_DIR)/jit/dis/itab.c \
+				$(CORE_DIR)/jit/dis/syn.c \
+				$(CORE_DIR)/jit/dis/syn-intel.c \
+				$(CORE_DIR)/jit/dis/syn-att.c \
+				$(CORE_DIR)/jit/dis/udis86.c
+
+
+
+#Extra mem files
+SOURCES_CXX += $(CORE_DIR)/jit/Memory/MemMapFunctions.cpp \
+				 $(CORE_DIR)/jit/Memory/MemoryUtil.cpp
+
+ifeq ($(IS_X86), 1)
+				#X86 specific files
+				CFLAGS += -DARCH_X86
+				CXXFLAGS += -DARCH_X86
+
+				#Do this later?
+				#$(CORE_DIR)/jit/x86/IRToX86.cpp \
+
+				SOURCES_CXX += $(CORE_DIR)/jit/x86/Asm.cpp \
+				$(CORE_DIR)/jit/x86/CompALU.cpp \
+				$(CORE_DIR)/jit/x86/CompBranch.cpp \
+				$(CORE_DIR)/jit/x86/CompFPU.cpp \
+				$(CORE_DIR)/jit/x86/CompLoadStore.cpp \
+				$(CORE_DIR)/jit/x86/CompReplace.cpp \
+				$(CORE_DIR)/jit/x86/Jit.cpp \
+				$(CORE_DIR)/jit/x86/JitSafeMem.cpp \
+				$(CORE_DIR)/jit/x86/RegCache.cpp \
+				$(CORE_DIR)/jit/x86/RegCacheFPU.cpp \
+				$(CORE_DIR)/jit/Common/x64Analyzer.cpp \
+				$(CORE_DIR)/jit/Common/Thunk.cpp \
+				$(CORE_DIR)/jit/Common/ABI.cpp
+endif #x86
+
+endif #JIT
+
 SOURCES_C += $(LIBRETRO_DIR)/glsm/glsm.c \
 				 $(LIBRETRO_DIR)/glsym/rglgen.c
 
@@ -90,10 +164,6 @@ endif
 
 ifeq ($(NEED_DEINTERLACER), 1)
    FLAGS += -DNEED_DEINTERLACER
-endif
-
-ifeq ($(IS_X86), 1)
-FLAGS += -DARCH_X86
 endif
 
 ifeq ($(NEED_BPP), 8)
@@ -151,9 +221,9 @@ ifneq ($(HAVE_GRIFFIN), 1)
 	$(CORE_EMU_DIR)/input/multitap.cpp \
 	$(CORE_EMU_DIR)/input/mouse.cpp
 
-ifeq ($(HAVE_JIT), 1)
-	SOURCES_CXX += $(CORE_EMU_DIR)/decomp.cpp
-endif
+#ifeq ($(HAVE_JIT), 1)
+#	SOURCES_CXX += $(CORE_EMU_DIR)/decomp.cpp
+#endif
 
 SOURCES_C += $(CORE_DIR)/libretro_cbs.c
 
@@ -279,6 +349,5 @@ SOURCES_CXX += $(CORE_DIR)/jit/Memory/MemArenaAndroid.cpp \
 				 $(CORE_DIR)/jit/Memory/MemArenaPosix.cpp \
 				 $(CORE_DIR)/jit/Memory/MemArenaWin32.cpp \
 				 $(CORE_DIR)/jit/Memory/MemMap.cpp
-				 # Maybe add these in later, if needed.
-				 # $(CORE_DIR)/jit/Memory/MemMapFunctions.cpp \
-				 # $(CORE_DIR)/jit/Memory/MemoryUtil.cpp \
+
+

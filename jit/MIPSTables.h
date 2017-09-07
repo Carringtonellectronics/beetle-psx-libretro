@@ -17,8 +17,8 @@
 
 #pragma once
 
-#include "Common/CommonTypes.h"
-#include "Core/MIPS/MIPS.h"
+#include "jit/MIPS.h"
+
 
 struct MIPSInfo {
 	MIPSInfo() {
@@ -116,7 +116,7 @@ namespace MIPSComp {
 }
 
 void MIPSCompileOp(MIPSOpcode op, MIPSComp::MIPSFrontendInterface *jit);
-void MIPSDisAsm(MIPSOpcode op, u32 pc, char *out, bool tabsToSpaces = false);
+void MIPSDisAsm(MIPSOpcode op, uint32 pc, char *out, bool tabsToSpaces = false);
 MIPSInfo MIPSGetInfo(MIPSOpcode op);
 void MIPSInterpret(MIPSOpcode op); //only for those rare ones
 int MIPSInterpret_RunUntil(u64 globalTicks);
@@ -124,7 +124,7 @@ MIPSInterpretFunc MIPSGetInterpretFunc(MIPSOpcode op);
 
 int MIPSGetInstructionCycleEstimate(MIPSOpcode op);
 const char *MIPSGetName(MIPSOpcode op);
-const char *MIPSDisasmAt(u32 compilerPC);
+const char *MIPSDisasmAt(uint32 compilerPC);
 
 void FillMIPSTables();
 

@@ -16,12 +16,12 @@
 // https://github.com/hrydgard/ppsspp and http://www.ppsspp.org/.
 
 
-#if PPSSPP_ARCH(X86) || PPSSPP_ARCH(AMD64)
+#if defined(ARCH_X86) || defined(ARCH_AMD64)
 
-#include "Core/MemMap.h"
-#include "Core/MIPS/JitCommon/JitCommon.h"
-#include "Core/MIPS/x86/RegCache.h"
-#include "Core/MIPS/x86/Jit.h"
+#include "jit/Memory/MemMap.h"
+#include "jit/JitCommon/JitCommon.h"
+#include "jit/x86/RegCache.h"
+#include "jit/x86/Jit.h"
 
 static const u64 MEMORY_ALIGNED16(ssNoSignMask[2]) = {0x7FFFFFFF7FFFFFFFULL, 0x7FFFFFFF7FFFFFFFULL};
 
@@ -40,4 +40,4 @@ int Jit::Replace_fabsf() {
 
 }
 
-#endif // PPSSPP_ARCH(X86) || PPSSPP_ARCH(AMD64)
+#endif // defined(ARCH_X86) || defined(ARCH_AMD64)

@@ -22,11 +22,11 @@
 #include "Core/Reporting.h"
 #include "Core/HLE/ReplaceTables.h"
 #include "Core/MemMap.h"
-#include "Core/MIPS/MIPSTables.h"
-#include "Core/MIPS/IR/IRFrontend.h"
-#include "Core/MIPS/IR/IRRegCache.h"
-#include "Core/MIPS/IR/IRPassSimplify.h"
-#include "Core/MIPS/IR/IRInterpreter.h"
+#include "jit/MIPSTables.h"
+#include "jit/IR/IRFrontend.h"
+#include "jit/IR/IRRegCache.h"
+#include "jit/IR/IRPassSimplify.h"
+#include "jit/IR/IRInterpreter.h"
 
 namespace MIPSComp {
 

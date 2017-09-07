@@ -17,15 +17,14 @@
 
 
 
-#if PPSSPP_ARCH(X86) || PPSSPP_ARCH(AMD64)
+#if defined(ARCH_X86) || defined(ARCH_AMD64)
 
-#include "Core/Config.h"
 #include "jit/Debugger/Breakpoints.h"
-#include "Core/MemMap.h"
-#include "Core/MIPS/JitCommon/JitCommon.h"
-#include "Core/MIPS/x86/Jit.h"
-#include "Core/MIPS/x86/JitSafeMem.h"
-#include "Core/System.h"
+#include "jit/Memory/MemMap.h"
+#include "jit/JitCommon/JitCommon.h"
+#include "jit/x86/Jit.h"
+#include "jit/x86/JitSafeMem.h"
+#include "jit/Common/DumbCoreStuff.h"
 
 namespace MIPSComp
 {
@@ -41,7 +40,6 @@ void JitMemCheck(u32 addr, int size, int isWrite)
 	// Did we already hit one?
 	if (coreState != CORE_RUNNING && coreState != CORE_NEXTFRAME)
 		return;
-
 	CBreakPoints::ExecMemCheckJitBefore(addr, isWrite == 1, size, currentMIPS->pc);
 }
 
@@ -54,14 +52,14 @@ JitSafeMem::JitSafeMem(Jit *jit, MIPSGPReg raddr, s32 offset, u32 alignMask)
 	: jit_(jit), raddr_(raddr), offset_(offset), needsCheck_(false), needsSkip_(false), alignMask_(alignMask)
 {
 	// This makes it more instructions, so let's play it safe and say we need a far jump.
-	far_ = !g_Config.bIgnoreBadMemAccess || !CBreakPoints::GetMemChecks().empty();
+	far_ = /*!g_Config.bIgnoreBadMemAccess ||*/ !CBreakPoints::GetMemChecks().empty();
 	// Mask out the kernel RAM bit, because we'll end up with a negative offset to MEMBASEREG.
 	if (jit_->gpr.IsImm(raddr_))
 		iaddr_ = (jit_->gpr.GetImm(raddr_) + offset_) & 0x7FFFFFFF;
 	else
 		iaddr_ = (u32) -1;
 
-	fast_ = g_Config.bFastMemory || raddr == MIPS_REG_SP;
+	fast_ = /*g_Config.bFastMemory || raddr == MIPS_REG_SP*/ true;
 
 	// If raddr_ is going to get loaded soon, load it now for more optimal code.
 	// We assume that it was already locked.
@@ -90,7 +88,7 @@ bool JitSafeMem::PrepareWrite(OpArg &dest, int size)
 			addr &= Memory::MEMVIEW32_MASK;
 #endif
 
-#if PPSSPP_ARCH(32BIT)
+#ifdef ARCH_32BIT
 			dest = M(Memory::base + addr);
 #else
 			dest = MDisp(MEMBASEREG, addr);
@@ -119,7 +117,7 @@ bool JitSafeMem::PrepareRead(OpArg &src, int size)
 			addr &= Memory::MEMVIEW32_MASK;
 #endif
 
-#if PPSSPP_ARCH(32BIT)
+#if defined(ARCH_32BIT)
 			src = M(Memory::base + addr);
 #else
 			src = MDisp(MEMBASEREG, addr);
@@ -143,7 +141,7 @@ OpArg JitSafeMem::NextFastAddress(int suboffset)
 		addr &= Memory::MEMVIEW32_MASK;
 #endif
 
-#if PPSSPP_ARCH(32BIT)
+#if defined(ARCH_32BIT)
 		return M(Memory::base + addr);
 #else
 		return MDisp(MEMBASEREG, addr);
@@ -152,7 +150,7 @@ OpArg JitSafeMem::NextFastAddress(int suboffset)
 
 	_dbg_assert_msg_(JIT, (suboffset & alignMask_) == suboffset, "suboffset must be aligned");
 
-#if PPSSPP_ARCH(32BIT)
+#if defined(ARCH_32BIT)
 	return MDisp(xaddr_, (u32) Memory::base + offset_ + suboffset);
 #else
 	return MComplex(MEMBASEREG, xaddr_, SCALE_1, offset_ + suboffset);
@@ -212,7 +210,7 @@ OpArg JitSafeMem::PrepareMemoryOpArg(MemoryOpType type)
 		jit_->SUB(32, R(xaddr_), Imm32(offset_));
 	}
 
-#if PPSSPP_ARCH(32BIT)
+#if defined(ARCH_32BIT)
 	return MDisp(xaddr_, (u32) Memory::base + offset_);
 #else
 	return MComplex(MEMBASEREG, xaddr_, SCALE_1, offset_);
@@ -261,18 +259,18 @@ void JitSafeMem::DoSlowWrite(const void *safeFunc, const OpArg& src, int suboffs
 			jit_->AND(32, R(EAX), Imm32(alignMask_));
 	}
 
-#if PPSSPP_ARCH(32BIT)
+#if defined(ARCH_32BIT)
 	jit_->PUSH(EDX);
 #endif
 	if (!src.IsSimpleReg(EDX)) {
 		jit_->MOV(32, R(EDX), src);
 	}
-	if (!g_Config.bIgnoreBadMemAccess) {
+	if (/*!g_Config.bIgnoreBadMemAccess*/ false) {
 		jit_->MOV(32, MIPSSTATE_VAR(pc), Imm32(jit_->GetCompilerPC()));
 	}
 	// This is a special jit-ABI'd function.
 	jit_->CALL(safeFunc);
-#if PPSSPP_ARCH(32BIT)
+#if defined(ARCH_32BIT)
 	jit_->POP(EDX);
 #endif
 	needsCheck_ = true;
@@ -297,7 +295,7 @@ bool JitSafeMem::PrepareSlowRead(const void *safeFunc)
 				jit_->AND(32, R(EAX), Imm32(alignMask_));
 		}
 
-		if (!g_Config.bIgnoreBadMemAccess) {
+		if (/*!g_Config.bIgnoreBadMemAccess*/ false) {
 			jit_->MOV(32, MIPSSTATE_VAR(pc), Imm32(jit_->GetCompilerPC()));
 		}
 		// This is a special jit-ABI'd function.
@@ -331,7 +329,7 @@ void JitSafeMem::NextSlowRead(const void *safeFunc, int suboffset)
 			jit_->AND(32, R(EAX), Imm32(alignMask_));
 	}
 
-	if (!g_Config.bIgnoreBadMemAccess) {
+	if (/*!g_Config.bIgnoreBadMemAccess*/ false) {
 		jit_->MOV(32, MIPSSTATE_VAR(pc), Imm32(jit_->GetCompilerPC()));
 	}
 	// This is a special jit-ABI'd function.
@@ -346,7 +344,7 @@ bool JitSafeMem::ImmValid()
 void JitSafeMem::Finish()
 {
 	// Memory::Read_U32/etc. may have tripped coreState.
-	if (needsCheck_ && !g_Config.bIgnoreBadMemAccess)
+	if (needsCheck_ && /*!g_Config.bIgnoreBadMemAccess*/ false)
 		jit_->js.afterOp |= JitState::AFTER_CORE_STATE;
 	if (needsSkip_)
 		jit_->SetJumpTarget(skip_);
@@ -477,7 +475,7 @@ void JitSafeMemFuncs::CreateReadFunc(int bits, const void *fallbackFunc) {
 	CheckDirectEAX();
 
 	// Since we were CALLed, we need to align the stack before calling C++.
-#if PPSSPP_ARCH(32BIT)
+#if defined(ARCH_32BIT)
 	SUB(32, R(ESP), Imm8(16 - 4));
 	ABI_CallFunctionA(thunks_->ProtectFunction(fallbackFunc, 1), R(EAX));
 	ADD(32, R(ESP), Imm8(16 - 4));
@@ -491,7 +489,7 @@ void JitSafeMemFuncs::CreateReadFunc(int bits, const void *fallbackFunc) {
 
 	StartDirectAccess();
 
-#if PPSSPP_ARCH(32BIT)
+#if defined(ARCH_32BIT)
 	MOVZX(32, bits, EAX, MDisp(EAX, (u32)Memory::base));
 #else
 	MOVZX(32, bits, EAX, MRegSum(MEMBASEREG, EAX));
@@ -504,7 +502,7 @@ void JitSafeMemFuncs::CreateWriteFunc(int bits, const void *fallbackFunc) {
 	CheckDirectEAX();
 
 	// Since we were CALLed, we need to align the stack before calling C++.
-#if PPSSPP_ARCH(32BIT)
+#if defined(ARCH_32BIT)
 	// 4 for return, 4 for saved reg on stack.
 	SUB(32, R(ESP), Imm8(16 - 4 - 4));
 	ABI_CallFunctionAA(thunks_->ProtectFunction(fallbackFunc, 2), R(EDX), R(EAX));
@@ -519,7 +517,7 @@ void JitSafeMemFuncs::CreateWriteFunc(int bits, const void *fallbackFunc) {
 
 	StartDirectAccess();
 
-#if PPSSPP_ARCH(32BIT)
+#if defined(ARCH_32BIT)
 	MOV(bits, MDisp(EAX, (u32)Memory::base), R(EDX));
 #else
 	MOV(bits, MRegSum(MEMBASEREG, EAX), R(EDX));
@@ -536,19 +534,20 @@ void JitSafeMemFuncs::CheckDirectEAX() {
 	FixupBranch tooHighRAM = J_CC(CC_AE);
 	CMP(32, R(EAX), Imm32(PSP_GetKernelMemoryBase()));
 	skips_.push_back(J_CC(CC_AE));
-	
+	//TODO reimplement vram stuff
+	/*
 	CMP(32, R(EAX), Imm32(PSP_GetVidMemEnd()));
 	FixupBranch tooHighVid = J_CC(CC_AE);
 	CMP(32, R(EAX), Imm32(PSP_GetVidMemBase()));
 	skips_.push_back(J_CC(CC_AE));
-	
+	*/
 	CMP(32, R(EAX), Imm32(PSP_GetScratchpadMemoryEnd()));
 	FixupBranch tooHighScratch = J_CC(CC_AE);
 	CMP(32, R(EAX), Imm32(PSP_GetScratchpadMemoryBase()));
 	skips_.push_back(J_CC(CC_AE));
 
 	SetJumpTarget(tooHighRAM);
-	SetJumpTarget(tooHighVid);
+	//SetJumpTarget(tooHighVid);
 	SetJumpTarget(tooHighScratch);
 }
 
@@ -561,4 +560,4 @@ void JitSafeMemFuncs::StartDirectAccess() {
 
 };
 
-#endif // PPSSPP_ARCH(X86) || PPSSPP_ARCH(AMD64)
+#endif // defined(ARCH_X86) || defined(ARCH_AMD64)

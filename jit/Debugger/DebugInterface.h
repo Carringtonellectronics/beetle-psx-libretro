@@ -18,8 +18,8 @@
 #pragma once
 #include <string>
 #include <cstdio>
-#include "Common/CommonTypes.h"
-#include "math/expression_parser.h"
+#include "mednafen/mednafen-types.h"
+#include "jit/Common/expression_parser.h"
 
 struct MemMap;
 
@@ -48,22 +48,22 @@ public:
 	virtual int getColor(unsigned int address){return 0xFFFFFFFF;}
 	virtual std::string getDescription(unsigned int address) {return "";}
 	virtual bool initExpression(const char* exp, PostfixExpression& dest) { return false; };
-	virtual bool parseExpression(PostfixExpression& exp, u32& dest) { return false; };
+	virtual bool parseExpression(PostfixExpression& exp, uint32& dest) { return false; };
 
 	
-	virtual u32 GetHi() { return 0; };
-	virtual u32 GetLo() { return 0; };
-	virtual void SetHi(u32 val) { };
-	virtual void SetLo(u32 val) { };
+	virtual uint32 GetHi() { return 0; };
+	virtual uint32 GetLo() { return 0; };
+	virtual void SetHi(uint32 val) { };
+	virtual void SetLo(uint32 val) { };
 	virtual const char *GetName() = 0;
 	virtual int GetGPRSize() = 0; //32 or 64
-	virtual u32 GetGPR32Value(int reg) {return 0;}
+	virtual uint32 GetGPR32Value(int reg) {return 0;}
 	virtual void SetGPR32Value(int reg) {}
 	virtual void SetGPR64Value(int reg) {}
-	virtual u32 GetPC() = 0;
-	virtual void SetPC(u32 _pc) = 0;
-	virtual u32 GetLR() {return GetPC();}
-	virtual void DisAsm(u32 op, u32 pc, int align, char *out) {sprintf(out,"[%08x] UNKNOWN", op);}
+	virtual uint32 GetPC() = 0;
+	virtual void SetPC(uint32 _pc) = 0;
+	virtual uint32 GetLR() {return GetPC();}
+	virtual void DisAsm(uint32 op, uint32 pc, int align, char *out) {sprintf(out,"[%08x] UNKNOWN", op);}
 	//More stuff for debugger
 	virtual int GetNumCategories() {return 0;}
 	virtual int GetNumRegsInCategory(int cat) {return 0;}
@@ -73,7 +73,7 @@ public:
 	{
 		sprintf(out,"%08X",GetGPR32Value(index));
 	}
-	virtual u32 GetRegValue(int cat, int index) {return 0;}
-	virtual void SetRegValue(int cat, int index, u32 value) {}
+	virtual uint32 GetRegValue(int cat, int index) {return 0;}
+	virtual void SetRegValue(int cat, int index, uint32 value) {}
 
 };

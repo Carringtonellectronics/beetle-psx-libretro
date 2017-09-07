@@ -19,7 +19,6 @@
 
 #include <map>
 
-#include "Common.h"
 #include "x64Emitter.h"
 
 // This simple class creates a wrapper around a C/C++ function that saves all fp state
@@ -39,10 +38,10 @@ typedef Gen::XCodeBlock ThunkCodeBlock;
 
 class ThunkManager : public ThunkCodeBlock
 {
-	std::map<const void *, const u8 *> thunks;
+	std::map<const void *, const uint8 *> thunks;
 
-	const u8 *save_regs;
-	const u8 *load_regs;
+	const uint8 *save_regs;
+	const uint8 *load_regs;
 
 public:
 	ThunkManager() {

@@ -23,10 +23,10 @@
 #include "base/logging.h"
 #include "Common/CPUDetect.h"
 #include "Core/Reporting.h"
-#include "Core/MIPS/MIPS.h"
-#include "Core/MIPS/ARM64/Arm64RegCacheFPU.h"
-#include "Core/MIPS/ARM64/Arm64Jit.h"
-#include "Core/MIPS/MIPSTables.h"
+#include "jit/MIPS.h"
+#include "jit/ARM64/Arm64RegCacheFPU.h"
+#include "jit/ARM64/Arm64Jit.h"
+#include "jit/MIPSTables.h"
 
 using namespace Arm64Gen;
 using namespace Arm64JitConstants;

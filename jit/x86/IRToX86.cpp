@@ -1,7 +1,7 @@
 
-#if PPSSPP_ARCH(X86) || PPSSPP_ARCH(AMD64)
+#if defined(ARCH_X86) || defined(ARCH_AMD64)
 
-#include "Core/MIPS/x86/IRToX86.h"
+#include "jit/x86/IRToX86.h"
 
 namespace MIPSComp {
 
@@ -107,6 +107,7 @@ void IRToX86::ConvertIRToNative(const IRInst *instructions, int count, const u32
 			case IROp::And: code_->AND(32, gpr.dest, gpr.src2); break;
 			case IROp::Or: code_->OR(32, gpr.dest, gpr.src2); break;
 			case IROp::Xor: code_->XOR(32, gpr.dest, gpr.src2); break;
+			default: break; //Shouldn't be able to be reached.
 			}
 			break;
 
@@ -296,4 +297,4 @@ void IRToX86::ConvertIRToNative(const IRInst *instructions, int count, const u32
 
 }  // namespace
 
-#endif // PPSSPP_ARCH(X86) || PPSSPP_ARCH(AMD64)
+#endif // defined(ARCH_X86) || defined(ARCH_AMD64)

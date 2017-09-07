@@ -18,10 +18,10 @@
 #include "base/logging.h"
 
 #include "Core/MemMap.h"
-#include "Core/MIPS/MIPS.h"
+#include "jit/MIPS.h"
 #include "Core/System.h"
 #include "Common/MemoryUtil.h"
-#include "Core/MIPS/IR/IRJit.h"
-#include "Core/MIPS/JitCommon/JitCommon.h"
+#include "jit/IR/IRJit.h"
+#include "jit/JitCommon/JitCommon.h"
 
 

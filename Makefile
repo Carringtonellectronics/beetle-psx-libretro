@@ -84,7 +84,7 @@ ifneq (,$(findstring unix,$(platform)))
    fpic := -fPIC
    SHARED := -shared -Wl,--no-undefined -Wl,--version-script=link.T
    ifneq ($(shell uname -p | grep -E '((i.|x)86|amd64)'),)
-      IS_X86 = 1
+      ARCH_X86 = 1
    endif
    LDFLAGS += $(PTHREAD_FLAGS)
    FLAGS +=
@@ -410,9 +410,9 @@ ifeq ($(HAVE_VULKAN),1)
 	FLAGS += -DHAVE_VULKAN
 endif
 
-ifeq ($(HAVE_JIT),1)
-   LDFLAGS += -ljit
-endif
+#ifeq ($(HAVE_JIT),1)
+#   LDFLAGS += -ljit
+#endif
 
 CXXFLAGS += $(FLAGS)
 CFLAGS   += $(FLAGS)

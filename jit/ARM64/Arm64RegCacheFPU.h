@@ -21,8 +21,8 @@
 
 #include "../MIPS.h"
 #include "../MIPSAnalyst.h"
-#include "Core/MIPS/ARM64/Arm64RegCache.h"
-#include "Core/MIPS/MIPSVFPUUtils.h"
+#include "jit/ARM64/Arm64RegCache.h"
+
 #include "Common/Arm64Emitter.h"
 
 namespace Arm64JitConstants {

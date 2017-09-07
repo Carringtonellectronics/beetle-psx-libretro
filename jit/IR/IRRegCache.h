@@ -3,8 +3,8 @@
 // IRRegCache is only to perform pre-constant folding. This is worth it to get cleaner
 // IR.
 
-#include "Common/CommonTypes.h"
-#include "Core/MIPS/MIPS.h"
+#include "mednafen/mednafen-types.h"
+#include "jit/MIPS.h"
 
 enum {
 	TOTAL_MAPPABLE_MIPSREGS = 256,
