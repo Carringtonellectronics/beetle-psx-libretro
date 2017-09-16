@@ -176,6 +176,15 @@ void XEmitter::ABI_CallFunctionRR(const void *func, Gen::X64Reg reg1, Gen::X64Re
 	ABI_RestoreStack(2 * 4);
 }
 
+void XEmitter::ABI_CallFunctionCA(const void *func, uint32 param1, const Gen::OpArg &arg2)
+{
+	ABI_AlignStack(2 * 4);
+	PUSH(32, arg2);
+	PUSH(32, Imm32(param1));
+	CALL(func);
+	ABI_RestoreStack(2 * 4);
+}
+
 void XEmitter::ABI_CallFunctionAC(const void *func, const Gen::OpArg &arg1, uint32 param2)
 {
 	ABI_AlignStack(2 * 4);
@@ -490,6 +499,22 @@ void XEmitter::ABI_CallFunctionAC(const void *func, const Gen::OpArg &arg1, uint
 	    CALLptr(R(RAX));
 	} else {
 	    CALL(func);
+	}
+}
+
+void XEmitter::ABI_CallFunctionCA(const void *func, uint32 param1, const Gen::OpArg &arg2)
+{
+	if (!arg2.IsSimpleReg(ABI_PARAM2))
+		MOV(32, R(ABI_PARAM2), arg2);
+	MOV(32, R(ABI_PARAM1), Imm32(param1));
+	uint64 distance = uint64(func) - (uint64(code) + 5);
+	if (distance >= 0x0000000080000000ULL
+	&& distance <  0xFFFFFFFF80000000ULL) {
+		// Far call
+		MOV(64, R(RAX), ImmPtr(func));
+		CALLptr(R(RAX));
+	} else {
+		CALL(func);
 	}
 }
 

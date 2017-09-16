@@ -1024,6 +1024,7 @@ public:
 	void ABI_CallFunctionPAA(const void *func, void *param1, const Gen::OpArg &arg2, const Gen::OpArg &arg3);
 	void ABI_CallFunctionPPC(const void *func, void *param1, void *param2, uint32 param3);
 	void ABI_CallFunctionAC(const void *func, const Gen::OpArg &arg1, uint32 param2);
+	void ABI_CallFunctionCA(const void *func, uint32 param1, const Gen::OpArg &arg2);
 	void ABI_CallFunctionACC(const void *func, const Gen::OpArg &arg1, uint32 param2, uint32 param3);
 	void ABI_CallFunctionA(const void *func, const Gen::OpArg &arg1);
 	void ABI_CallFunctionAA(const void *func, const Gen::OpArg &arg1, const Gen::OpArg &arg2);

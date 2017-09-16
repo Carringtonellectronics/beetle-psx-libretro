@@ -94,45 +94,8 @@ public:
 	void Comp_FPU3op(MIPSOpcode op) override;
 	void Comp_FPU2op(MIPSOpcode op) override;
 	void Comp_mxc1(MIPSOpcode op) override;
-	/*
-	void Comp_SV(MIPSOpcode op) override;
-	void Comp_SVQ(MIPSOpcode op) override;
-	void Comp_VPFX(MIPSOpcode op) override;
-	void Comp_VVectorInit(MIPSOpcode op) override;
-	void Comp_VMatrixInit(MIPSOpcode op) override;
-	void Comp_VDot(MIPSOpcode op) override;
-	void Comp_VecDo3(MIPSOpcode op) override;
-	void Comp_VV2Op(MIPSOpcode op) override;
-	void Comp_Mftv(MIPSOpcode op) override;
-	void Comp_Vmfvc(MIPSOpcode op) override;
-	void Comp_Vmtvc(MIPSOpcode op) override;
-	void Comp_Vmmov(MIPSOpcode op) override;
-	void Comp_VScl(MIPSOpcode op) override;
-	void Comp_Vmmul(MIPSOpcode op) override;
-	void Comp_Vmscl(MIPSOpcode op) override;
-	void Comp_Vtfm(MIPSOpcode op) override;
-	void Comp_VHdp(MIPSOpcode op) override;
-	void Comp_VCrs(MIPSOpcode op) override;
-	void Comp_VDet(MIPSOpcode op) override;
-	void Comp_Vi2x(MIPSOpcode op) override;
-	void Comp_Vx2i(MIPSOpcode op) override;
-	void Comp_Vf2i(MIPSOpcode op) override;
-	void Comp_Vi2f(MIPSOpcode op) override;
-	void Comp_Vh2f(MIPSOpcode op) override;
-	void Comp_Vcst(MIPSOpcode op) override;
-	void Comp_Vhoriz(MIPSOpcode op) override;
-	void Comp_VRot(MIPSOpcode op) override;
-	void Comp_VIdt(MIPSOpcode op) override;
-	void Comp_Vcmp(MIPSOpcode op) override;
-	void Comp_Vcmov(MIPSOpcode op) override;
-	void Comp_Viim(MIPSOpcode op) override;
-	void Comp_Vfim(MIPSOpcode op) override;
-	void Comp_VCrossQuat(MIPSOpcode op) override;
-	void Comp_Vsgn(MIPSOpcode op) override;
-	void Comp_Vocp(MIPSOpcode op) override;
-	void Comp_ColorConv(MIPSOpcode op) override;
-	void Comp_Vbfy(MIPSOpcode op) override;
-	*/
+	
+	void Comp_Cp2(MIPSOpcode op) override;
 	void Comp_Cp0(MIPSOpcode op) override;
 	void Comp_DoNothing(MIPSOpcode op) override;
 

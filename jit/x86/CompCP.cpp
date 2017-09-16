@@ -5,6 +5,7 @@
 #include "jit/MIPSCodeUtils.h"
 #include "jit/x86/Jit.h"
 #include "jit/x86/RegCache.h"
+#include "mednafen/psx/gte.h"
 
 #define _RS MIPS_GET_RS(op)
 #define _RT MIPS_GET_RT(op)
@@ -18,24 +19,63 @@ using namespace Gen;
 using namespace X64JitConstants;
 
 void Jit::Comp_Cp0(MIPSOpcode op){
-    uint32 type = (op.encoding & 0x03E00000) >> 21;
+    uint32 type = (op.encoding >> 21) & 0x1f;
     switch(type){
         case 0: //MFc0
             JitComp_MF0(op);
             break;
-        case 2: //MFc0
+        case 2: //CFc0
             JitComp_CF0(op);
             break;
-        case 4: //MFc0
+        case 4: //MTc0
             JitComp_MT0(op);
             break;
-        case 6: //MFc0
+        case 6: //CTc0
             JitComp_CT0(op);
             break;
         default: //Who knows?
             ERROR_LOG(COP0, "Unkown opcode in Comp_Cp0: %08x\n", op.encoding);
     }
 }
+
+void Jit::Comp_Cp2(MIPSOpcode op){
+    uint32 type = (op.encoding >> 21) & 0x1f;
+
+    if (type >= 0x10 && type <= 0x1F)
+    {
+       //TODO Compile the instructions themselves.
+        ABI_CallFunctionC((void *)GTE_Instruction, op.encoding);
+       
+       //TODO timestamp stuff: See below
+       /*
+       if(timestamp < gte_ts_done)
+          timestamp = gte_ts_done;
+       gte_ts_done = timestamp + GTE_Instruction(instr);
+       DO_LDS();
+       */
+    }
+    uint32 rd = (op.encoding >> 11) & 0x1F;
+
+    switch(type){
+        case 0: //MFc2        
+            ABI_CallFunctionC((void *)GTE_ReadDR, rd);
+            MOV(32, gpr.R(_RT), R(EAX));
+            break;
+        case 2: //CFc2
+            ABI_CallFunctionC((void *)GTE_ReadCR, rd);
+            MOV(32, gpr.R(_RT), R(EAX));
+            break;
+        case 4: //MTc2
+            ABI_CallFunctionCA((void *)GTE_WriteDR, rd, gpr.R(_RT));
+            break;
+        case 6: //CTc2
+            ABI_CallFunctionCA((void *)GTE_WriteCR, rd, gpr.R(_RT));
+            break;
+        default: //Who knows?
+            ERROR_LOG(COP2, "Unkown opcode in Comp_Cp2: %08x\n", op.encoding);
+    }
+}
+
 
 void Jit::JitComp_MF0(MIPSOpcode op){
     //Move rd (CP0) to rt (CPU)

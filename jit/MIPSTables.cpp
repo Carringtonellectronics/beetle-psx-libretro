@@ -327,13 +327,13 @@ const MIPSInstruction tableRegImm[32] = // 000001 ..... xxxxx ................
 
 const MIPSInstruction tableCop2[32] = // 010010 xxxxx ..... ................
 {
-	INSTR("mfc2", JITFUNC(Comp_Generic), Dis_Generic, 0, OUT_RT),
+	INSTR("mfc2", JITFUNC(Comp_Cp2), Dis_Generic, 0, OUT_RT),
 	INVALID,
-	INSTR("cfc2", JITFUNC(Comp_Generic), Dis_Generic, 0, 0),
+	INSTR("cfc2", JITFUNC(Comp_Cp2), Dis_Generic, 0, 0),
 	INVALID,//INSTR("mfv", JITFUNC(Comp_Mftv), Dis_Mftv, Int_Mftv, IN_OTHER|IN_VFPU_CC|OUT_RT|IS_VFPU),
-	INSTR("mtc2", JITFUNC(Comp_Generic), Dis_Generic, 0, IN_RT),
+	INSTR("mtc2", JITFUNC(Comp_Cp2), Dis_Generic, 0, IN_RT),
 	INVALID,
-	INSTR("ctc2", JITFUNC(Comp_Generic), Dis_Generic, 0, 0),
+	INSTR("ctc2", JITFUNC(Comp_Cp2), Dis_Generic, 0, 0),
 	INVALID,//INSTR("mtv", JITFUNC(Comp_Mftv), Dis_Mftv, Int_Mftv, IN_RT|OUT_VFPU_CC|OUT_OTHER|IS_VFPU),
 	//8
 	ENCODING(Cop2BC2),
@@ -345,8 +345,23 @@ const MIPSInstruction tableCop2[32] = // 010010 xxxxx ..... ................
 	INSTR("??", JITFUNC(Comp_Generic), Dis_Generic, 0, 0),
 	INSTR("??", JITFUNC(Comp_Generic), Dis_Generic, 0, 0),
 	//16
-	INVALID_X_8,
-	INVALID_X_8,
+	INSTR("gtei", JITFUNC(Comp_Cp2), Dis_Generic, 0, 0),
+	INSTR("gtei", JITFUNC(Comp_Cp2), Dis_Generic, 0, 0),
+	INSTR("gtei", JITFUNC(Comp_Cp2), Dis_Generic, 0, 0),
+	INSTR("gtei", JITFUNC(Comp_Cp2), Dis_Generic, 0, 0),
+	INSTR("gtei", JITFUNC(Comp_Cp2), Dis_Generic, 0, 0),
+	INSTR("gtei", JITFUNC(Comp_Cp2), Dis_Generic, 0, 0),
+	INSTR("gtei", JITFUNC(Comp_Cp2), Dis_Generic, 0, 0),
+	INSTR("gtei", JITFUNC(Comp_Cp2), Dis_Generic, 0, 0),
+	//24
+	INSTR("gtei", JITFUNC(Comp_Cp2), Dis_Generic, 0, 0),
+	INSTR("gtei", JITFUNC(Comp_Cp2), Dis_Generic, 0, 0),
+	INSTR("gtei", JITFUNC(Comp_Cp2), Dis_Generic, 0, 0),
+	INSTR("gtei", JITFUNC(Comp_Cp2), Dis_Generic, 0, 0),
+	INSTR("gtei", JITFUNC(Comp_Cp2), Dis_Generic, 0, 0),
+	INSTR("gtei", JITFUNC(Comp_Cp2), Dis_Generic, 0, 0),
+	INSTR("gtei", JITFUNC(Comp_Cp2), Dis_Generic, 0, 0),
+	INSTR("gtei", JITFUNC(Comp_Cp2), Dis_Generic, 0, 0),
 };
 
 const MIPSInstruction tableCop2BC2[4] = // 010010 01000 ...xx ................
@@ -361,11 +376,11 @@ const MIPSInstruction tableCop0[32] = // 010000 xxxxx ..... ................
 {
 	INSTR("mfc0", JITFUNC(Comp_Cp0), Dis_Generic, 0, OUT_RT),  // unused
 	INVALID,
-	INSTR("cfc0", JITFUNC(Comp_Cp0), Dis_Generic, 0, OUT_RT), //CF
+	INSTR("cfc0", JITFUNC(Comp_Cp0), Dis_Generic, 0, 0), //INVALID, needs to create error
 	INVALID,
 	INSTR("mtc0", JITFUNC(Comp_Cp0), Dis_Generic, 0, IN_RT),  // unused
 	INVALID,
-	INSTR("ctc0", JITFUNC(Comp_Cp0), Dis_Generic, 0, IN_RT), //CT
+	INSTR("ctc0", JITFUNC(Comp_Cp0), Dis_Generic, 0, 0), //INVALID, needs to create error
 	INVALID,
 	//8
 	INSTR("??", JITFUNC(Comp_Cp0), Dis_Generic, 0, 0), //BC???

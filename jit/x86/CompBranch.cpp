@@ -774,10 +774,13 @@ void Jit::Comp_Syscall(MIPSOpcode op)
 	WriteDowncount(offset);
 	RestoreRoundingMode();
 	js.downcountAmount = -offset;
-	
-	JitComp_Exception(EXCEPTION_SYSCALL);
 
-	ERROR_LOG(JIT, "Got a syscall, OP: %x at (%x)", op, js.compilerPC);
+	JitComp_Exception(EXCEPTION_SYSCALL);
+	//We should stop compiling after a syscall, otherwise the handler will be 
+	//recompiled, i think.
+	js.compiling = false;
+	
+	DEBUG_LOG(JIT, "Got a syscall, OP: %x at (%x)", op, js.compilerPC);
 /*
 #ifdef USE_PROFILER
 	// When profiling, we can't skip CallSyscall, since it times syscalls.
