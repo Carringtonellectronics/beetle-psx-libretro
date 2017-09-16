@@ -195,17 +195,17 @@ namespace MIPSComp
 		}
 FixupBranch noOverflow;
 		//Check for overflow
-#ifdef ARCH_32BIT
+//#ifdef ARCH_32BIT
 		//Only works for signed values, otherwise the carry bit is set.
 		//However, it looks like all these immediates use the signed ADD instruction
 		//Anyways.
 		noOverflow = J_CC(CC_NO);
-#else
+/*#else
 		MOV(32, R(TEMPREG), gpr.R(rt));
 		CMP(32, R(TEMPREG), Imm32(0xFFFFFFFF));
-		noOverflow = J_CC(CC_A);
-#endif
-		JitComp_Exception(EXCEPTION_OV);
+		noOverflow = J_CC(CC_B);
+#endif*/
+		JitComp_Exception(op, EXCEPTION_OV);
 		SetJumpTarget(noOverflow);
 	}
 
@@ -290,17 +290,17 @@ FixupBranch noOverflow;
 		}
 		FixupBranch noOverflow;
 		//Check for overflow
-#ifdef ARCH_32BIT
+//#ifdef ARCH_32BIT
 		//Only works for signed values, otherwise the carry bit is set.
 		//However, it looks like all these immediates use the signed ADD instruction
 		//Anyways.
 		noOverflow = J_CC(CC_NO);
-#else
+/*#else
 		MOV(32, R(TEMPREG), gpr.R(rd));
 		CMP(32, R(TEMPREG), Imm32(0xFFFFFFFF));
 		noOverflow = J_CC(CC_A);
-#endif
-		JitComp_Exception(EXCEPTION_OV);
+#endif*/
+		JitComp_Exception(op, EXCEPTION_OV);
 		SetJumpTarget(noOverflow);
 	}
 
@@ -405,17 +405,17 @@ FixupBranch noOverflow;
 
 		FixupBranch noOverflow;
 		//Check for overflow
-#ifdef ARCH_32BIT
+//#ifdef ARCH_32BIT
 		//Only works for signed values, otherwise the carry bit is set.
 		//However, it looks like all these immediates use the signed ADD instruction
 		//Anyways.
 		noOverflow = J_CC(CC_NO);
-#else
+/*#else
 		MOV(32, R(TEMPREG), gpr.R(rd));
 		CMP(32, R(TEMPREG), Imm32(0xFFFFFFFF));
 		noOverflow = J_CC(CC_A);
-#endif
-		JitComp_Exception(EXCEPTION_OV);
+#endif*/
+		JitComp_Exception(op, EXCEPTION_OV);
 		SetJumpTarget(noOverflow);
 	}
 
@@ -632,17 +632,17 @@ FixupBranch noOverflow;
 		}
 FixupBranch noOverflow;
 		//Check for overflow
-#ifdef ARCH_32BIT
+//#ifdef ARCH_32BIT
 		//Only works for signed values, otherwise the carry bit is set.
 		//However, it looks like all these immediates use the signed ADD instruction
 		//Anyways.
 		noOverflow = J_CC(CC_NO);
-#else
+/*#else
 		MOV(32, R(TEMPREG), gpr.R(rd));
 		CMP(32, R(TEMPREG), Imm32(0xFFFFFFFF));
 		noOverflow = J_CC(CC_A);
-#endif
-		JitComp_Exception(EXCEPTION_OV);
+#endif*/
+		JitComp_Exception(op, EXCEPTION_OV);
 		SetJumpTarget(noOverflow);
 	}
 

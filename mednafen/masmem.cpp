@@ -170,10 +170,11 @@ template <typename T>
 inline void ReadFromHardware(T &var, uint32 address) {
     //INFO_LOG(READ, "Reading at address %p\n", address);
     JTTTS_increment_timestamp(DMACycleSteal);
-
+    uint32 origAddress = address;
     address &= addr_mask[address >> 29];
     //if(address == 0xa0 && IsWrite)
     // DBG_Break();
+    //INFO_LOG(READ, "Masked address: %p\n", address);
 
     if(address >= 0x1F800000 && address <= 0x1F8003FF)
     {
@@ -240,6 +241,7 @@ inline void ReadFromHardware(T &var, uint32 address) {
         // CDC: TODO - 8-bit access.
         if(address >= 0x1f801800 && address <= 0x1f80180F)
         {
+            INFO_LOG(READ, "Reading CD at address %p\n", address);
             JTTTS_increment_timestamp( 6 * sizeof(T)); //24;
             var = CDC->Read(JITTS_get_timestamp(), address & 0x3);
             return;
@@ -337,7 +339,7 @@ inline void ReadFromHardware(T &var, uint32 address) {
         return;
     }
     var = 0;
-    DEBUG_LOG(MEM, "[MEM] Unknown read %d from %08x at time %d\n", (int)(sizeof(T) * 8), address, JITTS_get_timestamp());
+    DEBUG_LOG(MEM, "[MEM] Unknown read %d from %08x at time %d\n", (int)(sizeof(T) * 8), origAddress, JITTS_get_timestamp());
 }
 
 template <typename T>
@@ -345,7 +347,7 @@ inline void WriteToHardware(uint32 address, const T data) {
     //if(address == 0xa0 && IsWrite)
     // DBG_Break();
     //INFO_LOG(WRITE, "Writing at address %p\n", address);
-
+    uint32 origAddress = address;
     address &= addr_mask[address >> 29];
 
     if(address >= 0x1F800000 && address <= 0x1F8003FF)
@@ -404,6 +406,7 @@ inline void WriteToHardware(uint32 address, const T data) {
         // CDC: TODO - 8-bit access.
         if(address >= 0x1f801800 && address <= 0x1f80180F)
         {
+            INFO_LOG(READ, "Writing CD at address %p\n", address);
             CDC->Write(JITTS_get_timestamp(), address & 0x3, data);
             return;
         }
@@ -474,7 +477,7 @@ inline void WriteToHardware(uint32 address, const T data) {
         return;
     }
 
-    DEBUG_LOG(MEM, "[MEM] Unknown write%d to %08x at time %d, =%08x(%d)\n", (int)(sizeof(T) * 8), address, JITTS_get_timestamp(), data, data);
+    DEBUG_LOG(MEM, "[MEM] Unknown write%d to %08x at time %d, =%08x(%d)\n", (int)(sizeof(T) * 8), origAddress, JITTS_get_timestamp(), &data, data);
 }
 
 bool IsRAMAddress(const uint32 address) {

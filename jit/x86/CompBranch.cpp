@@ -775,7 +775,7 @@ void Jit::Comp_Syscall(MIPSOpcode op)
 	RestoreRoundingMode();
 	js.downcountAmount = -offset;
 
-	JitComp_Exception(EXCEPTION_SYSCALL);
+	JitComp_Exception(op, EXCEPTION_SYSCALL);
 	//We should stop compiling after a syscall, otherwise the handler will be 
 	//recompiled, i think.
 	js.compiling = false;
@@ -802,7 +802,7 @@ void Jit::Comp_Syscall(MIPSOpcode op)
 
 void Jit::Comp_Break(MIPSOpcode op)
 {
-	JitComp_Exception(EXCEPTION_BP);
+	JitComp_Exception(op, EXCEPTION_BP);
 
 	js.compiling = false;
 }

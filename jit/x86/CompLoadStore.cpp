@@ -283,6 +283,10 @@ namespace MIPSComp {
 		}
 	}
 
+	void LogInt322(uint32 in){
+		DEBUG_LOG(CPU, "Register = %d\n", in);
+	}
+
 	void Jit::Comp_ITypeMem(MIPSOpcode op)
 	{
 		CONDITIONAL_DISABLE;
@@ -294,31 +298,37 @@ namespace MIPSComp {
 			// Don't load anything into $zr
 			return;
 		}
-		//Let's make sure that the address isn't a non multiple of 4
-		MOV(32, R(EAX), gpr.R(rs));
-		ADD(32, R(EAX), Imm32(offset));
-		TEST(32, R(EAX), Imm32(0x3));
-		FixupBranch goodAddress = J_CC(CC_Z);
-
-		if((o >> 3) == 0x5){
-			//It's a store instruction if the upper 3 bits is = 5
-			JitComp_Exception(EXCEPTION_ADES);
-		}else{
-			JitComp_Exception(EXCEPTION_ADEL);
-		}
-		SetJumpTarget(goodAddress);
+		
+		FixupBranch goodAddress;
 
 		switch (o)
 		{
 		case 37: //R(rt) = ReadMem16(addr); break; //lhu
+			//Make sure that address is a 16-bit addressable one
+			MOV(32, R(EAX), gpr.R(rs));
+			ADD(32, R(EAX), Imm32(offset));
+			TEST(32, R(EAX), Imm32(0x1));
+			goodAddress = J_CC(CC_Z);
+			JitComp_Exception(op, EXCEPTION_ADEL);
+			SetJumpTarget(goodAddress);
+			
 			CompITypeMemRead(op, 16, &XEmitter::MOVZX, safeMemFuncs.readU16);
 			break;
 
 		case 36: //R(rt) = ReadMem8 (addr); break; //lbu
+			//No need to check for invalid addresses, they don't happen in LB
 			CompITypeMemRead(op, 8, &XEmitter::MOVZX,  safeMemFuncs.readU8);
 			break;
 
 		case 35: //R(rt) = ReadMem32(addr); break; //lw
+			//Make sure that address is a 32-bit addressable one
+			MOV(32, R(EAX), gpr.R(rs));
+			ADD(32, R(EAX), Imm32(offset));
+			TEST(32, R(EAX), Imm32(0x3));
+			goodAddress = J_CC(CC_Z);
+			JitComp_Exception(op, EXCEPTION_ADEL);
+			SetJumpTarget(goodAddress);
+
 			CompITypeMemRead(op, 32, &XEmitter::MOVZX, safeMemFuncs.readU32);
 			break;
 
@@ -327,6 +337,14 @@ namespace MIPSComp {
 			break;
 
 		case 33: //R(rt) = (u32)(s32)(s16)ReadMem16(addr); break; //lh
+			//Make sure that address is a 16-bit addressable one
+			MOV(32, R(EAX), gpr.R(rs));
+			ADD(32, R(EAX), Imm32(offset));
+			TEST(32, R(EAX), Imm32(0x1));
+			goodAddress = J_CC(CC_Z);
+			JitComp_Exception(op, EXCEPTION_ADEL);
+			SetJumpTarget(goodAddress);
+			
 			CompITypeMemRead(op, 16, &XEmitter::MOVSX, safeMemFuncs.readU16);
 			break;
 
@@ -335,10 +353,25 @@ namespace MIPSComp {
 			break;
 
 		case 41: //WriteMem16(addr, R(rt)); break; //sh
+			//Make sure that address is a 16-bit addressable one
+			MOV(32, R(EAX), gpr.R(rs));
+			ADD(32, R(EAX), Imm32(offset));
+			TEST(32, R(EAX), Imm32(0x1));
+			goodAddress = J_CC(CC_Z);
+			JitComp_Exception(op, EXCEPTION_ADES);
+			SetJumpTarget(goodAddress);
 			CompITypeMemWrite(op, 16, safeMemFuncs.writeU16);
 			break;
 
 		case 43: //WriteMem32(addr, R(rt)); break; //sw
+			//Make sure that address is a 32-bit addressable one
+			MOV(32, R(EAX), gpr.R(rs));
+			ADD(32, R(EAX), Imm32(offset));
+			TEST(32, R(EAX), Imm32(0x1));
+			goodAddress = J_CC(CC_Z);
+			JitComp_Exception(op, EXCEPTION_ADES);
+			SetJumpTarget(goodAddress);
+
 			CompITypeMemWrite(op, 32, safeMemFuncs.writeU32);
 			break;
 
@@ -405,7 +438,7 @@ namespace MIPSComp {
 					CompITypeMemUnpairedLR(op, true);
 			}
 			break;
-
+//TODO add SWC2 and LWc2
 		default:
 			Comp_Generic(op);
 			return ;

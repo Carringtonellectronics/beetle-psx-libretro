@@ -99,7 +99,7 @@ public:
 	void Comp_Cp0(MIPSOpcode op) override;
 	void Comp_DoNothing(MIPSOpcode op) override;
 
-	void Comp_IllegalInstr(MIPSOpcode op) override {JitComp_Exception(EXCEPTION_RI);}
+	void Comp_IllegalInstr(MIPSOpcode op) override {JitComp_Exception(op, EXCEPTION_RI);}
 
 	int Replace_fabsf() override;
 	/*
@@ -209,7 +209,7 @@ private:
 	void JitComp_MT0(MIPSOpcode op);
 	void JitComp_CT0(MIPSOpcode op);
 	void JitComp_BC0(MIPSOpcode op);
-	void JitComp_Exception(uint32_t code);
+	void JitComp_Exception(MIPSOpcode op, uint32_t code);
 	//Exception for cop0 function, CALLed in JIT code
 	uint32_t Exception_Helper(uint32_t code, uint32_t PC, uint32_t inDelaySlot);
 

@@ -133,7 +133,6 @@ void Jit::GenerateFixedCode(JitOptions &jo) {
 #ifdef ARCH_64BIT
 	// Two statically allocated registers.
 	MOV(64, R(MEMBASEREG), ImmPtr(Memory::base));
-	DEBUG_LOG(JIT, "Putting memory base (0x%08x) into rbx\n", Memory::base);
 	uintptr_t jitbase = (uintptr_t)GetBasePtr();
 	if (jitbase > 0x7FFFFFFFULL) {
 		MOV(64, R(JITBASEREG), ImmPtr(GetBasePtr()));
@@ -145,7 +144,6 @@ void Jit::GenerateFixedCode(JitOptions &jo) {
 	
 	outerLoop = GetCodePtr();
 		RestoreRoundingMode(true);
-		//ABI_CallFunction(reinterpret_cast<void *>(ImHere));
 		ABI_CallFunction(reinterpret_cast<void *>(JITTS_update_from_downcount));
 		ApplyRoundingMode(true);
 		FixupBranch skipToCoreStateCheck = J();  //skip the downcount check
@@ -162,7 +160,6 @@ void Jit::GenerateFixedCode(JitOptions &jo) {
 			MOV(PTRBITS, R(RAX), ImmPtr((const void *)&coreState));
 			CMP(32, MatR(RAX), Imm32(CORE_RUNNING));
 		}
-		//ABI_CallFunction(reinterpret_cast<void *>(ImHere));
 		FixupBranch badCoreState = J_CC(CC_NZ, true);
 		FixupBranch skipToRealDispatch2 = J(); //skip the sync and compare first time
 		dispatcher = GetCodePtr();
@@ -186,7 +183,7 @@ void Jit::GenerateFixedCode(JitOptions &jo) {
 			//ABI_CallFunction(reinterpret_cast<void *>(ImHere));
 			//Call ReadU32 to read the instruction at the PC into EAX
 			//TODO make sure this can reach high memory (in case that's needed?)
-			ABI_CallFunctionR((void *)Memory::Read_U32, EAX);
+			ABI_CallFunctionR((void *)Memory::Read_U32, RAX);
 			//MOV(32, R(EAX), MComplex(MEMBASEREG, EAX, SCALE_1, 0));
 #endif                                             
 			MOV(32, R(EDX), R(EAX));

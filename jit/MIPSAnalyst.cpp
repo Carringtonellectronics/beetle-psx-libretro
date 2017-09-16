@@ -735,7 +735,7 @@ namespace MIPSAnalyst {
 		}
 		totalUsedRegs += numUsedRegs;
 		numAnalyzings++;
-		//log_cb(RETRO_LOG_INFO, "[ %08x ] Used regs: %i Average: %f\n", address, numUsedRegs, (float)totalUsedRegs / (float)numAnalyzings);
+		log_cb(RETRO_LOG_INFO, "[ %08x ] Used regs: %i Average: %f\n", address, numUsedRegs, (float)totalUsedRegs / (float)numAnalyzings);
 
 		return results;
 	}

@@ -105,12 +105,17 @@ void Jit::JitComp_BC0(MIPSOpcode op){ //TODO ??
     
 }
 
-void Jit::JitComp_Exception(uint32_t code){
+void caught(uint32_t code, uint32_t instr){
+    INFO_LOG(EX, "Caught in exception, code = %u, instr = 0x%08x", code, instr);
+}
+
+void Jit::JitComp_Exception(MIPSOpcode op, uint32_t code){
+    ABI_CallFunctionCC((void *)caught, code, op.encoding);
     ABI_CallFunctionCCC((void *)&Exception_Helper, code, js.compilerPC, js.inDelaySlot);
     //We need to set the PC to be the handler
     MOV(32, MIPSSTATE_VAR(pc), R(EAX));
     //Now we need to exit this block, by going back to the dispatcher.
-    JMP(outerLoop, true);
+    WriteSyscallExit();
 }
 
 uint32_t Jit::Exception_Helper(uint32_t code, uint32_t PC, uint32_t inDelaySlot){

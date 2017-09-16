@@ -193,6 +193,7 @@ void Jit::FlushPrefixV() {
 }
 
 void Jit::WriteDowncount(int offset) {
+	//INFO_LOG(JIT, "Downcount size: %d\n", js.downcountAmount);
 	const int downcount = js.downcountAmount + offset;
 	SUB(32, MIPSSTATE_VAR(downcount), downcount > 127 ? Imm32(downcount) : Imm8(downcount));
 }
@@ -784,7 +785,13 @@ void Jit::WriteSyscallExit() {
 		ABI_CallFunction(&JitMemCheckCleanup);
 		ApplyRoundingMode();
 	}
-	JMP(dispatcherCheckCoreState, true);
+	if (RipAccessible((const void *)&coreState)) {
+		MOV(32, M(&coreState), Imm32(CORE_NEXTFRAME));  // rip accessible
+	} else {
+		MOV(PTRBITS, R(RAX), ImmPtr((const void *)&coreState));
+		MOV(32, MatR(RAX), Imm32(CORE_NEXTFRAME));
+	}
+	JMP(outerLoop, true);
 }
 
 bool Jit::CheckJitBreakpoint(u32 addr, int downcountOffset) {
