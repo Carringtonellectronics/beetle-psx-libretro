@@ -764,7 +764,7 @@ u32 IRInterpret(MIPSState *mips, const IRInst *inst, const u32 *constPool, int c
 			MIPSOpcode op(constPool[inst->src1]);
 			CallSyscall(op);
 			if (coreState != CORE_RUNNING)
-				TIMER_ForceCheck();
+				JITTS_force_check();
 			break;
 		}
 
@@ -805,14 +805,14 @@ u32 IRInterpret(MIPSState *mips, const IRInst *inst, const u32 *constPool, int c
 
 		case IROp::Breakpoint:
 			if (RunBreakpoint(mips->pc)) {
-				TIMER_ForceCheck();
+				JITTS_force_check();
 				return mips->pc;
 			}
 			break;
 
 		case IROp::MemoryCheck:
 			if (RunMemCheck(mips->pc, mips->r[inst->src1] + constPool[inst->src2])) {
-				TIMER_ForceCheck();
+				JITTS_force_check();
 				return mips->pc;
 			}
 			break;

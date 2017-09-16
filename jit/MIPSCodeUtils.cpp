@@ -18,7 +18,7 @@
 #include "jit/MIPS.h"
 #include "jit/MIPSTables.h"
 #include "jit/MIPSCodeUtils.h"
-#include "jit/Memory/MemMap.h"
+#include "mednafen/masmem.h"
 
 namespace MIPSCodeUtils
 {

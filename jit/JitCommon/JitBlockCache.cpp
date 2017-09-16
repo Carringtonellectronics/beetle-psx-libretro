@@ -30,7 +30,7 @@
 #include "Windows.h"
 #endif
 
-#include "jit/Memory/MemMap.h"
+#include "mednafen/masmem.h"
 
 #include "jit/MIPS.h"
 #include "jit/MIPSTables.h"
@@ -243,11 +243,11 @@ void JitBlockCache::FinalizeBlock(int block_num, bool block_link) {
 	if (Memory::IsScratchpadAddress(b.originalAddress)) {
 		ExpandRange(blockMemRanges_[JITBLOCK_RANGE_SCRATCH], b.originalAddress, blockEnd);
 	}
-	const uint32 halfUserMemory = (PSP_GetUserMemoryEnd() - PSP_GetUserMemoryBase()) / 2;
-	if (b.originalAddress < PSP_GetUserMemoryBase() + halfUserMemory) {
+	const uint32 halfUserMemory = (Memory::GetUserMemoryEnd() - Memory::GetUserMemoryBase()) / 2;
+	if (b.originalAddress < Memory::GetUserMemoryBase() + halfUserMemory) {
 		ExpandRange(blockMemRanges_[JITBLOCK_RANGE_RAMBOTTOM], b.originalAddress, blockEnd);
 	}
-	if (blockEnd > PSP_GetUserMemoryBase() + halfUserMemory) {
+	if (blockEnd > Memory::GetUserMemoryBase() + halfUserMemory) {
 		ExpandRange(blockMemRanges_[JITBLOCK_RANGE_RAMTOP], b.originalAddress, blockEnd);
 	}
 

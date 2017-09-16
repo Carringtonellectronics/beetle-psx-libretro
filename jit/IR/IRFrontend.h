@@ -84,6 +84,10 @@ public:
 	void Comp_ColorConv(MIPSOpcode op) override;
 	void Comp_Vbfy(MIPSOpcode op) override;
 */
+
+	void Comp_Cp0(MIPSOpcode op) override;
+	void Comp_IllegalInstr(MIPSOpcode op) override;
+
 	int Replace_fabsf() override;
 	int StateAction(StateMem *sm, int load, int data_only);
 	bool CheckRounding();  // returns true if we need a do-over

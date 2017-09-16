@@ -20,7 +20,7 @@
 
 #include "jit/profiler/profiler.h"
 
-#include "jit/Memory/MemMap.h"
+#include "mednafen/masmem.h"
 
 #include "jit/MIPS.h"
 #include "jit/MIPSCodeUtils.h"
@@ -602,6 +602,8 @@ void Jit::Comp_Jump(MIPSOpcode op) {
 		}
 		// TODO: Mark this block dirty or something?  May be indication it will be changed by imports.
 		return;
+	}else{
+		
 	}
 
 	switch (op >> 26) {
@@ -772,11 +774,10 @@ void Jit::Comp_Syscall(MIPSOpcode op)
 	WriteDowncount(offset);
 	RestoreRoundingMode();
 	js.downcountAmount = -offset;
+	
+	JitComp_Exception(EXCEPTION_SYSCALL);
 
-	if (!js.inDelaySlot) {
-		MOV(32, MIPSSTATE_VAR(pc), Imm32(GetCompilerPC() + 4));
-	}
-	ERROR_LOG(JIT, "Got a syscall, OP: %x", op);
+	ERROR_LOG(JIT, "Got a syscall, OP: %x at (%x)", op, js.compilerPC);
 /*
 #ifdef USE_PROFILER
 	// When profiling, we can't skip CallSyscall, since it times syscalls.
@@ -798,8 +799,8 @@ void Jit::Comp_Syscall(MIPSOpcode op)
 
 void Jit::Comp_Break(MIPSOpcode op)
 {
-	Comp_Generic(op);
-	WriteSyscallExit();
+	JitComp_Exception(EXCEPTION_BP);
+
 	js.compiling = false;
 }
 

@@ -27,7 +27,7 @@ namespace
 #ifndef ARCH_64BIT
 static uint8 GC_ALIGNED32(saved_fp_state[16 * 4 * 4]);
 static uint8 GC_ALIGNED32(saved_gpr_state[16 * 8]);
-static u16 saved_mxcsr;
+static uint16 saved_mxcsr;
 #endif
 
 }  // namespace

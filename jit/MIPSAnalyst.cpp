@@ -22,7 +22,7 @@
 #include <mutex>
 
 #include "jit/cityhash/city.h"
-#include "jit/Memory/MemMap.h"
+#include "mednafen/masmem.h"
 #include "jit/MIPS.h"
 
 #include "jit/MIPSTables.h"
@@ -735,7 +735,7 @@ namespace MIPSAnalyst {
 		}
 		totalUsedRegs += numUsedRegs;
 		numAnalyzings++;
-		log_cb(RETRO_LOG_INFO, "[ %08x ] Used regs: %i Average: %f\n", address, numUsedRegs, (float)totalUsedRegs / (float)numAnalyzings);
+		//log_cb(RETRO_LOG_INFO, "[ %08x ] Used regs: %i Average: %f\n", address, numUsedRegs, (float)totalUsedRegs / (float)numAnalyzings);
 
 		return results;
 	}

@@ -26,13 +26,12 @@
 #include "jit/MIPSDebugInterface.h"
 #include "jit/IR/IRJit.h"
 #include "jit/JitCommon/JitCommon.h"
-#include "mednafen/psx/timer.h"
+#include "mednafen/jittimestamp.h"
 
 
-MIPSState mipsr4k;
-MIPSState *currentMIPS = &mipsr4k;
-MIPSDebugInterface debugr4k(&mipsr4k);
-MIPSDebugInterface *currentDebugMIPS = &debugr4k;
+MIPSState *mipsr4k = NULL;
+MIPSState *currentMIPS = NULL;
+MIPSDebugInterface *currentDebugMIPS = NULL;
 
 uint8 voffset[128];
 uint8 fromvoffset[128];
@@ -81,6 +80,13 @@ const float cst_constants[32] = {
 	sqrtf(3.0f)/2.0f,
 };
 
+void InitMips(){
+	mipsr4k = new MIPSState();
+	currentMIPS = mipsr4k;
+	MIPSDebugInterface debugr4k(mipsr4k);
+	currentDebugMIPS = &debugr4k;
+	currentMIPS->Init();
+}
 
 MIPSState::MIPSState() {
 	MIPSComp::jit = 0;
@@ -261,7 +267,7 @@ int MIPSState::StateAction(StateMem *sm, int load, int data_only)
 void MIPSState::SingleStep() {
 	int cycles = MIPS_SingleStep();
 	currentMIPS->downcount -= cycles;
-	TIMER_Advance();
+	JITTS_update_from_downcount();
 }
 
 // returns 1 if reached ticks limit

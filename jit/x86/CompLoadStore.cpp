@@ -18,7 +18,7 @@
 
 #if defined(ARCH_X86) || defined(ARCH_AMD64)
 
-#include "jit/Memory/MemMap.h"
+#include "mednafen/masmem.h"
 #include "jit/MIPSAnalyst.h"
 #include "jit/MIPSCodeUtils.h"
 #include "jit/x86/Jit.h"
@@ -294,6 +294,19 @@ namespace MIPSComp {
 			// Don't load anything into $zr
 			return;
 		}
+		//Let's make sure that the address isn't a non multiple of 4
+		MOV(32, R(EAX), gpr.R(rs));
+		ADD(32, R(EAX), Imm32(offset));
+		TEST(32, R(EAX), Imm32(0x3));
+		FixupBranch goodAddress = J_CC(CC_Z);
+
+		if((o >> 3) == 0x5){
+			//It's a store instruction if the upper 3 bits is = 5
+			JitComp_Exception(EXCEPTION_ADES);
+		}else{
+			JitComp_Exception(EXCEPTION_ADEL);
+		}
+		SetJumpTarget(goodAddress);
 
 		switch (o)
 		{

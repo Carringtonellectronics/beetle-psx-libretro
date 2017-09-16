@@ -87,7 +87,11 @@ public:
 	void Comp_FPU2op(MIPSOpcode op) override {}
 	void Comp_mxc1(MIPSOpcode op) override {}
 
+	void Comp_Cp0(MIPSOpcode op) override {}
+
 	void Comp_DoNothing(MIPSOpcode op) override {}
+
+	void Comp_IllegalInstr(MIPSOpcode op) override {}
 
 	void Comp_SV(MIPSOpcode op) override {}
 	void Comp_SVQ(MIPSOpcode op) override {}

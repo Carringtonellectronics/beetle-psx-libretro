@@ -65,7 +65,9 @@ SOURCES_CXX += $(CORE_DIR)/jit/MIPS.cpp \
 				$(CORE_DIR)/jit/Common/CPUDetect.cpp \
 				$(CORE_DIR)/jit/Common/x64Emitter.cpp \
 				$(CORE_DIR)/jit/Common/ArmEmitter.cpp \
-				$(CORE_DIR)/jit/Common/Arm64Emitter.cpp 
+				$(CORE_DIR)/jit/Common/Arm64Emitter.cpp \
+				$(CORE_DIR)/jit/Memory/MemoryUtil.cpp \
+				$(CORE_DIR)/jit/Common/DumbCoreStuff.cpp
 
 SOURCES_CXX += $(CORE_DIR)/jit/Common/math_util.cpp  \
 				$(CORE_DIR)/jit/Common/expression_parser.cpp \
@@ -75,20 +77,15 @@ SOURCES_CXX += $(CORE_DIR)/jit/Common/math_util.cpp  \
 				$(CORE_DIR)/jit/Common/StringUtils.cpp \
 				$(CORE_DIR)/jit/Common/base/stringutil.cpp \
 				$(CORE_DIR)/jit/Common/Misc.cpp \
-				$(CORE_DIR)/jit/Common/utf8.cpp
+				$(CORE_DIR)/jit/Common/utf8.cpp \
+				$(CORE_DIR)/mednafen/jittimestamp.cpp
 
 SOURCES_C += $(CORE_DIR)/jit/dis/decode.c \
 				$(CORE_DIR)/jit/dis/itab.c \
 				$(CORE_DIR)/jit/dis/syn.c \
 				$(CORE_DIR)/jit/dis/syn-intel.c \
 				$(CORE_DIR)/jit/dis/syn-att.c \
-				$(CORE_DIR)/jit/dis/udis86.c
-
-
-
-#Extra mem files
-SOURCES_CXX += $(CORE_DIR)/jit/Memory/MemMapFunctions.cpp \
-				 $(CORE_DIR)/jit/Memory/MemoryUtil.cpp
+				$(CORE_DIR)/jit/dis/udis86.c \
 
 ifeq ($(IS_X86), 1)
 				#X86 specific files
@@ -108,6 +105,7 @@ ifeq ($(IS_X86), 1)
 				$(CORE_DIR)/jit/x86/JitSafeMem.cpp \
 				$(CORE_DIR)/jit/x86/RegCache.cpp \
 				$(CORE_DIR)/jit/x86/RegCacheFPU.cpp \
+				$(CORE_DIR)/jit/x86/CompCP.cpp \
 				$(CORE_DIR)/jit/Common/x64Analyzer.cpp \
 				$(CORE_DIR)/jit/Common/Thunk.cpp \
 				$(CORE_DIR)/jit/Common/ABI.cpp
@@ -274,6 +272,7 @@ SOURCES_CXX += \
 	$(MEDNAFEN_DIR)/Stream.cpp \
 	$(MEDNAFEN_DIR)/state.cpp \
 	$(MEDNAFEN_DIR)/mempatcher.cpp \
+	$(MEDNAFEN_DIR)/masmem.cpp \
 	$(MEDNAFEN_DIR)/video/Deinterlacer.cpp \
 	$(MEDNAFEN_DIR)/video/surface.cpp \
 	$(CORE_DIR)/libretro.cpp
@@ -343,11 +342,5 @@ SOURCES_C += $(CORE_DIR)/pgxp/pgxp_cpu.c \
 				 $(CORE_DIR)/pgxp/pgxp_main.c \
 				 $(CORE_DIR)/pgxp/pgxp_mem.c \
 				 $(CORE_DIR)/pgxp/pgxp_value.c
-
-SOURCES_CXX += $(CORE_DIR)/jit/Memory/MemArenaAndroid.cpp \
-				 $(CORE_DIR)/jit/Memory/MemArenaDarwin.cpp \
-				 $(CORE_DIR)/jit/Memory/MemArenaPosix.cpp \
-				 $(CORE_DIR)/jit/Memory/MemArenaWin32.cpp \
-				 $(CORE_DIR)/jit/Memory/MemMap.cpp
 
 

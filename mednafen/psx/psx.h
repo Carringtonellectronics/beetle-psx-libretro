@@ -100,6 +100,5 @@ class PS_SPU;
 extern PS_CPU *CPU;
 extern PS_CDC *CDC;
 extern PS_SPU *SPU;
-extern MultiAccessSizeMem* MainRAM;
 
 #endif

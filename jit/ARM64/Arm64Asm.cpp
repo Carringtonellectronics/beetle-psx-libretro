@@ -214,7 +214,7 @@ void Arm64Jit::GenerateFixedCode(const JitOptions &jo) {
 	outerLoop = GetCodePtr();
 		SaveStaticRegisters();  // Advance can change the downcount, so must save/restore
 		RestoreRoundingMode(true);
-		QuickCallFunction(SCRATCH1_64, &TIMER_Advance);
+		QuickCallFunction(SCRATCH1_64, &JITTS_update_from_downcount);
 		ApplyRoundingMode(true);
 		LoadStaticRegisters();
 		FixupBranch skipToCoreStateCheck = B();  //skip the downcount check

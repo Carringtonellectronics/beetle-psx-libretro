@@ -105,7 +105,7 @@ void IRJit::RunLoopUntil(u64 globalticks) {
 	
 	while (true) {
 		// RestoreRoundingMode(true);
-		TIMER_Advance();
+		JITTS_update_from_downcount();
 		// ApplyRoundingMode(true);
 		if (coreState != 0) {
 			break;

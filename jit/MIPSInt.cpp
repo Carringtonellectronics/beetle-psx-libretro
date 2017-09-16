@@ -21,7 +21,7 @@
 
 #include "jit/Common/math_util.h"
 
-#include "jit/Memory/MemMap.h"
+#include "mednafen/masmem.h"
 #include "jit/MIPS.h"
 #include "jit/MIPSInt.h"
 #include "jit/MIPSTables.h"
@@ -50,28 +50,28 @@
 static inline void DelayBranchTo(uint32 where)
 {
 	PC += 4;
-	mipsr4k.nextPC = where;
-	mipsr4k.inDelaySlot = true;
+	mipsr4k->nextPC = where;
+	mipsr4k->inDelaySlot = true;
 }
 
 static inline void SkipLikely()
 {
 	PC += 8;
-	--mipsr4k.downcount;
+	--mipsr4k->downcount;
 }
 
 int MIPS_SingleStep()
 {
 #if defined(ARM)
-	MIPSOpcode op = MIPSOpcode(Memory::ReadUnchecked_U32(mipsr4k.pc));
+	MIPSOpcode op = MIPSOpcode(Memory::ReadUnchecked_U32(mipsr4k->pc));
 #else
-	MIPSOpcode op = Memory::Read_Opcode_JIT(mipsr4k.pc);
+	MIPSOpcode op = Memory::Read_Opcode_JIT(mipsr4k->pc);
 #endif
-	if (mipsr4k.inDelaySlot) {
+	if (mipsr4k->inDelaySlot) {
 		MIPSInterpret(op);
-		if (mipsr4k.inDelaySlot) {
-			mipsr4k.pc = mipsr4k.nextPC;
-			mipsr4k.inDelaySlot = false;
+		if (mipsr4k->inDelaySlot) {
+			mipsr4k->pc = mipsr4k->nextPC;
+			mipsr4k->inDelaySlot = false;
 		}
 	} else {
 		MIPSInterpret(op);
@@ -126,16 +126,16 @@ namespace MIPSInt
 		// Need to pre-move PC, as CallSyscall may result in a rescheduling!
 		// To do this neater, we'll need a little generated kernel loop that syscall can jump to and then RFI from 
 		// but I don't see a need to bother.
-		if (mipsr4k.inDelaySlot)
+		if (mipsr4k->inDelaySlot)
 		{
-			mipsr4k.pc = mipsr4k.nextPC;
+			mipsr4k->pc = mipsr4k->nextPC;
 		}
 		else
 		{
-			mipsr4k.pc += 4;
+			mipsr4k->pc += 4;
 		}
 		/*
-		mipsr4k.inDelaySlot = false;
+		mipsr4k->inDelaySlot = false;
 		CallSyscall(op);
 		*/
 		ERROR_LOG(CPU, "HIT A SYSCALLL INSTR! %x", op);
@@ -244,7 +244,7 @@ namespace MIPSInt
 	
 	void Int_JumpType(MIPSOpcode op)
 	{
-		if (mipsr4k.inDelaySlot)
+		if (mipsr4k->inDelaySlot)
 			_dbg_assert_msg_(CPU,0,"Jump in delay slot :(");
 
 		uint32 off = ((op & 0x03FFFFFF) << 2);
@@ -265,7 +265,7 @@ namespace MIPSInt
 
 	void Int_JumpRegType(MIPSOpcode op)
 	{
-		if (mipsr4k.inDelaySlot)
+		if (mipsr4k->inDelaySlot)
 		{
 			// There's one of these in Star Soldier at 0881808c, which seems benign - it should probably be ignored.
 			if (op == 0x03e00008)

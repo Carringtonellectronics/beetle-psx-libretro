@@ -175,7 +175,7 @@ void ArmJit::GenerateFixedCode() {
 	outerLoop = GetCodePtr();
 		SaveDowncount();
 		RestoreRoundingMode(true);
-		QuickCallFunction(R0, &TIMER_Advance);
+		QuickCallFunction(R0, &JITTS_update_from_downcount);
 		ApplyRoundingMode(true);
 		RestoreDowncount();
 		FixupBranch skipToCoreStateCheck = B(); //skip the downcount check

@@ -1,6 +1,9 @@
 #ifndef __MDFN_PSX_MASMEM_H
 #define __MDFN_PSX_MASMEM_H
 
+#include "mednafen-types.h"
+#include "jit/Common/Opcode.h"
+
 // TODO, WIP (big-endian stores and loads not fully supported yet)
 
 #ifdef MSB_FIRST
@@ -103,107 +106,163 @@ static INLINE void StoreU32_LE(uint32 *a, const uint32 v)
 // pre_padding and post_padding are specified in units of sizeof(max_unit_type).
 //
  //, unsigned pre_padding_count, unsigned post_padding_count>
-struct MultiAccessSizeMem
-{
- //max_unit_type pre_padding[pre_padding_count ? pre_padding_count : 1];
- union
+ template<unsigned size, typename max_unit_type, bool big_endian> //, unsigned pre_padding_count, unsigned post_padding_count>
+ struct MultiAccessSizeMem
  {
-  uint8* data8;
-  uint16* data16;
-  uint32* data32;
+  //max_unit_type pre_padding[pre_padding_count ? pre_padding_count : 1];
+ 
+  union
+  {
+   uint8 data8[size];
+   uint16 data16[size / sizeof(uint16)];
+   uint32 data32[size / sizeof(uint32)];
+  };
+ 
+  //max_unit_type post_padding[post_padding_count ? post_padding_count : 1];
+ 
+  INLINE uint8 ReadU8(uint32 address)
+  {
+   return data8[address];
+  }
+ 
+  INLINE uint16 ReadU16(uint32 address)
+  {
+   if(MAS_NATIVE_IS_BIGENDIAN == big_endian)
+    return *(uint16*)(((uint8*)data16) + address);
+   else
+    return LoadU16_RBO((uint16*)(((uint8*)data16) + address));
+  }
+ 
+  INLINE uint32 ReadU32(uint32 address)
+  {
+   if(MAS_NATIVE_IS_BIGENDIAN == big_endian)
+    return *(uint32*)(((uint8*)data32) + address);
+   else
+    return LoadU32_RBO((uint32*)(((uint8*)data32) + address));
+  }
+ 
+  INLINE uint32 ReadU24(uint32 address)
+  {
+   uint32 ret;
+ 
+   if(!big_endian)
+   {
+    ret = ReadU8(address) | (ReadU8(address + 1) << 8) | (ReadU8(address + 2) << 16);
+   }
+ 
+   return(ret);
+  }
+ 
+ 
+  INLINE void WriteU8(uint32 address, uint8 value)
+  {
+   data8[address] = value;
+  }
+ 
+  INLINE void WriteU16(uint32 address, uint16 value)
+  {
+   if(MAS_NATIVE_IS_BIGENDIAN == big_endian)
+    *(uint16*)(((uint8*)data16) + address) = value;
+   else
+    StoreU16_RBO((uint16*)(((uint8*)data16) + address), value);
+  }
+ 
+  INLINE void WriteU32(uint32 address, uint32 value)
+  {
+   if(MAS_NATIVE_IS_BIGENDIAN == big_endian)
+    *(uint32*)(((uint8*)data32) + address) = value;
+   else
+    StoreU32_RBO((uint32*)(((uint8*)data32) + address), value);
+  }
+ 
+  INLINE void WriteU24(uint32 address, uint32 value)
+  {
+   if(!big_endian)
+   {
+    WriteU8(address + 0, value >> 0);
+    WriteU8(address + 1, value >> 8);
+    WriteU8(address + 2, value >> 16);
+   }
+  }
+ 
+  template<typename T>
+  INLINE T Read(uint32 address)
+  {
+   if(sizeof(T) == 4)
+    return(ReadU32(address));
+   else if(sizeof(T) == 2)
+    return(ReadU16(address));
+   else
+    return(ReadU8(address));
+  }
+ 
+  template<typename T>
+  INLINE void Write(uint32 address, T value)
+  {
+   if(sizeof(T) == 4)
+    WriteU32(address, value);
+   else if(sizeof(T) == 2)
+    WriteU16(address, value);
+   else
+    WriteU8(address, value);
+  }
  };
+namespace Memory {
 
- bool big_endian = false;
+    extern uint8 *base;
 
- //max_unit_type post_padding[post_padding_count ? post_padding_count : 1];
+    Opcode Read_Instruction(uint32 address, bool resolve_replacements);
+    INLINE Opcode Read_Instruction(uint32 address){return Read_Instruction(address, false);}
+    Opcode Read_Opcode_JIT(uint32 address);
+    void Write_Opcode_JIT(const uint32 _Address, const Opcode& _Value);
 
- INLINE uint8 ReadU8(uint32 address)
- {
-  return data8[address];
- }
+    void Init(bool WantPIOMem);
+    void Clear();
 
- INLINE uint16 ReadU16(uint32 address)
- {
-  if(MAS_NATIVE_IS_BIGENDIAN == big_endian)
-   return *(uint16*)(((uint8*)data16) + address);
-  else
-   return LoadU16_RBO((uint16*)(((uint8*)data16) + address));
- }
+    uint8 *GetPointer(const uint32 address);
+    
+    bool IsRAMAddress(const uint32 address);
+    bool IsScratchpadAddress(const uint32 address);
+    bool IsValidAddress(const uint32 address);
+    //TODO either remove all references to this, or make it work the way
+    //It should
+    INLINE bool Lock(){return false;}
 
- INLINE uint32 ReadU32(uint32 address)
- {
-  if(MAS_NATIVE_IS_BIGENDIAN == big_endian)
-   return *(uint32*)(((uint8*)data32) + address);
-  else
-   return LoadU32_RBO((uint32*)(((uint8*)data32) + address));
- }
+    uint8 Read_U8(const uint32 _Address);
+    uint16 Read_U16(const uint32 _Address);
+    uint32 Read_U32(const uint32 _Address);
+    uint64 Read_U64(const uint32 _Address);
+    uint32 Read_U8_ZX(const uint32 _Address);
+    uint32 Read_U16_ZX(const uint32 _Address);
+    void Write_U8(const uint8 _Data, const uint32 _Address);
+    void Write_U16(const uint16 _Data, const uint32 _Address);
+    void Write_U32(const uint32 _Data, const uint32 _Address);
+    void Write_U64(const uint64 _Data, const uint32 _Address);
 
- INLINE uint32 ReadU24(uint32 address)
- {
-  uint32 ret;
+    uint8 ReadUnchecked_U8(const uint32 _Address);
+    uint16 ReadUnchecked_U16(const uint32 _Address);
+    uint32 ReadUnchecked_U32(const uint32 _Address);
+    void WriteUnchecked_U8(const uint8 _iValue, const uint32 _Address);
+    void WriteUnchecked_U16(const uint16 _iValue, const uint32 _Address);
+    void WriteUnchecked_U32(const uint32 _iValue, const uint32 _Address);
 
-  if(!big_endian)
-  {
-   ret = ReadU8(address) | (ReadU8(address + 1) << 8) | (ReadU8(address + 2) << 16);
-  }
-
-  return(ret);
- }
-
-
- INLINE void WriteU8(uint32 address, uint8 value)
- {
-  data8[address] = value;
- }
-
- INLINE void WriteU16(uint32 address, uint16 value)
- {
-  if(MAS_NATIVE_IS_BIGENDIAN == big_endian)
-   *(uint16*)(((uint8*)data16) + address) = value;
-  else
-   StoreU16_RBO((uint16*)(((uint8*)data16) + address), value);
- }
-
- INLINE void WriteU32(uint32 address, uint32 value)
- {
-  if(MAS_NATIVE_IS_BIGENDIAN == big_endian)
-   *(uint32*)(((uint8*)data32) + address) = value;
-  else
-   StoreU32_RBO((uint32*)(((uint8*)data32) + address), value);
- }
-
- INLINE void WriteU24(uint32 address, uint32 value)
- {
-  if(!big_endian)
-  {
-   WriteU8(address + 0, value >> 0);
-   WriteU8(address + 1, value >> 8);
-   WriteU8(address + 2, value >> 16);
-  }
- }
-
- template<typename T>
- INLINE T Read(uint32 address)
- {
-  if(sizeof(T) == 4)
-   return(ReadU32(address));
-  else if(sizeof(T) == 2)
-   return(ReadU16(address));
-  else
-   return(ReadU8(address));
- }
-
- template<typename T>
- INLINE void Write(uint32 address, T value)
- {
-  if(sizeof(T) == 4)
-   WriteU32(address, value);
-  else if(sizeof(T) == 2)
-   WriteU16(address, value);
-  else
-   WriteU8(address, value);
- }
-};
+    inline uint32 GetScratchpadMemoryBase() { return 0x1f80000;}
+    inline uint32 GetScratchpadMemoryEnd() { return 0x1f80000 + 0x00000400;}
+    inline uint32 GetKernelMemoryBase() { return 0;}
+    inline uint32 GetUserMemoryEnd() { return GetKernelMemoryBase() + 0x00200000;}
+    inline uint32 GetKernelMemoryEnd() { return 0x0000ffff;}
+    // "Volatile" RAM is between 0x08400000 and 0x08800000, can be requested by the
+    // game through sceKernelVolatileMemTryLock.
+    
+    inline uint32 GetUserMemoryBase() { return 0x00010000;}
+    //inline uint32 GetDefaultLoadAddress() { return 0;}
+}
+//These externs allow direct access to the memory structs, but maybe it should be more compartmentalized?
+//Like, just have functions to manipulate them.
+extern MultiAccessSizeMem<1024, uint32, false> *ScratchRAM;
+extern MultiAccessSizeMem<512 * 1024, uint32, false> *BIOSROM;
+extern MultiAccessSizeMem<65536, uint32, false> *PIOMem;
+extern MultiAccessSizeMem<2048 * 1024, uint32, false> *MainRAM;
 
 #undef MAS_NATIVE_IS_BIGENDIAN
 

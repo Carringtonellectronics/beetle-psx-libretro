@@ -16,7 +16,7 @@
 // https://github.com/hrydgard/ppsspp and http://www.ppsspp.org/.
 
 #include <cstring>
-#include "jit/Memory/MemMap.h"
+#include "mednafen/masmem.h"
 #include "jit/MIPS.h"
 #include "jit/MIPSDis.h"
 #include "jit/MIPSTables.h"

@@ -15,13 +15,13 @@
 // Official git repository and contact information can be found at
 // https://github.com/hrydgard/ppsspp and http://www.ppsspp.org/.
 
-#include "jit/Memory/MemMap.h"
+#include "mednafen/masmem.h"
 #include "jit/MIPS.h"
 #include "jit/MIPSDis.h"
 #include "jit/MIPSInt.h"
 #include "jit/MIPSCodeUtils.h"
 #include "jit/MIPSTables.h"
-#include "mednafen/psx/timer.h"
+#include "mednafen/jittimestamp.h"
 #include "jit/Debugger/Breakpoints.h"
 
 #include "jit/JitCommon/JitCommon.h"
@@ -359,19 +359,19 @@ const MIPSInstruction tableCop2BC2[4] = // 010010 01000 ...xx ................
 
 const MIPSInstruction tableCop0[32] = // 010000 xxxxx ..... ................
 {
-	INSTR("mfc0", JITFUNC(Comp_Generic), Dis_Generic, 0, OUT_RT),  // unused
+	INSTR("mfc0", JITFUNC(Comp_Cp0), Dis_Generic, 0, OUT_RT),  // unused
 	INVALID,
+	INSTR("cfc0", JITFUNC(Comp_Cp0), Dis_Generic, 0, OUT_RT), //CF
 	INVALID,
+	INSTR("mtc0", JITFUNC(Comp_Cp0), Dis_Generic, 0, IN_RT),  // unused
 	INVALID,
-	INSTR("mtc0", JITFUNC(Comp_Generic), Dis_Generic, 0, IN_RT),  // unused
-	INVALID,
-	INVALID,
+	INSTR("ctc0", JITFUNC(Comp_Cp0), Dis_Generic, 0, IN_RT), //CT
 	INVALID,
 	//8
+	INSTR("??", JITFUNC(Comp_Cp0), Dis_Generic, 0, 0), //BC???
 	INVALID,
-	INVALID,
-	INSTR("rdpgpr", JITFUNC(Comp_Generic), Dis_Generic, 0, 0),
-	INSTR("mfmc0", JITFUNC(Comp_Generic), Dis_Generic, 0, 0),
+	INSTR("rdpgpr", JITFUNC(Comp_Cp0), Dis_Generic, 0, 0),
+	INSTR("mfmc0", JITFUNC(Comp_Cp0), Dis_Generic, 0, 0),
 
 	INVALID,
 	INVALID,
@@ -381,7 +381,7 @@ const MIPSInstruction tableCop0[32] = // 010000 xxxxx ..... ................
 	ENCODING(Cop0CO), ENCODING(Cop0CO), ENCODING(Cop0CO), ENCODING(Cop0CO), ENCODING(Cop0CO), ENCODING(Cop0CO), ENCODING(Cop0CO), ENCODING(Cop0CO),
 	ENCODING(Cop0CO), ENCODING(Cop0CO), ENCODING(Cop0CO), ENCODING(Cop0CO), ENCODING(Cop0CO), ENCODING(Cop0CO), ENCODING(Cop0CO), ENCODING(Cop0CO),
 };
-
+//TODO are these needed?
 // we won't encounter these since we only do user mode emulation
 const MIPSInstruction tableCop0CO[64] = // 010000 1.... ..... ..... ..... xxxxxx
 {
@@ -411,7 +411,7 @@ const MIPSInstruction tableCop0CO[64] = // 010000 1.... ..... ..... ..... xxxxxx
 	INVALID_X_8,
 	INVALID_X_8,
 };
-
+//TODO Make generate an exception
 const MIPSInstruction tableCop1[32] = // 010001 xxxxx ..... ..... ...........
 {
 	INSTR("mfc1", JITFUNC(Comp_mxc1), Dis_mxc1, Int_mxc1, IN_FS|OUT_RT|IS_FPU),
@@ -922,7 +922,9 @@ void MIPSCompileOp(MIPSOpcode op, MIPSComp::MIPSFrontendInterface *jit) {
 		if (info & OUT_EAT_PREFIX)
 			jit->EatPrefix();
 	} else {
-		ERROR_LOG_REPORT(CPU, "MIPSCompileOp: Invalid instruction %08x", op.encoding);
+		ERROR_LOG_REPORT(CPU, "MIPSCompileOp: Invalid instruction %08x\n", op.encoding);
+		//Generate an exception
+
 	}
 }
 
@@ -974,7 +976,7 @@ int MIPSInterpret_RunUntil(u64 globalTicks)
 	//Just assume core is always running
 	while (/*coreState == CORE_RUNNING*/ true)
 	{
-		TIMER_Advance();
+		JITTS_update_from_downcount();
 		uint32 lastPC = 0;
 
 		// NEVER stop in a delay slot!
@@ -984,7 +986,7 @@ int MIPSInterpret_RunUntil(u64 globalTicks)
 			{
 				again:
 				MIPSOpcode op = MIPSOpcode(Memory::Read_U32(curMips->pc));
-				//MIPSOpcode op = Memory::Read_Opcode_JIT(mipsr4k.pc);
+				//MIPSOpcode op = Memory::Read_Opcode_JIT(mipsr4k->pc);
 				/*
 				// Choke on VFPU
 				MIPSInfo info = MIPSGetInfo(op);
@@ -1083,14 +1085,15 @@ MIPSInterpretFunc MIPSGetInterpretFunc(MIPSOpcode op)
 		return 0;
 }
 
-// TODO: Do something that makes sense here.
+// TODO Write this function so it actually workes
 int MIPSGetInstructionCycleEstimate(MIPSOpcode op)
 {
 	MIPSInfo info = MIPSGetInfo(op);
 	if (info & DELAYSLOT)
-		return 2;
+		//Simply fetching an instruction takes 4 cycles
+		return 4;
 	else
-		return 1;
+		return 4;
 }
 
 const char *MIPSDisasmAt(uint32 compilerPC) {

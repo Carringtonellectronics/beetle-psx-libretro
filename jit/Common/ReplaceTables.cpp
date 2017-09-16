@@ -21,7 +21,7 @@
 
 #include "jit/Debugger/Breakpoints.h"
 #include "jit/Debugger/SymbolMap.h"
-#include "jit/Memory/MemMap.h"
+#include "mednafen/masmem.h"
 #include "jit/JitCommon/JitCommon.h"
 #include "jit/MIPSCodeUtils.h"
 #include "jit/MIPSAnalyst.h"

@@ -35,7 +35,7 @@
 #include "mednafen/mednafen-types.h"
 #include "jit/Common/FileUtil.h"
 #include "jit/Common/StringUtils.h"
-#include "jit/Memory/MemMap.h"
+#include "mednafen/masmem.h"
 #include "jit/Debugger/SymbolMap.h"
 
 //#include "ext/armips/Core/Assembler.h"

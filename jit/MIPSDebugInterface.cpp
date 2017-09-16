@@ -23,7 +23,7 @@
 #include "jit/Debugger/DebugInterface.h"
 #include "jit/MIPSDebugInterface.h"
 
-#include "jit/MEmory/MemMap.h"
+#include "mednafen/masmem.h"
 #include "jit/MIPSTables.h"
 #include "jit/MIPS.h"
 

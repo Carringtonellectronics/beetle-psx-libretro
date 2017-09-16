@@ -22,7 +22,7 @@
 #include "jit/Memory/MemoryUtil.h"
 #include "jit/Memory/MemArena.h"
 
-#include "jit/Memory/MemMap.h"
+#include "mednafen/masmem.h"
 
 #ifdef JIT
 #include "jit/MIPS.h"

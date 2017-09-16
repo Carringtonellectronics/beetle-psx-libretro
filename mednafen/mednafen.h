@@ -42,7 +42,7 @@
 #define INFO_LOG(_type_, ...) log_cb(RETRO_LOG_INFO, __VA_ARGS__)
 #define WARN_LOG(_type_, ...) log_cb(RETRO_LOG_WARN, __VA_ARGS__)
 #define ERROR_LOG(_type_, ...) log_cb(RETRO_LOG_ERROR, __VA_ARGS__)
-#define DEBUG_LOG(_type_, ...) log_cb(RETRO_LOG_DEBUG, __VA_ARGS__)
+#define DEBUG_LOG(_type_, ...) log_cb(RETRO_LOG_INFO, __VA_ARGS__)
 
 #define WARN_LOG_REPORT(_type_, ...) WARN_LOG(_type_, __VA_ARGS__)
 #define ERROR_LOG_REPORT(_type_, ...) ERROR_LOG(_type_, __VA_ARGS__)

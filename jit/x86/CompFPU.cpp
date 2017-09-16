@@ -18,7 +18,7 @@
 
 #if defined(ARCH_X86) || defined(ARCH_AMD64)
 
-#include "jit/Memory/MemMap.h"
+#include "mednafen/masmem.h"
 #include "jit/MIPS.h"
 #include "jit/MIPSCodeUtils.h"
 #include "jit/x86/Jit.h"

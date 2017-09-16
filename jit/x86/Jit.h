@@ -133,7 +133,10 @@ public:
 	void Comp_ColorConv(MIPSOpcode op) override;
 	void Comp_Vbfy(MIPSOpcode op) override;
 	*/
+	void Comp_Cp0(MIPSOpcode op) override;
 	void Comp_DoNothing(MIPSOpcode op) override;
+
+	void Comp_IllegalInstr(MIPSOpcode op) override {JitComp_Exception(EXCEPTION_RI);}
 
 	int Replace_fabsf() override;
 	/*
@@ -237,6 +240,15 @@ private:
 	void CompFPTriArith(MIPSOpcode op, void (XEmitter::*arith)(Gen::X64Reg reg, Gen::OpArg), bool orderMatters);
 	void CompFPComp(int lhs, int rhs, u8 compare, bool allowNaN = false);
 	void CompVrotShuffle(u8 *dregs, int imm, int n, bool negSin);
+	//Copz functions
+	void JitComp_MF0(MIPSOpcode op);
+	void JitComp_CF0(MIPSOpcode op);
+	void JitComp_MT0(MIPSOpcode op);
+	void JitComp_CT0(MIPSOpcode op);
+	void JitComp_BC0(MIPSOpcode op);
+	void JitComp_Exception(uint32_t code);
+	//Exception for cop0 function, CALLed in JIT code
+	uint32_t Exception_Helper(uint32_t code, uint32_t PC, uint32_t inDelaySlot);
 
 	void CallProtectedFunction(const void *func, const Gen::OpArg &arg1);
 	void CallProtectedFunction(const void *func, const Gen::OpArg &arg1, const Gen::OpArg &arg2);

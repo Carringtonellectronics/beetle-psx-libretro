@@ -24,7 +24,7 @@
 #include "jit/Common/math_util.h"
 #include "jit/profiler/profiler.h"
 
-#include "jit/Memory/MemMap.h"
+#include "mednafen/masmem.h"
 #include "jit/Debugger/SymbolMap.h"
 #include "jit/MIPS.h"
 #include "jit/MIPSCodeUtils.h"
@@ -319,6 +319,7 @@ void Jit::Compile(u32 em_address) {
 
 void Jit::RunLoopUntil(u64 globalticks) {
 	PROFILE_THIS_SCOPE("jit");
+	// DEBUG_LOG(JIT, "Entering dispatcher(%p)\n", enterDispatcher);
 	((void (*)())enterDispatcher)();
 }
 
@@ -364,6 +365,7 @@ const u8 *Jit::DoJit(u32 em_address, JitBlock *b) {
 		CheckJitBreakpoint(GetCompilerPC(), 0);
 
 		MIPSOpcode inst = Memory::Read_Opcode_JIT(GetCompilerPC());
+
 		js.downcountAmount += MIPSGetInstructionCycleEstimate(inst);
 
 		MIPSCompileOp(inst, this);
@@ -739,10 +741,10 @@ void Jit::WriteExitDestInReg(X64Reg reg) {
 
 	// Validate the jump to avoid a crash?
 	//TODO maybe change this or add an option?
-	if (/*!g_Config.bFastMemory*/ false) {
-		CMP(32, R(reg), Imm32(PSP_GetKernelMemoryBase()));
+	if (/*!g_Config.bFastMemory*/ true) {
+		CMP(32, R(reg), Imm32(Memory::GetKernelMemoryBase()));
 		FixupBranch tooLow = J_CC(CC_B);
-		CMP(32, R(reg), Imm32(PSP_GetUserMemoryEnd()));
+		CMP(32, R(reg), Imm32(Memory::GetUserMemoryEnd()));
 		FixupBranch tooHigh = J_CC(CC_AE);
 
 		// Need to set neg flag again.

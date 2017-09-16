@@ -501,7 +501,7 @@ void XEmitter::SetJumpTarget(const FixupBranch &branch)
 	{
 		int64 distance = (int64)(code - branch.ptr);
 		_assert_msg_(DYNA_REC, distance >= -0x80 && distance < 0x80, "Jump target too far away, needs force5Bytes = true\n");
-		branch.ptr[-1] = (uint8)(int8)distance;
+		((int8*)branch.ptr)[-1] = (int8)distance;
 	}
 	else if (branch.type == 1)
 	{

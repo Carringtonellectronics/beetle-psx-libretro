@@ -48,6 +48,33 @@ typedef Memory::Opcode MIPSOpcode;
 #define MIPS_IS_REPLACEMENT(op) (((op) & 0xFF000000) == (MIPS_EMUHACK_OPCODE | (EMUOP_CALL_REPLACEMENT << 24)))  // masks away the subop
 
 #define MIPS_EMUHACK_CALL_REPLACEMENT (MIPS_EMUHACK_OPCODE | (EMUOP_CALL_REPLACEMENT << 24))
+// These should probably be enums
+#define CP0REG_BPC            3   /* PC breakpoint address */
+#define CP0REG_BDA            5   /* Data load/store breakpoint address */
+#define CP0REG_TAR            6   /* Target address */
+#define CP0REG_DCIC           7   /* Cache control */
+#define CP0REG_BADA           8
+#define CP0REG_BDAM           9   /* Data load/store address mask */
+#define CP0REG_BPCM           11  /* PC breakpoint address mask */
+#define CP0REG_SR             12
+#define CP0REG_CAUSE          13
+#define CP0REG_EPC            14
+#define CP0REG_PRID           15  /* Product ID */
+#define CP0REG_ERREG          16
+
+#define EXCEPTION_INT         0
+#define EXCEPTION_MOD         1
+#define EXCEPTION_TLBL        2
+#define EXCEPTION_TLBS        3
+#define EXCEPTION_ADEL        4 /* Address error on load */
+#define EXCEPTION_ADES        5 /* Address error on store */
+#define EXCEPTION_IBE         6 /* Instruction bus error */
+#define EXCEPTION_DBE         7 /* Data bus error */
+#define EXCEPTION_SYSCALL     8 /* System call */
+#define EXCEPTION_BP          9 /* Breakpoint */
+#define EXCEPTION_RI         10 /* Reserved instruction */
+#define EXCEPTION_COPU       11 /* Coprocessor unusable */
+#define EXCEPTION_OV         12 /* Arithmetic overflow */
 
 enum MIPSGPReg {
 	MIPS_REG_ZERO=0,
@@ -228,8 +255,34 @@ public:
 	uint32 mxcsrTemp;
 	// Temporary used around delay slots and similar.
 	u64 saved_flags;
-
-	//GMRng rng;	// VFPU hardware random number generator. Probably not the right type.
+	//Cop0
+	struct
+	{
+	   union
+	   {
+		  uint32_t Regs[32];
+		  struct
+		  {
+			 uint32_t Unused00;
+			 uint32_t Unused01;
+			 uint32_t Unused02;
+			 uint32_t BPC;		// RW
+			 uint32_t Unused04;
+			 uint32_t BDA;		// RW
+			 uint32_t TAR;
+			 uint32_t DCIC;	   // RW
+			 uint32_t BADA;	   // R
+			 uint32_t BDAM;	   // R/W
+			 uint32_t Unused0A;
+			 uint32_t BPCM;	   // R/W
+			 uint32_t SR;		// R/W
+			 uint32_t CAUSE;	// R/W(partial)
+			 uint32_t EPC;		// R
+			 uint32_t PRID;	   // R
+			 uint32_t ERREG;	// ?(may not exist, test)
+		  };
+	   };
+	} CP0;
 
 	// Debug stuff
 	uint32 debugCount;	// can be used to count basic blocks before crashes, etc.
@@ -268,12 +321,13 @@ public:
 	void ClearJitCache();
 };
 
+void InitMips();
 
 class MIPSDebugInterface;
 
 //The one we are compiling or running currently
 extern MIPSState *currentMIPS;
 extern MIPSDebugInterface *currentDebugMIPS;
-extern MIPSState mipsr4k;
+extern MIPSState *mipsr4k;
 
 extern const float cst_constants[32];

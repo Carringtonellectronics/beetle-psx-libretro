@@ -17,8 +17,10 @@
 
 #include "psx.h"
 #include "cpu.h"
-#include "jit/Memory/MemMap.h"
+#include "mednafen/masmem.h"
 #include "jit/JitCommon/JitCommon.h"
+#include "mednafen/jittimestamp.h"
+#include "jit/Common/DumbCoreStuff.h"
 
 // iCB: PGXP STUFF
 #include "../pgxp/pgxp_cpu.h"
@@ -65,10 +67,6 @@ PS_CPU::PS_CPU()
 
       MULT_Tab24[i] = v;
    }
-    ScratchRAM = new MultiAccessSizeMem();
-    ScratchRAM->data8 = Memory::m_pScratchPad;
-
-    currentMIPS->Init();
 }
 
 PS_CPU::~PS_CPU()
@@ -2452,7 +2450,14 @@ SkipNPCStuff:	;
 int32_t PS_CPU::Run(int32_t timestamp_in)
 {
 #ifdef JIT
-    MIPSComp::jit->RunLoopUntil(timestamp_in);
+    JITTS_set_timestamp(timestamp_in);
+    do {
+        DEBUG_LOG(TIMESTAMP, "Timestamp in: %u\n", timestamp_in);
+        DEBUG_LOG(TIMESTAMP, "Cur timestamp: %u, next ts = %u\n", JITTS_get_timestamp(), JITTS_get_next_event());
+        coreState = CORE_RUNNING;
+        MIPSComp::jit->RunLoopUntil(JITTS_get_timestamp());
+    } while(MDFN_LIKELY(PSX_EventHandler(JITTS_get_timestamp())));
+    return JITTS_get_timestamp();
 #elif defined(HAVE_DEBUG)
    if(CPUHook || ADDBT)
       return(RunReal<true>(timestamp_in));

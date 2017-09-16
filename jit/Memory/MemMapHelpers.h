@@ -18,7 +18,7 @@
 #pragma once
 
 #include "jit/Debugger/Breakpoints.h"
-#include "jit/Memory/MemMap.h"
+#include "mednafen/masmem.h"
 #include "jit/MIPS.h"
 
 // To avoid pulling in the entire HLE.h.

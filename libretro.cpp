@@ -15,7 +15,8 @@
 #include "rsx/rsx_intf.h"
 #include "libretro_cbs.h"
 #include "libretro_options.h"
-#include "jit/Memory/MemMap.h"
+#include "mednafen/masmem.h"
+#include "mednafen/jittimestamp.h"
 
 #include "mednafen/mednafen-endian.h"
 
@@ -235,13 +236,8 @@ PS_SPU *SPU = NULL;
 PS_CDC *CDC = NULL;
 FrontIO *FIO = NULL;
 
-static MultiAccessSizeMem *BIOSROM = NULL;
-static MultiAccessSizeMem *PIOMem = NULL;
-
-MultiAccessSizeMem *MainRAM = NULL;
-
-static uint32_t TextMem_Start;
-static std::vector<uint8> TextMem;
+uint32_t TextMem_Start;
+std::vector<uint8> TextMem;
 
 static const uint32_t SysControl_Mask[9] = { 0x00ffffff, 0x00ffffff, 0xffffffff, 0x2f1fffff,
                                              0xffffffff, 0x2f1fffff, 0x2f1fffff, 0xffffffff,
@@ -272,7 +268,7 @@ static struct
    };
 } SysControl;
 
-static unsigned DMACycleSteal = 0;   // Doesn't need to be saved in save states, since it's calculated in the ForceEventUpdates() call chain.
+unsigned DMACycleSteal = 0;   // Doesn't need to be saved in save states, since it's calculated in the ForceEventUpdates() call chain.
 
 void PSX_SetDMACycleSteal(unsigned stealage)
 {
@@ -296,7 +292,7 @@ struct event_list_entry
    event_list_entry *next;
 };
 
-static event_list_entry events[PSX_EVENT__COUNT];
+event_list_entry events[PSX_EVENT__COUNT];
 
 static void EventReset(void)
 {
@@ -336,6 +332,9 @@ static void RebaseTS(const int32_t timestamp)
    }
 
    CPU->SetEventNT(events[PSX_EVENT__SYNFIRST].next->event_time);
+#ifdef JIT
+   JITTS_set_next_event(events[PSX_EVENT__SYNFIRST].next->event_time);
+#endif
 }
 
 void PSX_SetEventNT(const int type, const int32_t next_timestamp)
@@ -386,6 +385,10 @@ void PSX_SetEventNT(const int type, const int32_t next_timestamp)
    }
 
    CPU->SetEventNT(events[PSX_EVENT__SYNFIRST].next->event_time & Running);
+#ifdef JIT
+   JITTS_set_next_event(events[PSX_EVENT__SYNFIRST].next->event_time & Running);
+#endif
+
 }
 
 // Called from debug.cpp too.
@@ -401,6 +404,10 @@ void ForceEventUpdates(const int32_t timestamp)
    PSX_SetEventNT(PSX_EVENT_FIO, FIO->Update(timestamp));
 
    CPU->SetEventNT(events[PSX_EVENT__SYNFIRST].next->event_time);
+
+#ifdef JIT
+   JITTS_set_next_event(events[PSX_EVENT__SYNFIRST].next->event_time);
+#endif
 }
 
 bool MDFN_FASTCALL PSX_EventHandler(const int32_t timestamp)
@@ -445,8 +452,12 @@ bool MDFN_FASTCALL PSX_EventHandler(const int32_t timestamp)
 
 void PSX_RequestMLExit(void)
 {
+   INFO_LOG(EXIT, "Requested main loop exit\n");
    Running = 0;
    CPU->SetEventNT(0);
+#ifdef JIT
+   JITTS_set_next_event(0);
+#endif
 }
 
 
@@ -1392,9 +1403,11 @@ static void InitCommon(std::vector<CDIF *> *CDInterfaces, const bool EmulateMemc
       sls = sle;
       sle = tmp;
    }
-
+   DEBUG_LOG(CPU, "Creating CPU!\n");
    CPU = new PS_CPU();
    SPU = new PS_SPU();
+
+   JITTS_Init();
 
    GPU_Init(region == REGION_EU, sls, sle, psx_gpu_upscale_shift);
 
@@ -1440,14 +1453,7 @@ static void InitCommon(std::vector<CDIF *> *CDInterfaces, const bool EmulateMemc
          (CD_SelectedDisc >= 0 && !CD_TrayOpen) ? cdifs_scex_ids[CD_SelectedDisc] : NULL);
 
 
-   BIOSROM = new MultiAccessSizeMem();
-   BIOSROM->data8 = Memory::m_pBIOS;
-   PIOMem  = NULL;
-
-   if(WantPIOMem){
-      PIOMem = new MultiAccessSizeMem();
-      PIOMem->data8 = Memory::m_pParallelPort;
-   }
+   Memory::Init(WantPIOMem);
 
    for(uint32_t ma = 0x00000000; ma < 0x00800000; ma += 2048 * 1024)
    {
@@ -1488,7 +1494,7 @@ static void InitCommon(std::vector<CDIF *> *CDInterfaces, const bool EmulateMemc
    {
       const char *biospath = MDFN_MakeFName(MDFNMKF_FIRMWARE, 0, MDFN_GetSettingS(biospath_sname).c_str());
       FileStream BIOSFile(biospath, MODE_READ);
-
+      INFO_LOG(BIOS, "Loading Bios...\n");
       BIOSFile.read(BIOSROM->data8, 512 * 1024);
    }
 
@@ -1524,7 +1530,11 @@ static void InitCommon(std::vector<CDIF *> *CDInterfaces, const bool EmulateMemc
 #ifdef WANT_DEBUGGER
    DBG_Init();
 #endif
+   //JIT init
+   InitMips();
+
    PSX_Power();
+
 }
 
 static bool LoadEXE(const uint8_t *data, const uint32_t size, bool ignore_pcsp = false)
@@ -1758,14 +1768,6 @@ static void Cleanup(void)
    FIO = NULL;
 
    DMA_Kill();
-
-   if(BIOSROM)
-      delete BIOSROM;
-   BIOSROM = NULL;
-
-   if(PIOMem)
-      delete PIOMem;
-   PIOMem = NULL;
 
    cdifs = NULL;
 }
@@ -2436,6 +2438,7 @@ void retro_init(void)
    struct retro_log_callback log;
    uint64_t serialization_quirks = RETRO_SERIALIZATION_QUIRK_CORE_VARIABLE_SIZE;
 
+
    if (environ_cb(RETRO_ENVIRONMENT_GET_LOG_INTERFACE, &log))
       log_cb = log.log;
    else
@@ -2490,13 +2493,6 @@ void retro_init(void)
    setting_last_scanline_pal = 287;
 
    check_system_specs();
-
-   //Initialize memory
-   Memory::Init();
-   Memory::Clear();
-
-   MainRAM = new MultiAccessSizeMem();
-   MainRAM->data8 = Memory::m_pPhysicalRAM;
 }
 
 void retro_reset(void)
@@ -3713,8 +3709,9 @@ void retro_run(void)
    GPU_StartFrame(espec);
 
    Running = -1;
+   INFO_LOG(CPU, "Entering CPU!\n");
    timestamp = CPU->Run(timestamp);
-
+   INFO_LOG(CPU, "Exited CPU!\n");
    assert(timestamp);
 
    ForceEventUpdates(timestamp);
@@ -3924,9 +3921,6 @@ void retro_deinit(void)
          MEDNAFEN_CORE_NAME, (double)audio_frames / video_frames);
    log_cb(RETRO_LOG_INFO, "[%s]: Estimated FPS: %.5f\n",
          MEDNAFEN_CORE_NAME, (double)video_frames * 44100 / audio_frames);
-
-   //Get rid of memory map
-   Memory::Shutdown();
 }
 
 unsigned retro_get_region(void)

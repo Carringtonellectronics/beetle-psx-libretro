@@ -20,7 +20,7 @@
 #if defined(ARCH_X86) || defined(ARCH_AMD64)
 
 #include "jit/Debugger/Breakpoints.h"
-#include "jit/Memory/MemMap.h"
+#include "mednafen/masmem.h"
 #include "jit/JitCommon/JitCommon.h"
 #include "jit/x86/Jit.h"
 #include "jit/x86/JitSafeMem.h"
@@ -58,8 +58,8 @@ JitSafeMem::JitSafeMem(Jit *jit, MIPSGPReg raddr, s32 offset, u32 alignMask)
 		iaddr_ = (jit_->gpr.GetImm(raddr_) + offset_) & 0x7FFFFFFF;
 	else
 		iaddr_ = (u32) -1;
-
-	fast_ = /*g_Config.bFastMemory || raddr == MIPS_REG_SP*/ true;
+	//TODO fast memory should be an option
+	fast_ = /*g_Config.bFastMemory || */raddr == MIPS_REG_SP;
 
 	// If raddr_ is going to get loaded soon, load it now for more optimal code.
 	// We assume that it was already locked.
@@ -184,9 +184,9 @@ OpArg JitSafeMem::PrepareMemoryOpArg(MemoryOpType type)
 	if (!fast_)
 	{
 		// Is it in physical ram?
-		jit_->CMP(32, R(xaddr_), Imm32(PSP_GetKernelMemoryBase() - offset_));
+		jit_->CMP(32, R(xaddr_), Imm32(Memory::GetKernelMemoryBase() - offset_));
 		tooLow_ = jit_->J_CC(CC_B);
-		jit_->CMP(32, R(xaddr_), Imm32(PSP_GetUserMemoryEnd() - offset_ - (size_ - 1)));
+		jit_->CMP(32, R(xaddr_), Imm32(Memory::GetUserMemoryEnd() - offset_ - (size_ - 1)));
 		tooHigh_ = jit_->J_CC(CC_AE);
 
 		// We may need to jump back up here.
@@ -226,9 +226,9 @@ void JitSafeMem::PrepareSlowAccess()
 	jit_->SetJumpTarget(tooHigh_);
 
 	// Might also be the scratchpad.
-	jit_->CMP(32, R(xaddr_), Imm32(PSP_GetScratchpadMemoryBase() - offset_));
+	jit_->CMP(32, R(xaddr_), Imm32(Memory::GetScratchpadMemoryBase() - offset_));
 	FixupBranch tooLow = jit_->J_CC(CC_B);
-	jit_->CMP(32, R(xaddr_), Imm32(PSP_GetScratchpadMemoryEnd() - offset_ - (size_ - 1)));
+	jit_->CMP(32, R(xaddr_), Imm32(Memory::GetScratchpadMemoryEnd() - offset_ - (size_ - 1)));
 	jit_->J_CC(CC_B, safe_);
 	jit_->SetJumpTarget(tooLow);
 }
@@ -525,14 +525,14 @@ void JitSafeMemFuncs::CreateWriteFunc(int bits, const void *fallbackFunc) {
 
 	RET();
 }
-
+//TODO This might be good to look at for mem validation.
 void JitSafeMemFuncs::CheckDirectEAX() {
 	// Clear any cache/kernel bits.
 	AND(32, R(EAX), Imm32(0x3FFFFFFF));
 	
-	CMP(32, R(EAX), Imm32(PSP_GetUserMemoryEnd()));
+	CMP(32, R(EAX), Imm32(Memory::GetUserMemoryEnd()));
 	FixupBranch tooHighRAM = J_CC(CC_AE);
-	CMP(32, R(EAX), Imm32(PSP_GetKernelMemoryBase()));
+	CMP(32, R(EAX), Imm32(Memory::GetKernelMemoryBase()));
 	skips_.push_back(J_CC(CC_AE));
 	//TODO reimplement vram stuff
 	/*
@@ -541,9 +541,9 @@ void JitSafeMemFuncs::CheckDirectEAX() {
 	CMP(32, R(EAX), Imm32(PSP_GetVidMemBase()));
 	skips_.push_back(J_CC(CC_AE));
 	*/
-	CMP(32, R(EAX), Imm32(PSP_GetScratchpadMemoryEnd()));
+	CMP(32, R(EAX), Imm32(Memory::GetScratchpadMemoryEnd()));
 	FixupBranch tooHighScratch = J_CC(CC_AE);
-	CMP(32, R(EAX), Imm32(PSP_GetScratchpadMemoryBase()));
+	CMP(32, R(EAX), Imm32(Memory::GetScratchpadMemoryBase()));
 	skips_.push_back(J_CC(CC_AE));
 
 	SetJumpTarget(tooHighRAM);

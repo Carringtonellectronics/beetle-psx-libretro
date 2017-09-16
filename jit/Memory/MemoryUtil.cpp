@@ -138,7 +138,7 @@ void *AllocateExecutableMemory(size_t size) {
 		if (ptr) {
 			ptr = VirtualAlloc(ptr, aligned_size, MEM_RESERVE | MEM_COMMIT, prot);
 		} else {
-			WARN_LOG(COMMON, "Unable to find nearby executable memory for jit. Proceeding with far memory.");
+			WARN_LOG(COMMON, "Unable to find nearby executable memory for jit. Proceeding with far memory.\n");
 			// Can still run, thanks to "RipAccessible".
 			ptr = VirtualAlloc(nullptr, aligned_size, MEM_RESERVE | MEM_COMMIT, prot);
 		}
@@ -190,8 +190,8 @@ void *AllocateExecutableMemory(size_t size) {
 
 	if (ptr == failed_result) {
 		ptr = nullptr;
-		ERROR_LOG(MEMMAP, "Failed to allocate executable memory (%d)", (int)size);
-		PanicAlert("Failed to allocate executable memory\n%s", GetLastErrorMsg());
+		ERROR_LOG(MEMMAP, "Failed to allocate executable memory (%d)\n", (int)size);
+		PanicAlert("Failed to allocate executable memory\n%s\n", GetLastErrorMsg());
 	}
 #if defined(ARCH_64BIT) && !defined(_WIN32) && !defined(MAP_32BIT)
 	else if ((uintptr_t)map_hint <= 0xFFFFFFFF) {
@@ -220,12 +220,12 @@ void *AllocateMemoryPages(size_t size, uint32_t memProtFlags) {
 	void* ptr = VirtualAlloc(0, size, MEM_COMMIT, protect);
 #endif
 	if (!ptr)
-		PanicAlert("Failed to allocate raw memory");
+		PanicAlert("Failed to allocate raw memory\n");
 #else
 	uint32_t protect = ConvertProtFlagsUnix(memProtFlags);
 	void *ptr = mmap(0, size, protect, MAP_ANON | MAP_PRIVATE, -1, 0);
 	if (ptr == MAP_FAILED) {
-		ERROR_LOG(MEMMAP, "Failed to allocate memory pages: errno=%d", errno);
+		ERROR_LOG(MEMMAP, "Failed to allocate memory pages: errno=%d\n", errno);
 		return nullptr;
 	}
 #endif
@@ -252,7 +252,7 @@ void *AllocateAlignedMemory(size_t size, size_t alignment) {
 	//	(unsigned long)size);
 
 	if (ptr == NULL)
-		PanicAlert("Failed to allocate aligned memory");
+		PanicAlert("Failed to allocate aligned memory\n");
 
 	return ptr;
 }
@@ -264,7 +264,7 @@ void FreeMemoryPages(void *ptr, size_t size) {
 	size = (size + page_size - 1) & (~(page_size - 1));
 #ifdef _WIN32
 	if (!VirtualFree(ptr, 0, MEM_RELEASE))
-		PanicAlert("FreeMemoryPages failed!\n%s", GetLastErrorMsg());
+		PanicAlert("FreeMemoryPages failed!\n%s\n", GetLastErrorMsg());
 #else
 	munmap(ptr, size);
 #endif
@@ -292,13 +292,13 @@ bool PlatformIsWXExclusive() {
 }
 
 bool ProtectMemoryPages(const void* ptr, size_t size, uint32_t memProtFlags) {
-	DEBUG_LOG(JIT, "ProtectMemoryPages: %p (%d) : r%d w%d x%d", ptr, (int)size,
+	DEBUG_LOG(JIT, "ProtectMemoryPages: %p (%d) : r%d w%d x%d\n", ptr, (int)size,
 			(memProtFlags & MEM_PROT_READ) != 0, (memProtFlags & MEM_PROT_WRITE) != 0, (memProtFlags & MEM_PROT_EXEC) != 0);
 
 	if (PlatformIsWXExclusive()) {
 		if ((memProtFlags & (MEM_PROT_WRITE | MEM_PROT_EXEC)) == (MEM_PROT_WRITE | MEM_PROT_EXEC)) {
-			ERROR_LOG(MEMMAP, "Bad memory protection %d!", memProtFlags);
-			PanicAlert("Bad memory protect : W^X is in effect, can't both write and exec");
+			ERROR_LOG(MEMMAP, "Bad memory protection %d!\n", memProtFlags);
+			PanicAlert("Bad memory protect : W^X is in effect, can't both write and exec\n");
 		}
 	}
 	// Note - VirtualProtect will affect the full pages containing the requested range.
@@ -309,13 +309,13 @@ bool ProtectMemoryPages(const void* ptr, size_t size, uint32_t memProtFlags) {
 #if defined(UWP)
 	DWORD oldValue;
 	if (!VirtualProtectFromApp((void *)ptr, size, protect, &oldValue)) {
-		PanicAlert("WriteProtectMemory failed!\n%s", GetLastErrorMsg());
+		PanicAlert("WriteProtectMemory failed!\n%s\n", GetLastErrorMsg());
 		return false;
 	}
 #else
 	DWORD oldValue;
 	if (!VirtualProtect((void *)ptr, size, protect, &oldValue)) {
-		PanicAlert("WriteProtectMemory failed!\n%s", GetLastErrorMsg());
+		PanicAlert("WriteProtectMemory failed!\n%s\n", GetLastErrorMsg());
 		return false;
 	}
 #endif
@@ -330,7 +330,7 @@ bool ProtectMemoryPages(const void* ptr, size_t size, uint32_t memProtFlags) {
 	end = (end + page_size - 1) & ~(page_size - 1);
 	int retval = mprotect((void *)start, end - start, protect);
 	if (retval != 0) {
-		ERROR_LOG(MEMMAP, "mprotect failed (%p)! errno=%d (%s)", (void *)start, errno, strerror(errno));
+		ERROR_LOG(MEMMAP, "mprotect failed (%p)! errno=%d (%s)\n", (void *)start, errno, strerror(errno));
 		return false;
 	}
 	return true;

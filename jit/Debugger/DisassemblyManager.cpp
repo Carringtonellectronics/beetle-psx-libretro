@@ -22,7 +22,7 @@
 #include "jit/Common/xxhash.h"
 
 #include "mednafen/mednafen-types.h"
-#include "jit/Memory/MemMap.h"
+#include "mednafen/masmem.h"
 #include "jit/MIPSCodeUtils.h"
 #include "jit/MIPSTables.h"
 #include "jit/Debugger/DebugInterface.h"

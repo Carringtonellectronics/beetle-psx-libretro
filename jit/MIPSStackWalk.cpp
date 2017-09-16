@@ -15,7 +15,7 @@
 // Official git repository and contact information can be found at
 // https://github.com/hrydgard/ppsspp and http://www.ppsspp.org/.
 
-#include "jit/Memory/MemMap.h"
+#include "mednafen/masmem.h"
 #include "jit/Debugger/SymbolMap.h"
 #include "jit/MIPSCodeUtils.h"
 #include "jit/MIPSStackWalk.h"
@@ -86,12 +86,12 @@ namespace MIPSStackWalk {
 		const uint32 start = frame.pc;
 		uint32 stop = entry;
 		if (entry == INVALIDTARGET) {
-			if (start >= PSP_GetUserMemoryBase()) {
-				stop = PSP_GetUserMemoryBase();
-			} else if (start >= PSP_GetKernelMemoryBase()) {
-				stop = PSP_GetKernelMemoryBase();
-			} else if (start >= PSP_GetScratchpadMemoryBase()) {
-				stop = PSP_GetScratchpadMemoryBase();
+			if (start >= Memory::GetUserMemoryBase()) {
+				stop = Memory::GetUserMemoryBase();
+			} else if (start >= Memory::GetKernelMemoryBase()) {
+				stop = Memory::GetKernelMemoryBase();
+			} else if (start >= Memory::GetScratchpadMemoryBase()) {
+				stop = Memory::GetScratchpadMemoryBase();
 			}
 		}
 		if (stop < start - LONGEST_FUNCTION) {
