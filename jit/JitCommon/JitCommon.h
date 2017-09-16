@@ -112,6 +112,7 @@ namespace MIPSComp {
 		virtual void Comp_Vbfy(MIPSOpcode op) = 0;
 		*/
 		virtual void Comp_Cp0(MIPSOpcode op) = 0;
+		virtual void Comp_Cp1(MIPSOpcode op) = 0;
 		virtual void Comp_Cp2(MIPSOpcode op) = 0;
 		virtual void Comp_DoNothing(MIPSOpcode op) = 0;
 		virtual void Comp_IllegalInstr(MIPSOpcode op) = 0;

@@ -106,6 +106,16 @@ void XEmitter::ABI_CallFunctionCCC(const void *func, uint32 param1, uint32 param
 	ABI_RestoreStack(3 * 4);
 }
 
+void XEmitter::ABI_CallFunctionCCCC(const void *func, uint32 param1, uint32 param2, uint32 param3, uint32 param4) {
+	ABI_AlignStack(4 * 4);
+	PUSH(32, Imm32(param4));
+	PUSH(32, Imm32(param3));
+	PUSH(32, Imm32(param2));
+	PUSH(32, Imm32(param1));
+	CALL(func);
+	ABI_RestoreStack(4 * 4);
+}
+
 void XEmitter::ABI_CallFunctionCCP(const void *func, uint32 param1, uint32 param2, void *param3) {
 	ABI_AlignStack(3 * 4);
 	PUSH(32, ImmPtr(param3));
@@ -355,6 +365,23 @@ void XEmitter::ABI_CallFunctionCCC(const void *func, uint32 param1, uint32 param
 	    CALL(func);
 	}
 }
+
+void XEmitter::ABI_CallFunctionCCCC(const void *func, uint32 param1, uint32 param2, uint32 param3, uint32 param4){
+	MOV(32, R(ABI_PARAM1), Imm32(param1));
+	MOV(32, R(ABI_PARAM2), Imm32(param2));
+	MOV(32, R(ABI_PARAM3), Imm32(param3));
+	MOV(32, R(ABI_PARAM4), Imm32(param4));
+	uint64 distance = uint64(func) - (uint64(code) + 5);
+	if (distance >= 0x0000000080000000ULL
+	 && distance <  0xFFFFFFFF80000000ULL) {
+	    // Far call
+	    MOV(64, R(RAX), ImmPtr(func));
+	    CALLptr(R(RAX));
+	} else {
+	    CALL(func);
+	}
+}
+
 
 void XEmitter::ABI_CallFunctionCCP(const void *func, uint32 param1, uint32 param2, void *param3) {
 	MOV(32, R(ABI_PARAM1), Imm32(param1));

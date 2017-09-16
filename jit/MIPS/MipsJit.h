@@ -88,6 +88,7 @@ public:
 	void Comp_mxc1(MIPSOpcode op) override {}
 	
 	void Comp_Cp2(MIPSOpcode op) override {}
+	void Comp_Cp1(MIPSOpcode op) override {}
 	void Comp_Cp0(MIPSOpcode op) override {}
 
 	void Comp_DoNothing(MIPSOpcode op) override {}

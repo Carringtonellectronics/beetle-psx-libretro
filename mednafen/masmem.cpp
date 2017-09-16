@@ -137,7 +137,7 @@ uint8 *GetPointer(const uint32 address) {
 		(address >= 0xa0000000 && address <= 0xa01FFFFF)) {
 		// RAM
 		return MainRAM->data8 + (address & 0x1FFFFFFF);
-	} else if(address >= 0x1F000000 && address <= 0x1F7FFFFF) {
+	} else if(address >= 0x1F000000 && address <= 0x1F00FFFF) {
         if(PIOMem)
         {
             if((address & 0x7FFFFF) < 65536)
@@ -498,7 +498,7 @@ bool IsValidAddress(const uint32 address){
 		return true;
 	} else if (address >= 0x1F000000 && address <= 0x1F00FFFF) {
         //Parallel port
-        return true;
+        return false;
 	} else if (address >= 0x1F800000 && address <= 0x1F8003FF) {
         //Scratch Pad
         return true;
@@ -507,7 +507,7 @@ bool IsValidAddress(const uint32 address){
         return true;
 	} else if (address >= 0x1f801000 && address <= 0x1f802fff) {
         //HArdware
-        return true;
+        return false;
     } else{
 		return false;
 	}

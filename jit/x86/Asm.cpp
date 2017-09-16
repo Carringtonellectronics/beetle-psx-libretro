@@ -132,7 +132,7 @@ void Jit::GenerateFixedCode(JitOptions &jo) {
 	ABI_PushAllCalleeSavedRegsAndAdjustStack();
 #ifdef ARCH_64BIT
 	// Two statically allocated registers.
-	MOV(64, R(MEMBASEREG), ImmPtr(Memory::base));
+	MOV(64, R(MEMBASEREG), ImmPtr(0));
 	uintptr_t jitbase = (uintptr_t)GetBasePtr();
 	if (jitbase > 0x7FFFFFFFULL) {
 		MOV(64, R(JITBASEREG), ImmPtr(GetBasePtr()));

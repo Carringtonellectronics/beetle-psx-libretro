@@ -86,6 +86,7 @@ public:
 */
 
 	void Comp_Cp0(MIPSOpcode op) override;
+	void Comp_Cp1(MIPSOpcode op) override;
 	void Comp_Cp2(MIPSOpcode op) override;
 	void Comp_IllegalInstr(MIPSOpcode op) override;
 

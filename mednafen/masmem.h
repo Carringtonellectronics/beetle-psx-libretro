@@ -207,6 +207,14 @@ static INLINE void StoreU32_LE(uint32 *a, const uint32 v)
     WriteU8(address, value);
   }
  };
+
+//These externs allow direct access to the memory structs, but maybe it should be more compartmentalized?
+//Like, just have functions to manipulate them.
+extern MultiAccessSizeMem<1024, uint32, false> *ScratchRAM;
+extern MultiAccessSizeMem<512 * 1024, uint32, false> *BIOSROM;
+extern MultiAccessSizeMem<65536, uint32, false> *PIOMem;
+extern MultiAccessSizeMem<2048 * 1024, uint32, false> *MainRAM;
+
 namespace Memory {
 
     extern uint8 *base;
@@ -246,23 +254,17 @@ namespace Memory {
     void WriteUnchecked_U16(const uint16 _iValue, const uint32 _Address);
     void WriteUnchecked_U32(const uint32 _iValue, const uint32 _Address);
 
-    inline uint32 GetScratchpadMemoryBase() { return 0x1f80000;}
-    inline uint32 GetScratchpadMemoryEnd() { return 0x1f80000 + 0x00000400;}
-    inline uint32 GetKernelMemoryBase() { return 0;}
-    inline uint32 GetUserMemoryEnd() { return GetKernelMemoryBase() + 0x00200000;}
-    inline uint32 GetKernelMemoryEnd() { return 0x0000ffff;}
+    inline uint32 GetScratchpadMemoryBase() { return (uint32)(uint64)ScratchRAM->data8;}
+    inline uint32 GetScratchpadMemoryEnd() { return GetScratchpadMemoryBase() + sizeof(ScratchRAM->data8);}
+    inline uint32 GetKernelMemoryBase() { return (uint32)(uint64)MainRAM->data8;}
+    inline uint32 GetUserMemoryEnd() { return GetKernelMemoryBase() + sizeof(MainRAM->data8);}
+    inline uint32 GetKernelMemoryEnd() { return GetKernelMemoryBase() + 0x0000ffff;}
     // "Volatile" RAM is between 0x08400000 and 0x08800000, can be requested by the
     // game through sceKernelVolatileMemTryLock.
     
-    inline uint32 GetUserMemoryBase() { return 0x00010000;}
+    inline uint32 GetUserMemoryBase() { return GetKernelMemoryBase() + 0x00010000;}
     //inline uint32 GetDefaultLoadAddress() { return 0;}
 }
-//These externs allow direct access to the memory structs, but maybe it should be more compartmentalized?
-//Like, just have functions to manipulate them.
-extern MultiAccessSizeMem<1024, uint32, false> *ScratchRAM;
-extern MultiAccessSizeMem<512 * 1024, uint32, false> *BIOSROM;
-extern MultiAccessSizeMem<65536, uint32, false> *PIOMem;
-extern MultiAccessSizeMem<2048 * 1024, uint32, false> *MainRAM;
 
 #undef MAS_NATIVE_IS_BIGENDIAN
 

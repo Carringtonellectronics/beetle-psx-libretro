@@ -96,6 +96,7 @@ public:
 	void Comp_mxc1(MIPSOpcode op) override;
 	
 	void Comp_Cp2(MIPSOpcode op) override;
+	void Comp_Cp1(MIPSOpcode op) override;
 	void Comp_Cp0(MIPSOpcode op) override;
 	void Comp_DoNothing(MIPSOpcode op) override;
 
@@ -211,7 +212,7 @@ private:
 	void JitComp_BC0(MIPSOpcode op);
 	void JitComp_Exception(MIPSOpcode op, uint32_t code);
 	//Exception for cop0 function, CALLed in JIT code
-	uint32_t Exception_Helper(uint32_t code, uint32_t PC, uint32_t inDelaySlot);
+	uint32_t Exception_Helper(uint32_t code, uint32_t PC, uint32_t inDelaySlot, uint32_t instr);
 
 	void CallProtectedFunction(const void *func, const Gen::OpArg &arg1);
 	void CallProtectedFunction(const void *func, const Gen::OpArg &arg1, const Gen::OpArg &arg2);

@@ -89,9 +89,9 @@ bool JitSafeMem::PrepareWrite(OpArg &dest, int size)
 #endif
 
 #ifdef ARCH_32BIT
-			dest = M(Memory::base + addr);
+			dest = M(Memory::GetPointer(addr));
 #else
-			dest = MDisp(MEMBASEREG, addr);
+			dest = M(Memory::GetPointer(addr));
 #endif
 			return true;
 		}
@@ -107,6 +107,8 @@ bool JitSafeMem::PrepareWrite(OpArg &dest, int size)
 bool JitSafeMem::PrepareRead(OpArg &src, int size)
 {
 	size_ = size;
+	//Temporary disable
+	return false;
 	if (iaddr_ != (u32) -1)
 	{
 		if (ImmValid())
@@ -118,9 +120,11 @@ bool JitSafeMem::PrepareRead(OpArg &src, int size)
 #endif
 
 #if defined(ARCH_32BIT)
-			src = M(Memory::base + addr);
+			src = M(Memory::GetPointer(addr));
 #else
-			src = MDisp(MEMBASEREG, addr);
+			//TODO for all of these, make sure high mem can be accessed, through some 
+			//Displacement addressing mode
+			src = M(Memory::GetPointer(addr));
 #endif
 			return true;
 		}
@@ -142,18 +146,18 @@ OpArg JitSafeMem::NextFastAddress(int suboffset)
 #endif
 
 #if defined(ARCH_32BIT)
-		return M(Memory::base + addr);
+		return M(Memory::GetPointer(addr));
 #else
-		return MDisp(MEMBASEREG, addr);
+		return M(Memory::GetPointer(addr));
 #endif
 	}
 
 	_dbg_assert_msg_(JIT, (suboffset & alignMask_) == suboffset, "suboffset must be aligned");
 
 #if defined(ARCH_32BIT)
-	return MDisp(xaddr_, (u32) Memory::base + offset_ + suboffset);
+	return MDisp(xaddr_, (u32) Memory::GetPointer(offset_ + suboffset));
 #else
-	return MComplex(MEMBASEREG, xaddr_, SCALE_1, offset_ + suboffset);
+	return MComplex(MEMBASEREG, xaddr_, SCALE_1, (u32)(uint64)Memory::GetPointer(offset_ + suboffset));
 #endif
 }
 
@@ -490,7 +494,7 @@ void JitSafeMemFuncs::CreateReadFunc(int bits, const void *fallbackFunc) {
 	StartDirectAccess();
 
 #if defined(ARCH_32BIT)
-	MOVZX(32, bits, EAX, MDisp(EAX, (u32)Memory::base));
+	MOVZX(32, bits, EAX, MDisp(EAX, (u32)0));
 #else
 	MOVZX(32, bits, EAX, MRegSum(MEMBASEREG, EAX));
 #endif
@@ -525,8 +529,11 @@ void JitSafeMemFuncs::CreateWriteFunc(int bits, const void *fallbackFunc) {
 
 	RET();
 }
-//TODO This might be good to look at for mem validation.
+//TODO MAYBE re add this if you can find a way to make it work
+//What it's supposed to do: check if EAX is directly accesable, then access it if possible.
+//What it does: accesses wrong memory locations, unlike the protected functions 
 void JitSafeMemFuncs::CheckDirectEAX() {
+	/*
 	// Clear any cache/kernel bits.
 	AND(32, R(EAX), Imm32(0x3FFFFFFF));
 	
@@ -540,7 +547,7 @@ void JitSafeMemFuncs::CheckDirectEAX() {
 	FixupBranch tooHighVid = J_CC(CC_AE);
 	CMP(32, R(EAX), Imm32(PSP_GetVidMemBase()));
 	skips_.push_back(J_CC(CC_AE));
-	*/
+	*//*
 	CMP(32, R(EAX), Imm32(Memory::GetScratchpadMemoryEnd()));
 	FixupBranch tooHighScratch = J_CC(CC_AE);
 	CMP(32, R(EAX), Imm32(Memory::GetScratchpadMemoryBase()));
@@ -549,6 +556,7 @@ void JitSafeMemFuncs::CheckDirectEAX() {
 	SetJumpTarget(tooHighRAM);
 	//SetJumpTarget(tooHighVid);
 	SetJumpTarget(tooHighScratch);
+	*/
 }
 
 void JitSafeMemFuncs::StartDirectAccess() {
