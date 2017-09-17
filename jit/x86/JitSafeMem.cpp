@@ -54,11 +54,13 @@ JitSafeMem::JitSafeMem(Jit *jit, MIPSGPReg raddr, s32 offset, u32 alignMask)
 	// This makes it more instructions, so let's play it safe and say we need a far jump.
 	far_ = /*!g_Config.bIgnoreBadMemAccess ||*/ !CBreakPoints::GetMemChecks().empty();
 	// Mask out the kernel RAM bit, because we'll end up with a negative offset to MEMBASEREG.
-	if (jit_->gpr.IsImm(raddr_))
-		iaddr_ = (jit_->gpr.GetImm(raddr_) + offset_) & 0x7FFFFFFF;
-	else
+	if (jit_->gpr.IsImm(raddr_)){
+		iaddr_ = (jit_->gpr.GetImm(raddr_) + offset_);
+		INFO_LOG(SAFEMEM, "iaddr = 0x%08x\n", iaddr_);	
+	}else{
 		iaddr_ = (u32) -1;
-	//TODO fast memory should be an option
+	}
+		//TODO fast memory should be an option
 	fast_ = /*g_Config.bFastMemory || */raddr == MIPS_REG_SP;
 
 	// If raddr_ is going to get loaded soon, load it now for more optimal code.
@@ -101,14 +103,13 @@ bool JitSafeMem::PrepareWrite(OpArg &dest, int size)
 	// Otherwise, we always can do the write (conditionally.)
 	else
 		dest = PrepareMemoryOpArg(MEM_WRITE);
-	return true;
+	return false;
 }
 
 bool JitSafeMem::PrepareRead(OpArg &src, int size)
 {
 	size_ = size;
-	//Temporary disable
-	return false;
+
 	if (iaddr_ != (u32) -1)
 	{
 		if (ImmValid())
@@ -133,7 +134,8 @@ bool JitSafeMem::PrepareRead(OpArg &src, int size)
 	}
 	else
 		src = PrepareMemoryOpArg(MEM_READ);
-	return true;
+	//we don't know for sure that this is a good address, it could lead to bad places
+	return false;
 }
 
 OpArg JitSafeMem::NextFastAddress(int suboffset)
@@ -183,7 +185,7 @@ OpArg JitSafeMem::PrepareMemoryOpArg(MemoryOpType type)
 		xaddr_ = EAX;
 	}
 
-	MemCheckAsm(type);
+	/*MemCheckAsm(type);*/
 
 	if (!fast_)
 	{
@@ -213,11 +215,12 @@ OpArg JitSafeMem::PrepareMemoryOpArg(MemoryOpType type)
 		jit_->AND(32, R(xaddr_), Imm32(alignMask_));
 		jit_->SUB(32, R(xaddr_), Imm32(offset_));
 	}
-
+	//TODO Map xaddr_ to the actual in memory pointer?
+	//jit_->ABI_CallFunctionR(GetPointer, );
 #if defined(ARCH_32BIT)
-	return MDisp(xaddr_, (u32) Memory::base + offset_);
+	return MDisp(xaddr_, offset_);
 #else
-	return MComplex(MEMBASEREG, xaddr_, SCALE_1, offset_);
+	return MScaled(xaddr_, 1, offset_);
 #endif
 }
 
@@ -226,6 +229,7 @@ void JitSafeMem::PrepareSlowAccess()
 	// Skip the fast path (which the caller wrote just now.)
 	skip_ = jit_->J(far_);
 	needsSkip_ = true;
+	
 	jit_->SetJumpTarget(tooLow_);
 	jit_->SetJumpTarget(tooHigh_);
 
@@ -233,8 +237,9 @@ void JitSafeMem::PrepareSlowAccess()
 	jit_->CMP(32, R(xaddr_), Imm32(Memory::GetScratchpadMemoryBase() - offset_));
 	FixupBranch tooLow = jit_->J_CC(CC_B);
 	jit_->CMP(32, R(xaddr_), Imm32(Memory::GetScratchpadMemoryEnd() - offset_ - (size_ - 1)));
-	jit_->J_CC(CC_B, safe_);
+	//jit_->J_CC(CC_B, safe_);
 	jit_->SetJumpTarget(tooLow);
+	
 }
 
 bool JitSafeMem::PrepareSlowWrite()
@@ -258,7 +263,7 @@ void JitSafeMem::DoSlowWrite(const void *safeFunc, const OpArg& src, int suboffs
 		jit_->MOV(32, R(EAX), Imm32((iaddr_ + suboffset) & alignMask_));
 	else
 	{
-		jit_->LEA(32, EAX, MDisp(xaddr_, offset_ + suboffset));
+		jit_->LEA(32, EAX, MScaled(xaddr_, 1, offset_ + suboffset));
 		if (alignMask_ != 0xFFFFFFFF)
 			jit_->AND(32, R(EAX), Imm32(alignMask_));
 	}
@@ -294,7 +299,7 @@ bool JitSafeMem::PrepareSlowRead(const void *safeFunc)
 		else
 		{
 			PrepareSlowAccess();
-			jit_->LEA(32, EAX, MDisp(xaddr_, offset_));
+			jit_->LEA(32, EAX, MScaled(xaddr_, 1, offset_));
 			if (alignMask_ != 0xFFFFFFFF)
 				jit_->AND(32, R(EAX), Imm32(alignMask_));
 		}
@@ -328,7 +333,7 @@ void JitSafeMem::NextSlowRead(const void *safeFunc, int suboffset)
 	// For GPR, if xaddr_ was the dest register, this will be wrong.  Don't use in GPR.
 	else
 	{
-		jit_->LEA(32, EAX, MDisp(xaddr_, offset_ + suboffset));
+		jit_->LEA(32, EAX, MScaled(xaddr_, 1, offset_ + suboffset));
 		if (alignMask_ != 0xFFFFFFFF)
 			jit_->AND(32, R(EAX), Imm32(alignMask_));
 	}
@@ -522,9 +527,9 @@ void JitSafeMemFuncs::CreateWriteFunc(int bits, const void *fallbackFunc) {
 	StartDirectAccess();
 
 #if defined(ARCH_32BIT)
-	MOV(bits, MDisp(EAX, (u32)Memory::base), R(EDX));
+	MOV(bits, R(EAX), R(EDX));
 #else
-	MOV(bits, MRegSum(MEMBASEREG, EAX), R(EDX));
+	MOV(bits, R(EAX), R(EDX));
 #endif
 
 	RET();
@@ -533,30 +538,29 @@ void JitSafeMemFuncs::CreateWriteFunc(int bits, const void *fallbackFunc) {
 //What it's supposed to do: check if EAX is directly accesable, then access it if possible.
 //What it does: accesses wrong memory locations, unlike the protected functions 
 void JitSafeMemFuncs::CheckDirectEAX() {
-	/*
+
 	// Clear any cache/kernel bits.
 	AND(32, R(EAX), Imm32(0x3FFFFFFF));
 	
 	CMP(32, R(EAX), Imm32(Memory::GetUserMemoryEnd()));
 	FixupBranch tooHighRAM = J_CC(CC_AE);
 	CMP(32, R(EAX), Imm32(Memory::GetKernelMemoryBase()));
-	skips_.push_back(J_CC(CC_AE));
-	//TODO reimplement vram stuff
+	//skips_.push_back(J_CC(CC_AE));
 	/*
 	CMP(32, R(EAX), Imm32(PSP_GetVidMemEnd()));
 	FixupBranch tooHighVid = J_CC(CC_AE);
 	CMP(32, R(EAX), Imm32(PSP_GetVidMemBase()));
 	skips_.push_back(J_CC(CC_AE));
-	*//*
+	*/
 	CMP(32, R(EAX), Imm32(Memory::GetScratchpadMemoryEnd()));
 	FixupBranch tooHighScratch = J_CC(CC_AE);
 	CMP(32, R(EAX), Imm32(Memory::GetScratchpadMemoryBase()));
-	skips_.push_back(J_CC(CC_AE));
+	//skips_.push_back(J_CC(CC_AE));
 
 	SetJumpTarget(tooHighRAM);
 	//SetJumpTarget(tooHighVid);
 	SetJumpTarget(tooHighScratch);
-	*/
+	
 }
 
 void JitSafeMemFuncs::StartDirectAccess() {

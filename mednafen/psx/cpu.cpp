@@ -2452,9 +2452,9 @@ int32_t PS_CPU::Run(int32_t timestamp_in)
 #ifdef JIT
     DEBUG_LOG(TIMESTAMP, "Timestamp in: %u\n", timestamp_in);
     JITTS_set_timestamp(timestamp_in);
+    DEBUG_LOG(TIMESTAMP, "Cur timestamp: %u, next ts = %u\n", JITTS_get_timestamp(), JITTS_get_next_event());
+    DEBUG_LOG(TIMESTAMP, "Mips Downcount: %d\n", currentMIPS->downcount);
     do {    
-        DEBUG_LOG(TIMESTAMP, "Cur timestamp: %u, next ts = %u\n", JITTS_get_timestamp(), JITTS_get_next_event());
-        DEBUG_LOG(TIMESTAMP, "Mips Downcount: %d\n", currentMIPS->downcount);
         coreState = CORE_RUNNING;
         MIPSComp::jit->RunLoopUntil(JITTS_get_timestamp());
         JITTS_update_from_downcount();

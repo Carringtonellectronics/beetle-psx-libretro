@@ -120,7 +120,8 @@ namespace Memory
     {
         Memory::WriteUnchecked_U32(_Value.encoding, _Address);
     }
-    
+static const uint32_t addr_mask[8] = { 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF,
+    0x7FFFFFFF, 0x1FFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF };
 // =================================
 // From Memmap.cpp
 // ----------------
@@ -130,41 +131,40 @@ namespace Memory
 // GetPointer must always return an address in the bottom 32 bits of address space, so that 64-bit
 // programs don't have problems directly addressing any part of memory.
 //TODO it so it makes sense on PSX
-uint8 *GetPointer(const uint32 address) {
+uint8 *GetPointer(uint32 address) {
+    //This is essntially a read, so we'll treat it as if it is
     //INFO_LOG(GETPOINTER, "Getting pointer at %p", address);
-	if (address <= 0x001FFFFF || 
-		(address >= 0x80000000 && address <= 0x801FFFFF) ||
-		(address >= 0xa0000000 && address <= 0xa01FFFFF)) {
-		// RAM
-		return MainRAM->data8 + (address & 0x1FFFFFFF);
-	} else if(address >= 0x1F000000 && address <= 0x1F00FFFF) {
-        if(PIOMem)
-        {
-            if((address & 0x7FFFFF) < 65536)
-            {
-                return PIOMem->data8 + (address & 0x7FFFFF);
-            }
-            else if((address & 0x7FFFFF) < (65536 + TextMem.size()))
-            {
-                return &TextMem[(address & 0x7FFFFF) - 65536];
-            }
-        }
-        ERROR_LOG(MEMMAP, "Unknown GetPointer %08x PC %08x LR %08x\n", address, currentMIPS->pc, currentMIPS->r[MIPS_REG_RA]);
-        return nullptr;
-    } else if (address >= 0x1F800000 && address <= 0x1F8003FF) {
-		// Scratchpad
-		return ScratchRAM->data8 + address;
-	} else if (address >= 0xBFC00000 && address <= 0xBFC7FFFF) {
-		// BIOS
-		return BIOSROM->data8 + address;
-	} else {
-		ERROR_LOG(MEMMAP, "Unknown GetPointer %08x PC %08x LR %08x\n", address, currentMIPS->pc, currentMIPS->r[MIPS_REG_RA]);
-		return nullptr;
-	}
-}
+	JTTTS_increment_timestamp(DMACycleSteal);
+    uint32 origAddress = address;
+    address &= addr_mask[address >> 29];
+    //if(address == 0xa0 && IsWrite)
+    // DBG_Break();
+    //INFO_LOG(READ, "Masked address: %p\n", address);
 
-static const uint32_t addr_mask[8] = { 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF,
-    0x7FFFFFFF, 0x1FFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF };
+    if(origAddress >= 0x1F800000 && origAddress <= 0x1F8003FF)
+    {
+        return ScratchRAM->data8 + (origAddress & 0x3FF);
+         
+    }
+
+    if(address < 0x00800000)
+    {
+        return MainRAM->data8 + (address & 0x1FFFFF);
+    }
+    //TODO might not need this anymore?
+    if(address >= 0xbfc00000 && address <= 0xbfc7ffff)
+    {
+        return BIOSROM->data8 + (address & 0x7FFFF);
+    }
+
+    if(address >= 0x1FC00000 && address <= 0x1FC7FFFF)
+    {
+        return BIOSROM->data8 + (address & 0x7FFFF);
+    }
+
+    DEBUG_LOG(MEM, "[MEM] Unknown GetPointer from %08x at time %d, PC = 0x%08x\n", origAddress, JITTS_get_timestamp(), currentMIPS->pc);
+    return nullptr;
+}
 
 template <typename T>
 inline void ReadFromHardware(T &var, uint32 address) {
@@ -176,21 +176,15 @@ inline void ReadFromHardware(T &var, uint32 address) {
     // DBG_Break();
     //INFO_LOG(READ, "Masked address: %p\n", address);
 
-    if(address >= 0x1F800000 && address <= 0x1F8003FF)
+    if(origAddress >= 0x1F800000 && origAddress <= 0x1F8003FF)
     {
-        var = ScratchRAM->Read<T>(address & 0x3FF);
+        var = ScratchRAM->Read<T>(origAddress & 0x3FF);
         return; 
     }
 
     if(address < 0x00800000)
     {
          var = MainRAM->Read<T>(address & 0x1FFFFF);
-        return;
-    }
-    //TODO might not need this anymore?
-    if(address >= 0xbfc00000 && address <= 0xbfc7ffff)
-    {
-        var = BIOSROM->Read<T>(address & 0x7FFFF);
         return;
     }
 
@@ -362,17 +356,9 @@ inline void WriteToHardware(uint32 address, const T data) {
         MainRAM->Write<T>(address & 0x1FFFFF, data);
         return;
     }
-    
-    if(address >= 0xbfc00000 && address <= 0xbfc7ffff)
-    {
-        BIOSROM->Write<T>(address & 0x7FFFF, data);
-        return;
-    }
 
     if(address >= 0x1FC00000 && address <= 0x1FC7FFFF)
     {
-        //Can't write to BIOS
-        //Except you totally can, and the JIT compiler relies on it.
         BIOSROM->Write<T>(address & 0x7FFFF, data);
         return;
     }

@@ -43,7 +43,7 @@ void Jit::Comp_Cp1(MIPSOpcode op){
 
 void Jit::Comp_Cp2(MIPSOpcode op){
     uint32 type = (op.encoding >> 21) & 0x1f;
-
+    MIPSGPReg rt = _RT;
     if (type >= 0x10 && type <= 0x1F)
     {
        //TODO Compile the instructions themselves.
@@ -58,38 +58,47 @@ void Jit::Comp_Cp2(MIPSOpcode op){
        */
     }
     uint32 rd = (op.encoding >> 11) & 0x1F;
+    gpr.Lock(rt);
+    gpr.MapReg(rt, true, true);
 
     switch(type){
         case 0: //MFc2        
             ABI_CallFunctionC((void *)GTE_ReadDR, rd);
-            MOV(32, gpr.R(_RT), R(EAX));
+            MOV(32, gpr.R(rt), R(EAX));
             break;
         case 2: //CFc2
             ABI_CallFunctionC((void *)GTE_ReadCR, rd);
-            MOV(32, gpr.R(_RT), R(EAX));
+            MOV(32, gpr.R(rt), R(EAX));
             break;
         case 4: //MTc2
-            ABI_CallFunctionCA((void *)GTE_WriteDR, rd, gpr.R(_RT));
+            ABI_CallFunctionCA((void *)GTE_WriteDR, rd, gpr.R(rt));
             break;
         case 6: //CTc2
-            ABI_CallFunctionCA((void *)GTE_WriteCR, rd, gpr.R(_RT));
+            ABI_CallFunctionCA((void *)GTE_WriteCR, rd, gpr.R(rt));
             break;
         default: //Who knows?
             ERROR_LOG(COP2, "Unkown opcode in Comp_Cp2: %08x\n", op.encoding);
     }
+    gpr.UnlockAll();
 }
 
 
 void Jit::JitComp_MF0(MIPSOpcode op){
     //Move rd (CP0) to rt (CPU)
-    MOV(32, R(EAX), MIPSSTATE_VAR_ELEM32(CP0.Regs[0],_RD));
-    MOV(32, gpr.R(_RT), R(EAX)); //Seg fault here?
+    MIPSGPReg rt = _RT;
+    gpr.Lock(rt);
+    gpr.MapReg(rt, true, true);
+    MOV(32, gpr.R(rt), MIPSSTATE_VAR_ELEM32(CP0.Regs[0],_RD));
+    gpr.UnlockAll();
 }
 
 void Jit::JitComp_MT0(MIPSOpcode op){
     //Move _rt(CPU) t- _rd (CP0)
-    MOV(32, R(EAX), gpr.R(_RT));
-    MOV(32, MIPSSTATE_VAR_ELEM32(CP0.Regs[0],_RD), R(EAX));
+    MIPSGPReg rt = _RT;
+    gpr.Lock(rt);
+    gpr.MapReg(rt, true, true);
+    MOV(32, MIPSSTATE_VAR_ELEM32(CP0.Regs[0],_RD), gpr.R(_RT));
+    gpr.UnlockAll();
 }
 
 void Jit::JitComp_BC0(MIPSOpcode op){ //TODO ??
@@ -101,8 +110,13 @@ void caught(uint32_t code, uint32_t instr){
 }
 
 void Jit::JitComp_Exception(MIPSOpcode op, uint32_t code){
+    //ABI_PushAllCalleeSavedRegsAndAdjustStack();
+    
     ABI_CallFunctionCC((void *)caught, code, op.encoding);
+    
     ABI_CallFunctionCCCC((void *)&Exception_Helper, code, js.compilerPC, js.inDelaySlot, op.encoding);
+    
+    //ABI_PopAllCalleeSavedRegsAndAdjustStack();
     //We need to set the PC to be the handler
     MOV(32, MIPSSTATE_VAR(pc), R(EAX));
     //Now we need to exit this block, by going back to the dispatcher.
