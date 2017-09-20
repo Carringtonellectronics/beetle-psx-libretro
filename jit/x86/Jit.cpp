@@ -760,7 +760,7 @@ void Jit::WriteExitDestInReg(X64Reg reg) {
 		ABI_CallFunctionA((const void *)&Memory::GetPointer, R(reg));
 
 		// If we're ignoring, coreState didn't trip - so trip it now.
-		if (/*g_Config.bIgnoreBadMemAccess*/ true) {
+		if (/*g_Config.bIgnoreBadMemAccess*/ false) {
 			CMP(32, R(EAX), Imm32(0));
 			FixupBranch skip = J_CC(CC_NE);
 			//Update core state to be > 1. 5 is just what it was in PPSSPP, no real reason this couldn't be any other number.

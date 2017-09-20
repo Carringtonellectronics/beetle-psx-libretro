@@ -99,8 +99,13 @@ public:
 	void Comp_Cp1(MIPSOpcode op) override;
 	void Comp_Cp0(MIPSOpcode op) override;
 	void Comp_DoNothing(MIPSOpcode op) override;
-
-	void Comp_IllegalInstr(MIPSOpcode op) override {JitComp_Exception(op, EXCEPTION_RI);}
+	//since illegal instructions are guaranteed to be hit, we should stop compiling when we hit one
+	void Comp_IllegalInstr(MIPSOpcode op) override {
+		ERROR_LOG_REPORT(CPU, "MIPSCompileOp: Invalid instruction %08x at 0x%08x\n", op.encoding, js.compilerPC);
+		JitComp_Exception(op, EXCEPTION_RI);
+		js.compiling = false; 
+		WriteSyscallExit();
+	}
 
 	int Replace_fabsf() override;
 	/*

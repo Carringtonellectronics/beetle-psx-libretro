@@ -10,8 +10,11 @@
 #include "mednafen/mempatcher.h"
 #include "jit/Common/Swap.h"
 #include "mednafen-endian.h"
+
+#ifdef JIT
 #include "jit/JitCommon/JitCommon.h"
 #include "jittimestamp.h"
+#endif
 
 MultiAccessSizeMem<1024, uint32, false> *ScratchRAM = NULL;
 MultiAccessSizeMem<512 * 1024, uint32, false> *BIOSROM = NULL;
@@ -98,7 +101,7 @@ namespace Memory
         }
         memset(MainRAM->data8, 0, sizeof(MainRAM->data8));
     }
-
+#ifdef JIT
     Opcode Read_Instruction(uint32 address, bool resolve_replacements){
         Opcode inst = Opcode(Read_U32(address));
         if (MIPS_IS_RUNBLOCK(inst.encoding) && MIPSComp::jit) {
@@ -120,6 +123,7 @@ namespace Memory
     {
         Memory::WriteUnchecked_U32(_Value.encoding, _Address);
     }
+
 static const uint32_t addr_mask[8] = { 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF,
     0x7FFFFFFF, 0x1FFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF };
 // =================================
@@ -332,7 +336,7 @@ inline void ReadFromHardware(T &var, uint32 address) {
         var = CPU->GetBIU();
         return;
     }
-    var = 0;
+    var = 0xFFFFFFFF;
     DEBUG_LOG(MEM, "[MEM] Unknown read %d from %08x at time %d\n", (int)(sizeof(T) * 8), origAddress, JITTS_get_timestamp());
 }
 
@@ -592,5 +596,5 @@ void WriteUnchecked_U32(const uint32 _iValue, const uint32 _Address)
 {
 	WriteToHardware<u32_le>(_Address, _iValue);
 }
-
+#endif
 } //Namespace Memory

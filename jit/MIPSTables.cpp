@@ -937,9 +937,8 @@ void MIPSCompileOp(MIPSOpcode op, MIPSComp::MIPSFrontendInterface *jit) {
 		if (info & OUT_EAT_PREFIX)
 			jit->EatPrefix();
 	} else {
-		ERROR_LOG_REPORT(CPU, "MIPSCompileOp: Invalid instruction %08x\n", op.encoding);
 		//Generate an exception
-
+		jit->Comp_IllegalInstr(op);
 	}
 }
 

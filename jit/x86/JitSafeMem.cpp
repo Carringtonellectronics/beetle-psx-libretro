@@ -56,12 +56,11 @@ JitSafeMem::JitSafeMem(Jit *jit, MIPSGPReg raddr, s32 offset, u32 alignMask)
 	// Mask out the kernel RAM bit, because we'll end up with a negative offset to MEMBASEREG.
 	if (jit_->gpr.IsImm(raddr_)){
 		iaddr_ = (jit_->gpr.GetImm(raddr_) + offset_);
-		INFO_LOG(SAFEMEM, "iaddr = 0x%08x\n", iaddr_);	
 	}else{
 		iaddr_ = (u32) -1;
 	}
 		//TODO fast memory should be an option
-	fast_ = /*g_Config.bFastMemory || */raddr == MIPS_REG_SP;
+	fast_ = /*g_Config.bFastMemory || raddr == MIPS_REG_SP*/ false;
 
 	// If raddr_ is going to get loaded soon, load it now for more optimal code.
 	// We assume that it was already locked.
@@ -102,7 +101,7 @@ bool JitSafeMem::PrepareWrite(OpArg &dest, int size)
 	}
 	// Otherwise, we always can do the write (conditionally.)
 	else
-		dest = PrepareMemoryOpArg(MEM_WRITE);
+		//dest = PrepareMemoryOpArg(MEM_WRITE);
 	return false;
 }
 
@@ -133,7 +132,7 @@ bool JitSafeMem::PrepareRead(OpArg &src, int size)
 			return false;
 	}
 	else
-		src = PrepareMemoryOpArg(MEM_READ);
+		//src = PrepareMemoryOpArg(MEM_READ);
 	//we don't know for sure that this is a good address, it could lead to bad places
 	return false;
 }
@@ -230,8 +229,8 @@ void JitSafeMem::PrepareSlowAccess()
 	skip_ = jit_->J(far_);
 	needsSkip_ = true;
 	
-	jit_->SetJumpTarget(tooLow_);
-	jit_->SetJumpTarget(tooHigh_);
+	//jit_->SetJumpTarget(tooLow_);
+	//jit_->SetJumpTarget(tooHigh_);
 
 	// Might also be the scratchpad.
 	jit_->CMP(32, R(xaddr_), Imm32(Memory::GetScratchpadMemoryBase() - offset_));
@@ -540,7 +539,7 @@ void JitSafeMemFuncs::CreateWriteFunc(int bits, const void *fallbackFunc) {
 void JitSafeMemFuncs::CheckDirectEAX() {
 
 	// Clear any cache/kernel bits.
-	AND(32, R(EAX), Imm32(0x3FFFFFFF));
+	//AND(32, R(EAX), Imm32(0x3FFFFFFF));
 	
 	CMP(32, R(EAX), Imm32(Memory::GetUserMemoryEnd()));
 	FixupBranch tooHighRAM = J_CC(CC_AE);

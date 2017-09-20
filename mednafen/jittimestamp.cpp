@@ -5,9 +5,22 @@ uint32 internal_timestamp = 0;
 int32 cur_slice_length = 0;
 uint32 last_ts = 0;
 uint32 next_event_ts = 0;
+uint32 gte_next_ts = 0;
+uint32 muldiv_next_ts = 0;
 
 void JITTS_Init(){
     internal_timestamp = 0;
+    gte_next_ts = 0;
+    muldiv_next_ts = 0;
+}
+
+void JITTS_prepare(uint32 timestamp_in){
+    if(gte_next_ts > 0)
+        gte_next_ts -= internal_timestamp;
+    if(muldiv_next_ts > 0)
+        muldiv_next_ts -= internal_timestamp;
+
+    last_ts = internal_timestamp = timestamp_in;
 }
 
 void JITTS_set_next_event(uint32 ts){
@@ -42,4 +55,35 @@ void JITTS_force_check(){
     internal_timestamp += cyclesEx;
     cur_slice_length = -1;
     currentMIPS->downcount = -1;
+}
+
+//Set when the GTE gets done, as timestamp + offset
+void JITTS_increment_gte_done(uint32 offset){
+    gte_next_ts = internal_timestamp + offset;
+}
+//Set when the Muldiv gets done, as timestamp + offset
+void JITTS_increment_muldiv_done(uint32 offset){
+    muldiv_next_ts = internal_timestamp + offset;
+}
+//update the gte timestamp if timestamp is less than gte timestamp. Return true if timestamp was < gte timestamp, otherwise false
+bool JITTS_update_gte_done(){
+    if(internal_timestamp < gte_next_ts){
+        internal_timestamp = gte_next_ts;
+        JTTTS_update_from_direct_access();
+        return true;
+    }
+    return false;
+}
+//update the muldiv timestamp if timestamp is less than muldiv timestamp. Return true if timestamp was < muldiv timestamp, otherwise false
+bool JITTS_update_muldiv_done(){
+    if(internal_timestamp < muldiv_next_ts){
+        if(muldiv_next_ts - 1 == internal_timestamp)
+            muldiv_next_ts--;
+        else
+            internal_timestamp = muldiv_next_ts;
+        
+        JTTTS_update_from_direct_access();
+        return true;
+    }
+    return false;
 }

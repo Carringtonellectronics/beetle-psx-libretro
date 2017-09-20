@@ -68,6 +68,10 @@ using namespace MIPSAnalyst;
 #define CONDITIONAL_LOG_EXIT_EAX() ;
 #endif
 
+void PrintBranch(uint32_t curPC, uint32_t newPC){
+	INFO_LOG(JMP, "Jump from 0x%08x to 0x%08x\n", curPC, newPC);
+}
+
 namespace MIPSComp
 {
 using namespace Gen;
@@ -318,6 +322,8 @@ void Jit::BranchRSRTComp(MIPSOpcode op, Gen::CCFlags cc, bool likely)
 	MIPSGPReg rs = _RS;
 	u32 targetAddr = GetCompilerPC() + offset + 4;
 
+	ABI_CallFunctionCC((void*)PrintBranch, GetCompilerPC(), targetAddr);
+
 	bool immBranch = false;
 	bool immBranchTaken = false;
 	if (gpr.IsImm(rs) && gpr.IsImm(rt)) {
@@ -392,6 +398,8 @@ void Jit::BranchRSZeroComp(MIPSOpcode op, Gen::CCFlags cc, bool andLink, bool li
 	int offset = _IMM16 << 2;
 	MIPSGPReg rs = _RS;
 	u32 targetAddr = GetCompilerPC() + offset + 4;
+
+	ABI_CallFunctionCC((void*)PrintBranch, GetCompilerPC(), targetAddr);
 
 	bool immBranch = false;
 	bool immBranchTaken = false;
@@ -591,10 +599,11 @@ void Jit::Comp_Jump(MIPSOpcode op) {
 		return;
 	}
 	u32 off = _IMM26 << 2;
-	u32 targetAddr = (GetCompilerPC() & 0xF0000000) | off;
-
+	u32 targetAddr = (GetCompilerPC() & 0xF0000000) + off;
+	INFO_LOG(JIT, "Target address: 0x%08x\n", targetAddr);
 	// Might be a stubbed address or something?
 	if (!Memory::IsValidAddress(targetAddr)) {
+		ERROR_LOG_REPORT(JIT, "Jump to invalid address: %08x PC %08x LR %08x", targetAddr, GetCompilerPC(), currentMIPS->r[MIPS_REG_RA]);
 		if (js.nextExit == 0) {
 			ERROR_LOG_REPORT(JIT, "Jump to invalid address: %08x PC %08x LR %08x", targetAddr, GetCompilerPC(), currentMIPS->r[MIPS_REG_RA]);
 		} else {
@@ -709,6 +718,7 @@ void Jit::Comp_JumpReg(MIPSOpcode op)
 			AddContinuedBlock(gpr.GetImm(rs));
 			// Account for the increment in the loop.
 			js.compilerPC = gpr.GetImm(rs) - 4;
+			INFO_LOG(JIT, "Compile PC changed to 0x%08x\n", js.compilerPC);
 			// In case the delay slot was a break or something.
 			js.compiling = true;
 			return;

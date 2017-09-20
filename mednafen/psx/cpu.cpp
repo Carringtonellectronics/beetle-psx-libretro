@@ -18,10 +18,14 @@
 #include "psx.h"
 #include "cpu.h"
 #include "mednafen/masmem.h"
+
+#ifdef JIT
+
 #include "jit/JitCommon/JitCommon.h"
 #include "mednafen/jittimestamp.h"
 #include "jit/Common/DumbCoreStuff.h"
 
+#endif
 // iCB: PGXP STUFF
 #include "../pgxp/pgxp_cpu.h"
 #include "../pgxp/pgxp_gte.h"
@@ -495,6 +499,8 @@ uint32_t PS_CPU::Exception(uint32_t code, uint32_t PC, const uint32 NP, const ui
    CP0.CAUSE |= (instr << 2) & (0x3 << 28); // CE
 
    RecalcIPCache();
+
+   INFO_LOG(CPU, "Exception! code = %d, instr = 0x%08x, pc = 0x%08x\n",code, instr, PC);
 
    return(handler);
 }
@@ -2410,6 +2416,7 @@ int32_t PS_CPU::RunReal(int32_t timestamp_in)
     // Mednafen special instruction
     //
     BEGIN_OPF(INTERRUPT);
+    INFO_LOG(CPU, "Encountered instruction %08x at 0x%08x\n", instr, PC);
 	if(Halted)
 	{
 	 goto SkipNPCStuff;
@@ -2423,7 +2430,7 @@ int32_t PS_CPU::RunReal(int32_t timestamp_in)
 	}
     END_OPF;
    }
-
+   
 OpDone: ;
 
         PC = (PC & new_PC_mask) + new_PC;
@@ -2435,6 +2442,8 @@ SkipNPCStuff:	;
                //printf("\n");
       }
    } while(MDFN_LIKELY(PSX_EventHandler(timestamp)));
+
+   INFO_LOG(CPU, "Ending main loop at PC = 0x%08x, timestamp = %u\n", PC, timestamp);
 
    if(gte_ts_done > 0)
       gte_ts_done -= timestamp;

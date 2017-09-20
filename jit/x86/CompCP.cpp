@@ -6,6 +6,7 @@
 #include "jit/x86/Jit.h"
 #include "jit/x86/RegCache.h"
 #include "mednafen/psx/gte.h"
+#include "mednafen/jittimestamp.h"
 
 #define _RS MIPS_GET_RS(op)
 #define _RT MIPS_GET_RT(op)
@@ -47,15 +48,10 @@ void Jit::Comp_Cp2(MIPSOpcode op){
     if (type >= 0x10 && type <= 0x1F)
     {
        //TODO Compile the instructions themselves.
-        ABI_CallFunctionC((void *)GTE_Instruction, op.encoding);
-       
-       //TODO timestamp stuff: See below
-       /*
-       if(timestamp < gte_ts_done)
-          timestamp = gte_ts_done;
-       gte_ts_done = timestamp + GTE_Instruction(instr);
-       DO_LDS();
-       */
+       ABI_CallFunction((void *)JITTS_update_gte_done);
+       ABI_CallFunctionC((void *)GTE_Instruction, op.encoding);
+       ABI_CallFunctionR((void *)JITTS_increment_gte_done, EAX);
+
     }
     uint32 rd = (op.encoding >> 11) & 0x1F;
     gpr.Lock(rt);
@@ -63,17 +59,21 @@ void Jit::Comp_Cp2(MIPSOpcode op){
 
     switch(type){
         case 0: //MFc2        
+            ABI_CallFunction((void *)JITTS_update_gte_done);
             ABI_CallFunctionC((void *)GTE_ReadDR, rd);
             MOV(32, gpr.R(rt), R(EAX));
             break;
         case 2: //CFc2
+            ABI_CallFunction((void *)JITTS_update_gte_done);
             ABI_CallFunctionC((void *)GTE_ReadCR, rd);
             MOV(32, gpr.R(rt), R(EAX));
             break;
         case 4: //MTc2
+            ABI_CallFunction((void *)JITTS_update_gte_done);
             ABI_CallFunctionCA((void *)GTE_WriteDR, rd, gpr.R(rt));
             break;
         case 6: //CTc2
+            ABI_CallFunction((void *)JITTS_update_gte_done);
             ABI_CallFunctionCA((void *)GTE_WriteCR, rd, gpr.R(rt));
             break;
         default: //Who knows?
@@ -105,14 +105,14 @@ void Jit::JitComp_BC0(MIPSOpcode op){ //TODO ??
     
 }
 
-void caught(uint32_t code, uint32_t instr){
-    INFO_LOG(EX, "Caught in exception, code = %u, instr = 0x%08x", code, instr);
+void caught(uint32_t code, uint32_t instr, uint32_t pc){
+    INFO_LOG(EX, "Caught in exception, code = %u, instr = 0x%08x, pc = 0x%08x\n", code, instr, pc);
 }
 
 void Jit::JitComp_Exception(MIPSOpcode op, uint32_t code){
     //ABI_PushAllCalleeSavedRegsAndAdjustStack();
     
-    ABI_CallFunctionCC((void *)caught, code, op.encoding);
+    ABI_CallFunctionCCC((void *)caught, code, op.encoding, js.compilerPC);
     
     ABI_CallFunctionCCCC((void *)&Exception_Helper, code, js.compilerPC, js.inDelaySlot, op.encoding);
     

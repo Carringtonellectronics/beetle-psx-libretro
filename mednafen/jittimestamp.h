@@ -13,6 +13,9 @@ extern uint32 last_ts;
 extern int32 cur_slice_length;
 
 void JITTS_Init();
+
+void JITTS_prepare(uint32 timestamp_in);
+
 //Note that this also decrements downcount
 INLINE void JTTTS_increment_timestamp(uint32 inc){
     last_ts = internal_timestamp += inc;
@@ -53,5 +56,12 @@ void JITTS_update_from_downcount();
 void JITTS_update_and_set_downcount();
 //Forces currentMIPS->downcount to -1, basically stops the CPU so other stuff can run.
 void JITTS_force_check();
-
+//Set when the GTE gets done, as timestamp + offset
+void JITTS_increment_gte_done(uint32 offset);
+//Set when the Muldiv gets done, as timestamp + offset
+void JITTS_increment_muldiv_done(uint32 offset);
+//update the gte timestamp if timestamp is less than gte timestamp. Return true if timestamp was < gte timestamp, otherwise false
+bool JITTS_update_gte_done();
+//update the muldiv timestamp if timestamp is less than muldiv timestamp. Return true if timestamp was < muldiv timestamp, otherwise false
+bool JITTS_update_muldiv_done();
 #endif

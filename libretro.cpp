@@ -16,7 +16,10 @@
 #include "libretro_cbs.h"
 #include "libretro_options.h"
 #include "mednafen/masmem.h"
+
+#ifdef JIT
 #include "mednafen/jittimestamp.h"
+#endif
 
 #include "mednafen/mednafen-endian.h"
 
@@ -1406,9 +1409,9 @@ static void InitCommon(std::vector<CDIF *> *CDInterfaces, const bool EmulateMemc
    DEBUG_LOG(CPU, "Creating CPU!\n");
    CPU = new PS_CPU();
    SPU = new PS_SPU();
-
+#ifdef JIT
    JITTS_Init();
-
+#endif
    GPU_Init(region == REGION_EU, sls, sle, psx_gpu_upscale_shift);
 
    CDC = new PS_CDC();
@@ -1531,8 +1534,9 @@ static void InitCommon(std::vector<CDIF *> *CDInterfaces, const bool EmulateMemc
    DBG_Init();
 #endif
    //JIT init
+#ifdef JIT
    InitMips();
-
+#endif
    PSX_Power();
 
 }
@@ -3730,6 +3734,9 @@ void retro_run(void)
    DMA_ResetTS();
    GPU_ResetTS();
    FIO->ResetTS();
+#ifdef JIT
+   JITTS_prepare(0);
+#endif
 
    RebaseTS(timestamp);
 
