@@ -26,8 +26,9 @@
 #include "jit/MIPSDebugInterface.h"
 #include "jit/IR/IRJit.h"
 #include "jit/JitCommon/JitCommon.h"
+#include "jit/Common/DumbCoreStuff.h"
 #include "mednafen/jittimestamp.h"
-
+#include "mednafen/psx/psx.h"
 
 MIPSState *mipsr4k = NULL;
 MIPSState *currentMIPS = NULL;
@@ -274,6 +275,19 @@ void MIPSState::SingleStep() {
 int MIPSState::RunLoopUntil(u64 globalTicks) {
 	MIPSComp::jit->RunLoopUntil(globalTicks);
 	return 1;
+}
+
+uint32 MIPSState::Run(uint32 timestamp_in){
+	DEBUG_LOG(TIMESTAMP, "Timestamp in: %u\n", timestamp_in);
+    JITTS_set_timestamp(timestamp_in);
+    DEBUG_LOG(TIMESTAMP, "Cur timestamp: %u, next ts = %u\n", JITTS_get_timestamp(), JITTS_get_next_event());
+    DEBUG_LOG(TIMESTAMP, "Mips Downcount: %d\n", currentMIPS->downcount);
+    do {
+        coreState = CORE_RUNNING;
+        MIPSComp::jit->RunLoopUntil(JITTS_get_timestamp());
+        JITTS_update_from_downcount();
+    } while(MDFN_LIKELY(PSX_EventHandler(JITTS_get_timestamp())));
+    return JITTS_get_timestamp();
 }
 
 void MIPSState::InvalidateICache(uint32 address, int length) {

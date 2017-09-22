@@ -103,7 +103,7 @@ namespace Memory
     }
 #ifdef JIT
     Opcode Read_Instruction(uint32 address, bool resolve_replacements){
-        Opcode inst = Opcode(Read_U32(address));
+        Opcode inst = Opcode(Read_U32_instr(address));
         if (MIPS_IS_RUNBLOCK(inst.encoding) && MIPSComp::jit) {
             inst = MIPSComp::jit->GetOriginalOp(inst);
         }
@@ -111,7 +111,7 @@ namespace Memory
     }
     
     Opcode Read_Opcode_JIT(uint32 address){
-        Opcode inst = Opcode(Read_U32(address));
+        Opcode inst = Opcode(Read_U32_instr(address));
         if (MIPS_IS_RUNBLOCK(inst.encoding) && MIPSComp::jit) {
             return MIPSComp::jit->GetOriginalOp(inst);
         } else {
@@ -170,10 +170,12 @@ uint8 *GetPointer(uint32 address) {
     return nullptr;
 }
 
-template <typename T>
+template <typename T, bool increment = true>
 inline void ReadFromHardware(T &var, uint32 address) {
     //INFO_LOG(READ, "Reading at address %p\n", address);
-    JTTTS_increment_timestamp(DMACycleSteal);
+    if(increment){
+        JTTTS_increment_timestamp(DMACycleSteal);
+    }
     uint32 origAddress = address;
     address &= addr_mask[address >> 29];
     //if(address == 0xa0 && IsWrite)
@@ -188,7 +190,10 @@ inline void ReadFromHardware(T &var, uint32 address) {
 
     if(address < 0x00800000)
     {
-         var = MainRAM->Read<T>(address & 0x1FFFFF);
+        if(increment){
+            JTTTS_increment_timestamp(3);
+        }
+        var = MainRAM->Read<T>(address & 0x1FFFFF);
         return;
     }
 
@@ -214,9 +219,9 @@ inline void ReadFromHardware(T &var, uint32 address) {
         {
             if(sizeof(T) == 4)
             {
-            
-                JTTTS_increment_timestamp(36);
-
+                if(increment){
+                    JTTTS_increment_timestamp(36);
+                }
                 if(JITTS_get_timestamp() >= events[PSX_EVENT__SYNFIRST].next->event_time)
                     PSX_EventHandler(JITTS_get_timestamp());
 
@@ -225,12 +230,13 @@ inline void ReadFromHardware(T &var, uint32 address) {
             }
             else
             {
-                JTTTS_increment_timestamp(16); // Just a guess, need to test.
+                if(increment){
+                    JTTTS_increment_timestamp(16); // Just a guess, need to test.
+                }
+                if(JITTS_get_timestamp() >= events[PSX_EVENT__SYNFIRST].next->event_time)
+                    PSX_EventHandler(JITTS_get_timestamp());
 
-                    if(JITTS_get_timestamp() >= events[PSX_EVENT__SYNFIRST].next->event_time)
-                        PSX_EventHandler(JITTS_get_timestamp());
-
-                    var = SPU->Read(JITTS_get_timestamp(), address & ~1);
+                var = SPU->Read(JITTS_get_timestamp(), address & ~1);
             }
         return;
         }     // End SPU
@@ -240,21 +246,27 @@ inline void ReadFromHardware(T &var, uint32 address) {
         if(address >= 0x1f801800 && address <= 0x1f80180F)
         {
             INFO_LOG(READ, "Reading CD at address %p\n", address);
-            JTTTS_increment_timestamp( 6 * sizeof(T)); //24;
+            if(increment){
+                JTTTS_increment_timestamp( 6 * sizeof(T)); //24;
+            }
             var = CDC->Read(JITTS_get_timestamp(), address & 0x3);
             return;
         }
 
         if(address >= 0x1F801810 && address <= 0x1F801817)
         {
-            JTTTS_increment_timestamp(1);
+            if(increment){
+                JTTTS_increment_timestamp(1);
+            }
             var = GPU_Read(JITTS_get_timestamp(), address);
             return;
         }
 
         if(address >= 0x1F801820 && address <= 0x1F801827)
         {
-            JTTTS_increment_timestamp(1);
+            if(increment){
+                JTTTS_increment_timestamp(1);
+            }
             var = MDEC_Read(JITTS_get_timestamp(), address);
             return;
         }
@@ -262,7 +274,9 @@ inline void ReadFromHardware(T &var, uint32 address) {
         if(address >= 0x1F801000 && address <= 0x1F801023)
         {
             unsigned index = (address & 0x1F) >> 2;
-            JTTTS_increment_timestamp(1);
+            if(increment){
+                JTTTS_increment_timestamp(1);
+            }
             var = SysControl.Regs[index] | SysControl_OR[index];
             var >>= (address & 3) * 8;
             return;
@@ -270,34 +284,44 @@ inline void ReadFromHardware(T &var, uint32 address) {
 
         if(address >= 0x1F801040 && address <= 0x1F80104F)
         {
-            JTTTS_increment_timestamp(1);
+            if(increment){
+                JTTTS_increment_timestamp(1);
+            }
             var = FIO->Read(JITTS_get_timestamp(), address);
         }
 
         if(address >= 0x1F801050 && address <= 0x1F80105F)
         {
-            JTTTS_increment_timestamp(1);
+            if(increment){
+                JTTTS_increment_timestamp(1);
+            }
             var = SIO_Read(JITTS_get_timestamp(), address);
             return;
         }
 
         if(address >= 0x1F801070 && address <= 0x1F801077) // IRQ
         {
-            JTTTS_increment_timestamp(1);
+            if(increment){
+                JTTTS_increment_timestamp(1);
+            }
             var = ::IRQ_Read(address);
             return;
         }
 
         if(address >= 0x1F801080 && address <= 0x1F8010FF)    // DMA
         {
-            JTTTS_increment_timestamp(1);
+            if(increment){
+                JTTTS_increment_timestamp(1);
+            }
             var = DMA_Read(JITTS_get_timestamp(), address);
             return;
         }
 
         if(address >= 0x1F801100 && address <= 0x1F80113F) // Root counters
         {
-            JTTTS_increment_timestamp(1);
+            if(increment){
+                JTTTS_increment_timestamp(1);
+            }
             var = TIMER_Read(JITTS_get_timestamp(), address);
             return;
         }
@@ -336,7 +360,7 @@ inline void ReadFromHardware(T &var, uint32 address) {
         var = CPU->GetBIU();
         return;
     }
-    var = 0xFFFFFFFF;
+    var = (T)~0U;
     DEBUG_LOG(MEM, "[MEM] Unknown read %d from %08x at time %d\n", (int)(sizeof(T) * 8), origAddress, JITTS_get_timestamp());
 }
 
@@ -580,6 +604,12 @@ uint32 ReadUnchecked_U32(const uint32 _Address)
 	uint32 _var = 0;
 	ReadFromHardware<u32_le>(_var, _Address);
 	return _var;
+}
+
+uint32 Read_U32_instr(const uint32 _Address){
+    uint32 _var = 0;
+    ReadFromHardware<u32_le, false>(_var, _Address);
+    return _var;
 }
 
 void WriteUnchecked_U8(const uint8 _iValue, const uint32 _Address)

@@ -249,6 +249,7 @@ namespace Memory {
     uint8 ReadUnchecked_U8(const uint32 _Address);
     uint16 ReadUnchecked_U16(const uint32 _Address);
     uint32 ReadUnchecked_U32(const uint32 _Address);
+    uint32 Read_U32_instr(const uint32 _Address);
     void WriteUnchecked_U8(const uint8 _iValue, const uint32 _Address);
     void WriteUnchecked_U16(const uint16 _iValue, const uint32 _Address);
     void WriteUnchecked_U32(const uint32 _iValue, const uint32 _Address);

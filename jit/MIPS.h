@@ -315,6 +315,7 @@ public:
 
 	void SingleStep();
 	int RunLoopUntil(u64 globalTicks);
+	uint32 Run(uint32 timestamp_in);
 	// To clear jit caches, etc.
 	void InvalidateICache(uint32 address, int length = 4);
 

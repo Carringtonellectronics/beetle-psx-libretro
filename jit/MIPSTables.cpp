@@ -25,6 +25,7 @@
 #include "jit/Debugger/Breakpoints.h"
 
 #include "jit/JitCommon/JitCommon.h"
+#include "jit/Common/DumbCoreStuff.h"
 
 enum MipsEncoding {
 	Imme,
@@ -142,20 +143,20 @@ const MIPSInstruction tableImmediate[64] = // xxxxxx ..... ..... ...............
 	INVALID,
 	INVALID,
 	INSTR("swr", JITFUNC(Comp_ITypeMem), Dis_ITypeMem, Int_ITypeMem, IN_IMM16|IN_RS_ADDR|IN_RT|OUT_MEM|MEMTYPE_WORD),
-	INSTR("cache", JITFUNC(Comp_Cache), Dis_Cache, Int_Cache, IN_MEM|IN_IMM16|IN_RS_ADDR),
+	INVALID,//INSTR("cache", JITFUNC(Comp_Cache), Dis_Cache, Int_Cache, IN_MEM|IN_IMM16|IN_RS_ADDR),
 	//48
-	INSTR("ll", JITFUNC(Comp_Generic), Dis_Generic, Int_StoreSync, IN_MEM|IN_IMM16|IN_RS_ADDR|OUT_RT|OUT_OTHER|MEMTYPE_WORD),
+	INVALID,//INSTR("ll", JITFUNC(Comp_Generic), Dis_Generic, Int_StoreSync, IN_MEM|IN_IMM16|IN_RS_ADDR|OUT_RT|OUT_OTHER|MEMTYPE_WORD),
 	INVALID,//INSTR("lwc1", JITFUNC(Comp_FPULS), Dis_FPULS, Int_FPULS, IN_MEM|IN_IMM16|IN_RS_ADDR|OUT_FT|MEMTYPE_FLOAT|IS_FPU),
-	INVALID,//INSTR("lv.s", JITFUNC(Comp_SV), Dis_SV, Int_SV, IN_MEM|IN_IMM16|IN_RS_ADDR|OUT_OTHER|IS_VFPU|VFPU_NO_PREFIX|MEMTYPE_FLOAT),
+	INSTR("lwc2", JITFUNC(Comp_Cp2), Dis_Generic, 0, IN_MEM|IN_IMM16|IN_RS_ADDR|OUT_OTHER|MEMTYPE_WORD),
 	INVALID,
 	INVALID,//ENCODING(VFPU4Jump),
 	INVALID,//INSTR("lv", JITFUNC(Comp_SVQ), Dis_SVLRQ, Int_SVQ, IN_MEM|IN_IMM16|IN_RS_ADDR|OUT_OTHER|IS_VFPU|VFPU_NO_PREFIX|MEMTYPE_VQUAD),
 	INVALID,//INSTR("lv.q", JITFUNC(Comp_SVQ), Dis_SVQ, Int_SVQ, IN_MEM|IN_IMM16|IN_RS_ADDR|OUT_OTHER|IS_VFPU|VFPU_NO_PREFIX|MEMTYPE_VQUAD), //copU
 	INVALID,//ENCODING(VFPU5),
 	//56
-	INSTR("sc", JITFUNC(Comp_Generic), Dis_Generic, Int_StoreSync, IN_IMM16|IN_RS_ADDR|IN_OTHER|IN_RT|OUT_RT|OUT_MEM|MEMTYPE_WORD),
+	INVALID,//INSTR("sc", JITFUNC(Comp_Generic), Dis_Generic, Int_StoreSync, IN_IMM16|IN_RS_ADDR|IN_OTHER|IN_RT|OUT_RT|OUT_MEM|MEMTYPE_WORD),
 	INVALID, //INSTR("swc1", JITFUNC(Comp_FPULS), Dis_FPULS, Int_FPULS, IN_IMM16|IN_RS_ADDR|IN_FT|OUT_MEM|MEMTYPE_FLOAT|IS_FPU), //copU
-	INVALID,//INSTR("sv.s", JITFUNC(Comp_SV), Dis_SV, Int_SV, IN_IMM16|IN_RS_ADDR|IN_OTHER|OUT_MEM|IS_VFPU|VFPU_NO_PREFIX|MEMTYPE_FLOAT),
+	INSTR("swc2", JITFUNC(Comp_Cp2), Dis_Generic, 0, IN_IMM16|IN_RS_ADDR|IN_OTHER|OUT_MEM|MEMTYPE_WORD),
 	INVALID,
 	//60
 	INVALID,//ENCODING(VFPU6),
@@ -985,10 +986,9 @@ void MIPSInterpret(MIPSOpcode op) {
 
 int MIPSInterpret_RunUntil(u64 globalTicks)
 {
-	//TODO Right now, I'm fairly certain this is an infinite loop. It should only run until globalTicks is reached. So, fix that, if this function is ever used.
 	MIPSState *curMips = currentMIPS;
 	//Just assume core is always running
-	while (/*coreState == CORE_RUNNING*/ true)
+	while (coreState == CORE_RUNNING)
 	{
 		JITTS_update_from_downcount();
 		uint32 lastPC = 0;

@@ -2922,10 +2922,17 @@ static void check_variables(bool startup)
 
    if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
    {
-      if (strcmp(var.value, "enabled") == 0)
+      if (strcmp(var.value, "enabled") == 0){
+         if(!enable_jit){
+            PSX_Power();
+         }
          enable_jit = true;
-      else 
+      }else{ 
+         if(enable_jit){
+            PSX_Power();
+         }
          enable_jit = false;
+      }
    }
 #endif
 }
@@ -3714,7 +3721,15 @@ void retro_run(void)
 
    Running = -1;
    INFO_LOG(CPU, "Entering CPU!\n");
-   timestamp = CPU->Run(timestamp);
+#ifdef JIT
+   if(enable_jit){
+     timestamp = currentMIPS->Run(timestamp);    
+   }
+   else
+#endif
+   {
+      timestamp = CPU->Run(timestamp);
+   }
    INFO_LOG(CPU, "Exited CPU!\n");
    assert(timestamp);
 

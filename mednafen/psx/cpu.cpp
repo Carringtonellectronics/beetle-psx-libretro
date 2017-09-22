@@ -585,7 +585,6 @@ int32_t PS_CPU::RunReal(int32_t timestamp_in)
 
 		 instr = ReadInstruction(timestamp, PC);
 
-
          //printf("PC=%08x, SP=%08x - op=0x%02x - funct=0x%02x - instr=0x%08x\n", PC, GPR[29], instr >> 26, instr & 0x3F, instr);
          //for(int i = 0; i < 32; i++)
          // printf("%02x : %08x\n", i, GPR[i]);
@@ -2458,18 +2457,7 @@ SkipNPCStuff:	;
 
 int32_t PS_CPU::Run(int32_t timestamp_in)
 {
-#ifdef JIT
-    DEBUG_LOG(TIMESTAMP, "Timestamp in: %u\n", timestamp_in);
-    JITTS_set_timestamp(timestamp_in);
-    DEBUG_LOG(TIMESTAMP, "Cur timestamp: %u, next ts = %u\n", JITTS_get_timestamp(), JITTS_get_next_event());
-    DEBUG_LOG(TIMESTAMP, "Mips Downcount: %d\n", currentMIPS->downcount);
-    do {    
-        coreState = CORE_RUNNING;
-        MIPSComp::jit->RunLoopUntil(JITTS_get_timestamp());
-        JITTS_update_from_downcount();
-    } while(MDFN_LIKELY(PSX_EventHandler(JITTS_get_timestamp())));
-    return JITTS_get_timestamp();
-#elif defined(HAVE_DEBUG)
+#if defined(HAVE_DEBUG)
    if(CPUHook || ADDBT)
       return(RunReal<true>(timestamp_in));
 #endif
