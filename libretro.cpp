@@ -2923,12 +2923,12 @@ static void check_variables(bool startup)
    if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
    {
       if (strcmp(var.value, "enabled") == 0){
-         if(!enable_jit){
+         if(!enable_jit && !startup){
             PSX_Power();
          }
          enable_jit = true;
       }else{ 
-         if(enable_jit){
+         if(enable_jit && !startup){
             PSX_Power();
          }
          enable_jit = false;

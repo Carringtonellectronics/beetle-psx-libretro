@@ -4,6 +4,10 @@
 #include "mednafen-types.h"
 #include "jit/Common/Opcode.h"
 
+#ifdef JIT
+#include "jit/JitCommon/JitState.h"
+#endif
+
 // TODO, WIP (big-endian stores and loads not fully supported yet)
 
 #ifdef MSB_FIRST
@@ -223,7 +227,7 @@ namespace Memory {
 #ifdef JIT
     Opcode Read_Instruction(uint32 address, bool resolve_replacements);
     INLINE Opcode Read_Instruction(uint32 address){return Read_Instruction(address, false);}
-    Opcode Read_Opcode_JIT(uint32 address);
+    Opcode Read_Opcode_JIT(MIPSComp::JitState* js);
     void Write_Opcode_JIT(const uint32 _Address, const Opcode& _Value);
 
     uint8 *GetPointer(const uint32 address);

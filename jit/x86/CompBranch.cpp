@@ -322,7 +322,7 @@ void Jit::BranchRSRTComp(MIPSOpcode op, Gen::CCFlags cc, bool likely)
 	MIPSGPReg rs = _RS;
 	u32 targetAddr = GetCompilerPC() + offset + 4;
 
-	ABI_CallFunctionCC((void*)PrintBranch, GetCompilerPC(), targetAddr);
+	//ABI_CallFunctionCC((void*)PrintBranch, GetCompilerPC(), targetAddr);
 
 	bool immBranch = false;
 	bool immBranchTaken = false;
@@ -600,7 +600,7 @@ void Jit::Comp_Jump(MIPSOpcode op) {
 	}
 	u32 off = _IMM26 << 2;
 	u32 targetAddr = (GetCompilerPC() & 0xF0000000) + off;
-	INFO_LOG(JIT, "Target address: 0x%08x\n", targetAddr);
+	//INFO_LOG(JIT, "Target address: 0x%08x\n", targetAddr);
 	// Might be a stubbed address or something?
 	if (!Memory::IsValidAddress(targetAddr)) {
 		ERROR_LOG_REPORT(JIT, "Jump to invalid address: %08x PC %08x LR %08x", targetAddr, GetCompilerPC(), currentMIPS->r[MIPS_REG_RA]);
@@ -786,8 +786,7 @@ void Jit::Comp_Syscall(MIPSOpcode op)
 	js.downcountAmount = -offset;
 
 	JitComp_Exception(op, EXCEPTION_SYSCALL);
-	//We should stop compiling after a syscall, otherwise the handler will be 
-	//recompiled, i think.
+	//We should stop compiling after a syscall.
 	js.compiling = false;
 	
 	DEBUG_LOG(JIT, "Got a syscall, OP: %x at (%x)", op, js.compilerPC);
@@ -807,7 +806,6 @@ void Jit::Comp_Syscall(MIPSOpcode op)
 	ApplyRoundingMode();
 	WriteSyscallExit();
 	*/
-	js.compiling = false;
 }
 
 void Jit::Comp_Break(MIPSOpcode op)

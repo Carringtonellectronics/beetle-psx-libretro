@@ -95,9 +95,31 @@ void Jit::JitComp_MF0(MIPSOpcode op){
 void Jit::JitComp_MT0(MIPSOpcode op){
     //Move _rt(CPU) t- _rd (CP0)
     MIPSGPReg rt = _RT;
+    MIPSGPReg rd = _RD;
+
     gpr.Lock(rt);
     gpr.MapReg(rt, true, true);
-    MOV(32, MIPSSTATE_VAR_ELEM32(CP0.Regs[0],_RD), gpr.R(_RT));
+    switch(rd){
+    case 7:
+        MOV(32, R(EAX), gpr.R(rt));
+        AND(32, R(EAX), Imm32(0xFF80003F));
+        MOV(32, MIPSSTATE_VAR_ELEM32(CP0.Regs[0], rd), R(EAX));
+        break;
+    case 13:
+        AND(32, MIPSSTATE_VAR_ELEM32(CP0.Regs[0], rd), Imm32(~(0x3 << 8)));
+        MOV(32, R(EAX), gpr.R(rt));
+        AND(32, R(EAX), Imm32(0x3 << 8));
+        OR(32, MIPSSTATE_VAR_ELEM32(CP0.Regs[0], rd), R(EAX));
+        break;
+    case 12:
+        MOV(32, R(EAX), Imm32(~((0x3 << 26) | (0x3 << 23) | (0x3 << 6))));
+        AND(32, R(EAX), Imm32(0x3 << 8));
+        MOV(32, MIPSSTATE_VAR_ELEM32(CP0.Regs[0], rd), R(EAX));
+        break;
+    default:
+        MOV(32, MIPSSTATE_VAR_ELEM32(CP0.Regs[0], rd), gpr.R(rt));
+        break;
+    }
     gpr.UnlockAll();
 }
 

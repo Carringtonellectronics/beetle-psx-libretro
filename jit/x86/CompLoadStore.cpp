@@ -122,11 +122,13 @@ namespace MIPSComp {
 					// The downcast is needed so we don't try to generate a 8-bit write with a 32-bit imm
 					// (that might have been generated from an li instruction) which is illegal.
 					MOV(bits, dest, DowncastImm(gpr.R(rt), bits));
+					
 				}
 			}
 		}
-		if (safe.PrepareSlowWrite())
+		if (safe.PrepareSlowWrite()){
 			safe.DoSlowWrite(safeFunc, gpr.R(rt));
+		}
 		safe.Finish();
 
 		if (needSwap)
@@ -180,8 +182,10 @@ namespace MIPSComp {
 		{
 			JitSafeMem safe(this, rs, offset, ~3);
 			OpArg dest;
-			if (safe.PrepareWrite(dest, 4))
+			if (safe.PrepareWrite(dest, 4)){
 				MOV(32, dest, R(EDX));
+				uint32 address = gpr.GetImm(rs) + offset;
+			}
 			if (safe.PrepareSlowWrite())
 				safe.DoSlowWrite(safeMemFuncs.writeU32, R(EDX));
 			safe.Finish();

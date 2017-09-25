@@ -65,7 +65,7 @@ int MIPS_SingleStep()
 #if defined(ARM)
 	MIPSOpcode op = MIPSOpcode(Memory::ReadUnchecked_U32(mipsr4k->pc));
 #else
-	MIPSOpcode op = Memory::Read_Opcode_JIT(mipsr4k->pc);
+	MIPSOpcode op = Memory::Read_Instruction(mipsr4k->pc);
 #endif
 	if (mipsr4k->inDelaySlot) {
 		MIPSInterpret(op);

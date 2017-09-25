@@ -221,8 +221,10 @@ static void ExpandRange(std::pair<u32, u32> &range, uint32 newStart, uint32 newE
 
 void JitBlockCache::FinalizeBlock(int block_num, bool block_link) {
 	JitBlock &b = blocks_[block_num];
+	MIPSComp::JitState js;
+	js.compilerPC = b.originalAddress;
 
-	b.originalFirstOpcode = Memory::Read_Opcode_JIT(b.originalAddress);
+	b.originalFirstOpcode = Memory::Read_Opcode_JIT(&js);
 	MIPSOpcode opcode = GetEmuHackOpForBlock(block_num);
 	Memory::Write_Opcode_JIT(b.originalAddress, opcode);
 

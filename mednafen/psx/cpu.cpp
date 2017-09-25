@@ -75,7 +75,6 @@ PS_CPU::PS_CPU()
 
 PS_CPU::~PS_CPU()
 {
-    delete ScratchRAM;
 }
 
 void PS_CPU::SetFastMap(void *region_mem, uint32_t region_address, uint32_t region_size)
@@ -86,6 +85,9 @@ void PS_CPU::SetFastMap(void *region_mem, uint32_t region_address, uint32_t regi
 
    for(A = region_address; A < (uint64)region_address + region_size; A += FAST_MAP_PSIZE)
       FastMap[A >> FAST_MAP_SHIFT] = ((uint8_t *)region_mem - region_address);
+#ifdef JIT
+    JitSetFastmap(region_mem, region_address, region_size);
+#endif
 }
 
 INLINE void PS_CPU::RecalcIPCache(void)
@@ -102,6 +104,14 @@ INLINE void PS_CPU::RecalcIPCache(void)
 void PS_CPU::SetHalt(bool status)
 {
    Halted = status;
+#ifdef JIT
+    currentMIPS->halted = status;
+    if(status){
+        Core_UpdateState(CORE_HALTED);
+    }else{
+        Core_UpdateState(CORE_RUNNING);
+    }
+#endif
    RecalcIPCache();
 }
 
@@ -156,6 +166,9 @@ void PS_CPU::Power(void)
 #ifdef JIT
    currentMIPS->Reset();
    currentMIPS->pc = 0xBFC00000;
+   currentMIPS->CP0.SR |= (1 << 22);	// BEV
+   currentMIPS->CP0.SR |= (1 << 21);	// TS
+   currentMIPS->CP0.PRID = 0x2;
 #endif
 }
 //TODO JIT savestate
@@ -390,8 +403,7 @@ INLINE void PS_CPU::WriteMemory(int32_t &timestamp, uint32_t address, uint32_t v
          else
             ScratchRAM->Write<T>(address & 0x3FF, value);
       }
-      //printf("IsC WRITE%d 0x%08x 0x%08x -- CP0.SR=0x%08x\n", (int)sizeof(T), address, value, CP0.SR);
-   }
+    }
 }
 
 INLINE uint32 PS_CPU::ReadInstruction(pscpu_timestamp_t &timestamp, uint32 address)
@@ -2415,7 +2427,6 @@ int32_t PS_CPU::RunReal(int32_t timestamp_in)
     // Mednafen special instruction
     //
     BEGIN_OPF(INTERRUPT);
-    INFO_LOG(CPU, "Encountered instruction %08x at 0x%08x\n", instr, PC);
 	if(Halted)
 	{
 	 goto SkipNPCStuff;

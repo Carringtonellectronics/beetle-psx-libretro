@@ -85,9 +85,12 @@ bool JitSafeMem::PrepareWrite(OpArg &dest, int size)
 		{
 			MemCheckImm(MEM_WRITE);
 			u32 addr = (iaddr_ & alignMask_);
-#ifdef MASKED_PSP_MEMORY
-			addr &= Memory::MEMVIEW32_MASK;
-#endif
+
+			if(addr >= 0x1F801080 && addr <= 0x1F8010FF){
+				//DMA address, could trigger a halt. We could either check it, or just return to the dispatcher.
+				//Let's just return to the dispatcher and let it handle it.
+				needsCheck_ = true;
+			}
 
 #ifdef ARCH_32BIT
 			dest = M(Memory::GetPointer(addr));
@@ -197,15 +200,21 @@ OpArg JitSafeMem::PrepareMemoryOpArg(MemoryOpType type)
 		// We may need to jump back up here.
 		safe_ = jit_->GetCodePtr();
 	}
-	else
-	{
-#ifdef MASKED_PSP_MEMORY
-		if (needMask) {
-			jit_->AND(32, R(EAX), Imm32(Memory::MEMVIEW32_MASK));
-		}
-#endif
-	}
+//TODO maybe check here for corestate changes, particularily
+//Halt changes. Maybe it will speed things up?
+/*
+	jit_->ADD(32, R(xaddr_), Imm32(offset_));
+	FixupBranch tooLow, tooHigh;
+	jit_->CMP(32, R(EAX), Imm32(0x1F801080));
+	tooLow = jit_->J_CC(CC_B);
+	jit_->CMP(32, R(EAX), Imm32(0x1F8010FF));
+	tooHigh = jit_->J_CC(CC_A);
 
+	WriteExit(js.compilerPC + 4, js.nextExit++);
+
+	SetJumpTarget(tooHigh);
+	SetJumpTarget(tooLow);
+*/
 	// TODO: This could be more optimal, but the common case is that we want xaddr_ not to include offset_.
 	// Since we need to align them after add, we add and subtract.
 	if (alignMask_ != 0xFFFFFFFF)
@@ -352,7 +361,7 @@ bool JitSafeMem::ImmValid()
 void JitSafeMem::Finish()
 {
 	// Memory::Read_U32/etc. may have tripped coreState.
-	if (needsCheck_ && /*!g_Config.bIgnoreBadMemAccess*/ false)
+	if (needsCheck_)
 		jit_->js.afterOp |= JitState::AFTER_CORE_STATE;
 	if (needsSkip_)
 		jit_->SetJumpTarget(skip_);

@@ -183,7 +183,7 @@ void Jit::GenerateFixedCode(JitOptions &jo) {
 			//ABI_CallFunction(reinterpret_cast<void *>(ImHere));
 			//Call ReadU32 to read the instruction at the PC into EAX
 			//TODO make sure this can reach high memory (in case that's needed?)
-			ABI_CallFunctionR((void *)Memory::Read_U32, RAX);
+			ABI_CallFunctionR((void *)Memory::Read_U32, EAX);
 			//MOV(32, R(EAX), MComplex(MEMBASEREG, EAX, SCALE_1, 0));
 #endif                                             
 			MOV(32, R(EDX), R(EAX));

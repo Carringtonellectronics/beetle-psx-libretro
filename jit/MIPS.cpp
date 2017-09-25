@@ -206,6 +206,7 @@ void MIPSState::Init() {
 	llBit = 0;
 	nextPC = 0;
 	downcount = 0;
+	halted = 0;
 	// Initialize the VFPU random number generator with .. something?
 	//rng.Init(0x1337);
 	//Used purely for JIT comp.
@@ -283,9 +284,8 @@ uint32 MIPSState::Run(uint32 timestamp_in){
     DEBUG_LOG(TIMESTAMP, "Cur timestamp: %u, next ts = %u\n", JITTS_get_timestamp(), JITTS_get_next_event());
     DEBUG_LOG(TIMESTAMP, "Mips Downcount: %d\n", currentMIPS->downcount);
     do {
-        coreState = CORE_RUNNING;
         MIPSComp::jit->RunLoopUntil(JITTS_get_timestamp());
-        JITTS_update_from_downcount();
+		JITTS_update_from_downcount();
     } while(MDFN_LIKELY(PSX_EventHandler(JITTS_get_timestamp())));
     return JITTS_get_timestamp();
 }
@@ -299,4 +299,14 @@ void MIPSState::InvalidateICache(uint32 address, int length) {
 void MIPSState::ClearJitCache() {
 	if (MIPSComp::jit)
 		MIPSComp::jit->ClearCache();
+}
+
+void MIPSState::AssertIRQ(unsigned which, bool asserted)
+{
+   assert(which <= 5);
+
+   CP0.CAUSE &= ~(1 << (10 + which));
+
+   if(asserted)
+      CP0.CAUSE |= 1 << (10 + which);
 }

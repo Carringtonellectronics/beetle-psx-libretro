@@ -284,6 +284,8 @@ public:
 	   };
 	} CP0;
 
+	uint32_t halted;
+
 	// Debug stuff
 	uint32 debugCount;	// can be used to count basic blocks before crashes, etc.
 
@@ -320,6 +322,8 @@ public:
 	void InvalidateICache(uint32 address, int length = 4);
 
 	void ClearJitCache();
+
+	void AssertIRQ(unsigned which, bool asserted);
 };
 
 void InitMips();

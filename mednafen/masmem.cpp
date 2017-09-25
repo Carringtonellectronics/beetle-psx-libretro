@@ -14,6 +14,7 @@
 #ifdef JIT
 #include "jit/JitCommon/JitCommon.h"
 #include "jittimestamp.h"
+#include "jit/Memory/jitICache.h"
 #endif
 
 MultiAccessSizeMem<1024, uint32, false> *ScratchRAM = NULL;
@@ -73,6 +74,8 @@ static struct
     };
 } SysControl;
 
+static int tsDelta;
+
 namespace Memory
 {
     uint8 *base;
@@ -102,16 +105,13 @@ namespace Memory
         memset(MainRAM->data8, 0, sizeof(MainRAM->data8));
     }
 #ifdef JIT
-    Opcode Read_Instruction(uint32 address, bool resolve_replacements){
-        Opcode inst = Opcode(Read_U32_instr(address));
-        if (MIPS_IS_RUNBLOCK(inst.encoding) && MIPSComp::jit) {
-            inst = MIPSComp::jit->GetOriginalOp(inst);
-        }
-        return inst;
-    }
     
-    Opcode Read_Opcode_JIT(uint32 address){
-        Opcode inst = Opcode(Read_U32_instr(address));
+    Opcode Read_Opcode_JIT(MIPSComp::JitState* js){
+        tsDelta = 0;
+        Opcode inst = Read_Instruction(js->compilerPC);
+
+        js->downcountAmount += tsDelta;
+
         if (MIPS_IS_RUNBLOCK(inst.encoding) && MIPSComp::jit) {
             return MIPSComp::jit->GetOriginalOp(inst);
         } else {
@@ -155,11 +155,6 @@ uint8 *GetPointer(uint32 address) {
     {
         return MainRAM->data8 + (address & 0x1FFFFF);
     }
-    //TODO might not need this anymore?
-    if(address >= 0xbfc00000 && address <= 0xbfc7ffff)
-    {
-        return BIOSROM->data8 + (address & 0x7FFFF);
-    }
 
     if(address >= 0x1FC00000 && address <= 0x1FC7FFFF)
     {
@@ -176,31 +171,22 @@ inline void ReadFromHardware(T &var, uint32 address) {
     if(increment){
         JTTTS_increment_timestamp(DMACycleSteal);
     }
-    uint32 origAddress = address;
-    address &= addr_mask[address >> 29];
     //if(address == 0xa0 && IsWrite)
     // DBG_Break();
     //INFO_LOG(READ, "Masked address: %p\n", address);
-
-    if(origAddress >= 0x1F800000 && origAddress <= 0x1F8003FF)
-    {
-        var = ScratchRAM->Read<T>(origAddress & 0x3FF);
-        return; 
-    }
 
     if(address < 0x00800000)
     {
         if(increment){
             JTTTS_increment_timestamp(3);
         }
-        var = MainRAM->Read<T>(address & 0x1FFFFF);
+        var = MainRAM->Read<T>(address & 0x001FFFFF);
         return;
     }
 
     if(address >= 0x1FC00000 && address <= 0x1FC7FFFF)
     {
-        //Bios mirror?
-        var = BIOSROM->Read<T>(address & 0x7FFFF);
+        var = BIOSROM->Read<T>(address & 0x0007FFFF);
         return;
     }
 
@@ -337,11 +323,11 @@ inline void ReadFromHardware(T &var, uint32 address) {
 
         if(PIOMem)
         {
-            if((address & 0x7FFFFF) < 65536)
+            if((address & 0x007FFFFF) < 65536)
             {
-                var = PIOMem->Read<T>(address & 0x7FFFFF);
+                var = PIOMem->Read<T>(address & 0x007FFFFF);
             }
-            else if((address & 0x7FFFFF) < (65536 + TextMem.size()))
+            else if((address & 0x007FFFFF) < (65536 + TextMem.size()))
             {
                 switch(sizeof(T))
                 {
@@ -357,20 +343,94 @@ inline void ReadFromHardware(T &var, uint32 address) {
 
     if(address == 0xFFFE0130) // Per tests on PS1, ignores the access(sort of, on reads the value is forced to 0 if not aligned) if not aligned to 4-bytes.
     {
-        var = CPU->GetBIU();
+        var = BIU;
         return;
     }
     var = (T)~0U;
-    DEBUG_LOG(MEM, "[MEM] Unknown read %d from %08x at time %d\n", (int)(sizeof(T) * 8), origAddress, JITTS_get_timestamp());
+    DEBUG_LOG(MEM, "[MEM] Unknown read %d from 0x%08x at time %d\n", (int)(sizeof(T) * 8), address, JITTS_get_timestamp());
 }
 
+
+template<typename T, bool increment = true>
+INLINE void ReadMemory(T &var, uint32_t address)
+{
+   T ret;
+   address &= addr_mask[address >> 29];
+
+   if(address >= 0x1F800000 && address <= 0x1F8003FF)
+   {
+      var = ScratchRAM->Read<T>(address & 0x3FF);
+      return;
+   }
+
+   //timestamp += (ReadFudge >> 4) & 2;
+
+   //assert(!(CP0.SR & 0x10000));
+
+   ReadFromHardware<T, increment>(var, address);
+}
+
+
+Opcode Read_Instruction(uint32 address, bool resolve_replacements){
+    Opcode instr = Opcode(ICache.ICache[(address & 0xFFC) >> 2].Data);
+    
+    if(ICache.ICache[(address & 0xFFC) >> 2].TV != address)
+    {
+        // FIXME: Handle executing out of scratchpad.
+        if(address >= 0xA0000000 || !(BIU & 0x800))
+        {
+            instr = Opcode(LoadU32_LE((uint32_t *)&FastMap[address >> FAST_MAP_SHIFT][address]));
+            tsDelta += 4;
+        }
+        else
+        {
+            __ICache *ICI = &ICache.ICache[((address & 0xFF0) >> 2)];
+            const uint32_t *FMP = (uint32_t *)&FastMap[(address &~ 0xF) >> FAST_MAP_SHIFT][address &~ 0xF];
+
+            // | 0x2 to simulate (in)validity bits.
+            ICI[0x00].TV = (address &~ 0xF) | 0x00 | 0x2;
+            ICI[0x01].TV = (address &~ 0xF) | 0x04 | 0x2;
+            ICI[0x02].TV = (address &~ 0xF) | 0x08 | 0x2;
+            ICI[0x03].TV = (address &~ 0xF) | 0x0C | 0x2;
+
+            // When overclock is enabled, remove code cache fetch latency
+            tsDelta += 3;
+            
+            switch(address & 0xC)
+            {
+            case 0x0:
+                tsDelta += 1;
+                ICI[0x00].TV &= ~0x2;
+                ICI[0x00].Data = LoadU32_LE(&FMP[0]);
+            case 0x4:
+                tsDelta += 1;
+                ICI[0x01].TV &= ~0x2;
+                ICI[0x01].Data = LoadU32_LE(&FMP[1]);
+            case 0x8:
+                tsDelta += 1;
+                ICI[0x02].TV &= ~0x2;
+                ICI[0x02].Data = LoadU32_LE(&FMP[2]);
+            case 0xC:
+                tsDelta += 1;
+                ICI[0x03].TV &= ~0x2;
+                ICI[0x03].Data = LoadU32_LE(&FMP[3]);
+                break;
+            }
+            instr = Opcode(ICache.ICache[(address & 0xFFC) >> 2].Data);
+        }
+    }
+
+   /* if (MIPS_IS_RUNBLOCK(inst.encoding) && MIPSComp::jit) {
+        inst = MIPSComp::jit->GetOriginalOp(inst);
+    }*/
+    return instr;
+}
 template <typename T>
 inline void WriteToHardware(uint32 address, const T data) {
+    
     //if(address == 0xa0 && IsWrite)
     // DBG_Break();
     //INFO_LOG(WRITE, "Writing at address %p\n", address);
-    uint32 origAddress = address;
-    address &= addr_mask[address >> 29];
 
     if(address >= 0x1F800000 && address <= 0x1F8003FF)
     {
@@ -390,7 +450,7 @@ inline void WriteToHardware(uint32 address, const T data) {
         BIOSROM->Write<T>(address & 0x7FFFF, data);
         return;
     }
-    //This probably isn't appropriate here!
+    //This maybe isn't appropriate here.
     if(JITTS_get_timestamp() >= events[PSX_EVENT__SYNFIRST].next->event_time)
         PSX_EventHandler(JITTS_get_timestamp());
 
@@ -487,11 +547,52 @@ inline void WriteToHardware(uint32 address, const T data) {
 
     if(address == 0xFFFE0130) // Per tests on PS1, ignores the access(sort of, on reads the value is forced to 0 if not aligned) if not aligned to 4-bytes.
     {
-        CPU->SetBIU(data);
+        JitSetBIU(data);
         return;
     }
 
-    DEBUG_LOG(MEM, "[MEM] Unknown write%d to %08x at time %d, =%08x(%d)\n", (int)(sizeof(T) * 8), origAddress, JITTS_get_timestamp(), &data, data);
+    DEBUG_LOG(MEM, "[MEM] Unknown write%d to %08x at time %d, =%08x(%d)\n", (int)(sizeof(T) * 8), address, JITTS_get_timestamp(), &data, data);
+}
+
+template<typename T>
+inline void WriteMemory(uint32_t address, uint32_t value){
+    if(MDFN_LIKELY(!(currentMIPS->CP0.SR & 0x10000)))
+    {
+       address &= addr_mask[address >> 29];
+ 
+       if(address >= 0x1F800000 && address <= 0x1F8003FF)
+       {
+          ScratchRAM->Write<T>(address & 0x3FF, value);
+          return;
+       }
+       WriteToHardware<T>(address, value);
+    }
+    else
+    {
+        if(BIU & BIU_ENABLE_ICACHE_S1)	// Instruction cache is enabled/active
+        {
+            if(BIU & (BIU_TAG_TEST_MODE | BIU_INVALIDATE_MODE | BIU_LOCK_MODE))
+            {
+                const uint8 valid_bits = (BIU & BIU_TAG_TEST_MODE) ? ((value << ((address & 0x3) * 8)) & 0x0F) : 0x00;
+                __ICache* const ICI = &ICache.ICache[((address & 0xFF0) >> 2)];
+ 
+                //
+                // Set validity bits and tag.
+                //
+                for(unsigned i = 0; i < 4; i++)
+                    ICI[i].TV = ((valid_bits & (1U << i)) ? 0x00 : 0x02) | (address & 0xFFFFFFF0) | (i << 2);
+            }
+            else
+          {
+            ICache.ICache[(address & 0xFFC) >> 2].Data = value << ((address & 0x3) * 8);
+          }
+       }
+ 
+       if((BIU & 0x081) == 0x080)	// Writes to the scratchpad(TODO test)
+       {
+             ScratchRAM->Write<T>(address & 0x3FF, value);
+       }
+     }
 }
 
 bool IsRAMAddress(const uint32 address) {
@@ -530,28 +631,28 @@ bool IsValidAddress(const uint32 address){
 uint8 Read_U8(const uint32 _Address)
 {		
 	uint8 _var = 0;
-	ReadFromHardware<u8>(_var, _Address);
+	ReadMemory<u8>(_var, _Address);
 	return (u8)_var;
 }
 
 uint16 Read_U16(const uint32 _Address)
 {
 	uint16 _var = 0;
-	ReadFromHardware<u16_le>(_var, _Address);
+	ReadMemory<u16_le>(_var, _Address);
 	return (u16)_var;
 }
 
 uint32 Read_U32(const uint32 _Address)
 {
 	uint32 _var = 0;
-	ReadFromHardware<u32_le>(_var, _Address);
+	ReadMemory<u32_le>(_var, _Address);
 	return _var;
 }
 
 uint64 Read_U64(const uint32 _Address)
 {
 	u64_le _var = 0;
-	ReadFromHardware<u64_le>(_var, _Address);
+	ReadMemory<u64_le>(_var, _Address);
 	return _var;
 }
 
@@ -567,64 +668,64 @@ uint32 Read_U16_ZX(const uint32 _Address)
 
 void Write_U8(const uint8 _Data, const uint32 _Address)	
 {
-	WriteToHardware<u8>(_Address, _Data);
+	WriteMemory<u8>(_Address, _Data);
 }
 
 void Write_U16(const uint16 _Data, const uint32 _Address)
 {
-	WriteToHardware<u16_le>(_Address, _Data);
+	WriteMemory<u16_le>(_Address, _Data);
 }
 
 void Write_U32(const uint32 _Data, const uint32 _Address)
 {	
-	WriteToHardware<u32_le>(_Address, _Data);
+	WriteMemory<u32_le>(_Address, _Data);
 }
 
 void Write_U64(const uint64 _Data, const uint32 _Address)
 {
-	WriteToHardware<u64_le>(_Address, _Data);
+	WriteMemory<u64_le>(_Address, _Data);
 }
 
 uint8 ReadUnchecked_U8(const uint32 _Address)
 {
 	uint8 _var = 0;
-	ReadFromHardware<u8>(_var, _Address);
+	ReadMemory<u8>(_var, _Address);
 	return _var;
 }
 
 uint16 ReadUnchecked_U16(const uint32 _Address)
 {
 	uint16 _var = 0;
-	ReadFromHardware<u16_le>(_var, _Address);
+	ReadMemory<u16_le>(_var, _Address);
 	return _var;
 }
 
 uint32 ReadUnchecked_U32(const uint32 _Address)
 {
 	uint32 _var = 0;
-	ReadFromHardware<u32_le>(_var, _Address);
+	ReadMemory<u32_le>(_var, _Address);
 	return _var;
 }
 
 uint32 Read_U32_instr(const uint32 _Address){
     uint32 _var = 0;
-    ReadFromHardware<u32_le, false>(_var, _Address);
+    ReadMemory<u32_le, false>(_var, _Address);
     return _var;
 }
 
 void WriteUnchecked_U8(const uint8 _iValue, const uint32 _Address)
 {
-	WriteToHardware<u8>(_Address, _iValue);
+	WriteMemory<u8>(_Address, _iValue);
 }
 
 void WriteUnchecked_U16(const uint16 _iValue, const uint32 _Address)
 {
-	WriteToHardware<u16_le>(_Address, _iValue);
+	WriteMemory<u16_le>(_Address, _iValue);
 }
 
 void WriteUnchecked_U32(const uint32 _iValue, const uint32 _Address)
 {
-	WriteToHardware<u32_le>(_Address, _iValue);
+	WriteMemory<u32_le>(_Address, _iValue);
 }
 #endif
 } //Namespace Memory

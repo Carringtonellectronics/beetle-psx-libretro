@@ -6,6 +6,15 @@
 #ifdef JIT
 #include "jit/MIPS.h"
 #include "jit/Common/Opcode.h"
+#include "jit/Memory/jitICache.h"
+#endif
+
+#ifdef FAST_MAP_SHIFT
+#undef FAST_MAP_SHIFT
+#endif
+
+#ifdef FAST_MAP_PSIZE
+#undef FAST_MAP_PSIZE
 #endif
 
 #define FAST_MAP_SHIFT        16

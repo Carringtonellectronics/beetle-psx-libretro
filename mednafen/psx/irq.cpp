@@ -21,7 +21,12 @@ static uint16_t Asserted;
 static uint16_t Mask;
 static uint16_t Status;
 
-#define Recalc() CPU->AssertIRQ(0, (bool)(Status & Mask))
+void Recalc(){ 
+      CPU->AssertIRQ(0, (bool)(Status & Mask));
+#ifdef JIT
+      currentMIPS->AssertIRQ(0, (bool)(Status & Mask));
+#endif
+}
 
 void IRQ_Power(void)
 {

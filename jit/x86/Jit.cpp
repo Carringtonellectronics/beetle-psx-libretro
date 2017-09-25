@@ -365,7 +365,7 @@ const u8 *Jit::DoJit(u32 em_address, JitBlock *b) {
 		// Jit breakpoints are quite fast, so let's do them in release too.
 		CheckJitBreakpoint(GetCompilerPC(), 0);
 
-		MIPSOpcode inst = Memory::Read_Opcode_JIT(GetCompilerPC());
+		MIPSOpcode inst = Memory::Read_Opcode_JIT(&js);
 
 		js.downcountAmount += MIPSGetInstructionCycleEstimate(inst);
 
@@ -742,7 +742,7 @@ void Jit::WriteExitDestInReg(X64Reg reg) {
 
 	// Validate the jump to avoid a crash?
 	//TODO maybe change this or add an option?
-	if (/*!g_Config.bFastMemory*/ true) {
+	if (/*!g_Config.bFastMemory*/ false) {
 		CMP(32, R(reg), Imm32(Memory::GetKernelMemoryBase()));
 		FixupBranch tooLow = J_CC(CC_B);
 		CMP(32, R(reg), Imm32(Memory::GetUserMemoryEnd()));

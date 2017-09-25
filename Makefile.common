@@ -67,6 +67,7 @@ SOURCES_CXX += $(CORE_DIR)/jit/MIPS.cpp \
 				$(CORE_DIR)/jit/Common/ArmEmitter.cpp \
 				$(CORE_DIR)/jit/Common/Arm64Emitter.cpp \
 				$(CORE_DIR)/jit/Memory/MemoryUtil.cpp \
+				$(CORE_DIR)/jit/Memory/jitICache.cpp \
 				$(CORE_DIR)/jit/Common/DumbCoreStuff.cpp
 
 SOURCES_CXX += $(CORE_DIR)/jit/Common/math_util.cpp  \

@@ -1,5 +1,6 @@
 #include "jittimestamp.h"
 #include "jit/Common/DumbCoreStuff.h"
+#include "mednafen/psx/psx.h"
 
 uint32 internal_timestamp = 0;
 int32 cur_slice_length = 0;
@@ -25,10 +26,11 @@ void JITTS_prepare(uint32 timestamp_in){
 
 void JITTS_set_next_event(uint32 ts){
     next_event_ts = ts;
-    coreState = CORE_RUNNING;
     //INFO_LOG(JITTS, "Slice length: %d, Next event ts: %u, Internal timestamp: %u", cur_slice_length, next_event_ts, internal_timestamp);
     //update time slice, downcount, all that stuff
-    JITTS_update_from_downcount();
+    if(coreState != CORE_HALTED){
+        JITTS_update_from_downcount();
+    }
 }
 
 uint32 JITTS_get_next_event(){return next_event_ts;}
@@ -41,10 +43,17 @@ void JITTS_update_from_downcount(){
     last_ts = (internal_timestamp += cyclesEx);
     cur_slice_length = next_event_ts - internal_timestamp;
     currentMIPS->downcount = cur_slice_length;
-
-    if(currentMIPS->downcount < 0){
+    if(coreState == CORE_HALTED){
+        while(coreState == CORE_HALTED){
+            //Wait 'till next event
+            last_ts = internal_timestamp = next_event_ts;
+            PSX_EventHandler(internal_timestamp);
+            INFO_LOG(HALTED, "HATLED, UPDATING TO %u!\n", internal_timestamp);
+        }
+    }else if(currentMIPS->downcount < 0){
         coreState = CORE_NEXTFRAME;
-        //INFO_LOG(CPU, "Changed core state! cur pc = %08x\n", currentMIPS->pc);
+    }else{
+        coreState = CORE_RUNNING;
     }
     //INFO_LOG(JITTS, "Slice length: %d, Next event ts: %u, Internal timestamp: %u", cur_slice_length, next_event_ts, internal_timestamp);
     //INFO_LOG(JITTS, "Updated Timestamp! Timestamp: %u, Downcount: %d\n", internal_timestamp, currentMIPS->downcount);

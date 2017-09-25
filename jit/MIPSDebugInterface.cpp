@@ -180,7 +180,7 @@ const char *MIPSDebugInterface::disasm(unsigned int address, unsigned int align)
 {
 	static char mojs[256];
 	if (Memory::IsValidAddress(address))
-		MIPSDisAsm(Memory::Read_Opcode_JIT(address), address, mojs);
+		MIPSDisAsm(Memory::Read_Instruction(address), address, mojs);
 	else
 		strcpy(mojs, "-");
 	return mojs;
