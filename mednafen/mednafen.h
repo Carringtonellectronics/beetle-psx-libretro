@@ -67,7 +67,7 @@ private:
 	NonCopyable(const NonCopyable&);
 	void operator=(const NonCopyable&);
 };
-//Maybe should be in some memory class?
+//Maybe should be in some memory namespace?
 //Anyways, just byte order swap stuff
 #undef swap16
 #undef swap32

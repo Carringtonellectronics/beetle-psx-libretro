@@ -1004,7 +1004,7 @@ FixupBranch noOverflow;
 		switch (op & 63) 
 		{
 		case 16: // R(rd) = HI; //mfhi
-			ABI_CallFunction((void *)JITTS_update_muldiv_done);	
+			ABI_CallFunction((void *)&JITTS_update_muldiv_done);	
 			if (rd != MIPS_REG_ZERO) {
 				gpr.MapReg(rd, false, true);
 				MOV(32, gpr.R(rd), gpr.R(MIPS_REG_HI));
@@ -1018,7 +1018,7 @@ FixupBranch noOverflow;
 			break; 
 
 		case 18: // R(rd) = LO; break; //mflo
-			ABI_CallFunction((void *)JITTS_update_muldiv_done);
+			ABI_CallFunction((void *)&JITTS_update_muldiv_done);
 			if (rd != MIPS_REG_ZERO) {
 				gpr.MapReg(rd, false, true);
 				MOV(32, gpr.R(rd), gpr.R(MIPS_REG_LO));
@@ -1032,7 +1032,7 @@ FixupBranch noOverflow;
 			break; 
 
 		case 24: //mult (the most popular one). lo,hi  = signed mul (rs * rt)
-			ABI_CallFunctionC((void *)JITTS_increment_muldiv_done, 37);
+			ABI_CallFunctionC((void *)&JITTS_increment_muldiv_done, 37);
 			gpr.FlushLockX(EDX);
 			gpr.KillImmediate(MIPS_REG_HI, false, true);
 			gpr.KillImmediate(MIPS_REG_LO, false, true);
@@ -1047,7 +1047,7 @@ FixupBranch noOverflow;
 
 
 		case 25: //multu (2nd) lo,hi  = unsigned mul (rs * rt)
-			ABI_CallFunctionC((void *)JITTS_increment_muldiv_done, 37);
+			ABI_CallFunctionC((void *)&JITTS_increment_muldiv_done, 37);
 			gpr.FlushLockX(EDX);
 			gpr.KillImmediate(MIPS_REG_HI, false, true);
 			gpr.KillImmediate(MIPS_REG_LO, false, true);
@@ -1061,7 +1061,7 @@ FixupBranch noOverflow;
 
 		case 26: //div
 			{
-				ABI_CallFunctionC((void *)JITTS_increment_muldiv_done, 37);
+				ABI_CallFunctionC((void *)&JITTS_increment_muldiv_done, 37);
 
 				gpr.FlushLockX(EDX);
 				gpr.KillImmediate(MIPS_REG_HI, false, true);
@@ -1109,7 +1109,7 @@ FixupBranch noOverflow;
 
 		case 27: //divu
 			{
-				ABI_CallFunctionC((void *)JITTS_increment_muldiv_done, 37);
+				ABI_CallFunctionC((void *)&JITTS_increment_muldiv_done, 37);
 				gpr.FlushLockX(EDX);
 				gpr.KillImmediate(MIPS_REG_HI, false, true);
 				gpr.KillImmediate(MIPS_REG_LO, false, true);

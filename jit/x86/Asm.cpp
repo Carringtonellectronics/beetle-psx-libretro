@@ -149,7 +149,6 @@ void Jit::GenerateFixedCode(JitOptions &jo) {
 		FixupBranch skipToCoreStateCheck = J();  //skip the downcount check
 
 		dispatcherCheckCoreState = GetCodePtr();
-
 		// The result of slice decrementation should be in flags if somebody jumped here
 		// IMPORTANT - We jump on negative, not carry!!!
 		FixupBranch bailCoreState = J_CC(CC_S, true);
@@ -174,7 +173,6 @@ void Jit::GenerateFixedCode(JitOptions &jo) {
 
 			MOV(32, R(EAX), MIPSSTATE_VAR(pc));
 			dispatcherInEAXNoCheck = GetCodePtr();
-
 #ifdef ARCH_32BIT
 			_assert_msg_(CPU, Memory::base != 0, "Memory base bogus");
 			MOV(32, R(EAX), MDisp(EAX, (u32)Memory::base));
@@ -183,7 +181,7 @@ void Jit::GenerateFixedCode(JitOptions &jo) {
 			//ABI_CallFunction(reinterpret_cast<void *>(ImHere));
 			//Call ReadU32 to read the instruction at the PC into EAX
 			//TODO make sure this can reach high memory (in case that's needed?)
-			ABI_CallFunctionR((void *)Memory::Read_U32, EAX);
+			ABI_CallFunctionR((void *)&Memory::Read_U32_instr, EAX);
 			//MOV(32, R(EAX), MComplex(MEMBASEREG, EAX, SCALE_1, 0));
 #endif                                             
 			MOV(32, R(EDX), R(EAX));
@@ -210,7 +208,7 @@ void Jit::GenerateFixedCode(JitOptions &jo) {
 
 			//Ok, no block, let's jit
 			RestoreRoundingMode(true);
-			ABI_CallFunction(reinterpret_cast<void *>(MIPSComp::JitAt));
+			ABI_CallFunction((void*)&MIPSComp::JitAt);
 			//ABI_CallFunction(reinterpret_cast<void *>(ImHere));
 			ApplyRoundingMode(true);
 			JMP(dispatcherNoCheck, true); // Let's just dispatch again, we'll enter the block since we know it's there.

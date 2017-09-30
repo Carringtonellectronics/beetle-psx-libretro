@@ -22,6 +22,7 @@ void JITTS_prepare(uint32 timestamp_in){
         muldiv_next_ts -= internal_timestamp;
 
     last_ts = internal_timestamp = timestamp_in;
+    next_event_ts = 0;
 }
 
 void JITTS_set_next_event(uint32 ts){
@@ -42,15 +43,17 @@ void JITTS_update_from_downcount(){
     int cyclesEx = cur_slice_length - currentMIPS->downcount;
     last_ts = (internal_timestamp += cyclesEx);
     cur_slice_length = next_event_ts - internal_timestamp;
+    //INFO_LOG(JITTS, "Slice length: %d, Next event ts: %u, Internal timestamp: %u\n", cur_slice_length, next_event_ts, internal_timestamp);
     currentMIPS->downcount = cur_slice_length;
     if(coreState == CORE_HALTED){
         while(coreState == CORE_HALTED){
             //Wait 'till next event
             last_ts = internal_timestamp = next_event_ts;
             PSX_EventHandler(internal_timestamp);
-            INFO_LOG(HALTED, "HATLED, UPDATING TO %u!\n", internal_timestamp);
+            INFO_LOG(HALTED, "HALTED, UPDATING TO %u!\n", internal_timestamp);
         }
-    }else if(currentMIPS->downcount < 0){
+    }else if(currentMIPS->downcount <= 0){
+        //INFO_LOG(CORESTATE, "Setting coreState to CORE_NEXTFRAME\n");
         coreState = CORE_NEXTFRAME;
     }else{
         coreState = CORE_RUNNING;

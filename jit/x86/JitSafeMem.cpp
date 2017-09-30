@@ -118,10 +118,6 @@ bool JitSafeMem::PrepareRead(OpArg &src, int size)
 		{
 			MemCheckImm(MEM_READ);
 			u32 addr = (iaddr_ & alignMask_);
-#ifdef MASKED_PSP_MEMORY
-			addr &= Memory::MEMVIEW32_MASK;
-#endif
-
 #if defined(ARCH_32BIT)
 			src = M(Memory::GetPointer(addr));
 #else

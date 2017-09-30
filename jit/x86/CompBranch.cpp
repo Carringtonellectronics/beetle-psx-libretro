@@ -68,6 +68,10 @@ using namespace MIPSAnalyst;
 #define CONDITIONAL_LOG_EXIT_EAX() ;
 #endif
 
+void PrintOP(uint32_t encoding){
+	INFO_LOG(OP, "Op is: 0x%08x\n", encoding);
+}
+
 void PrintBranch(uint32_t curPC, uint32_t newPC){
 	INFO_LOG(JMP, "Jump from 0x%08x to 0x%08x\n", curPC, newPC);
 }
@@ -399,7 +403,7 @@ void Jit::BranchRSZeroComp(MIPSOpcode op, Gen::CCFlags cc, bool andLink, bool li
 	MIPSGPReg rs = _RS;
 	u32 targetAddr = GetCompilerPC() + offset + 4;
 
-	ABI_CallFunctionCC((void*)PrintBranch, GetCompilerPC(), targetAddr);
+	//ABI_CallFunctionCC((void*)PrintBranch, GetCompilerPC(), targetAddr);
 
 	bool immBranch = false;
 	bool immBranchTaken = false;
@@ -599,7 +603,8 @@ void Jit::Comp_Jump(MIPSOpcode op) {
 		return;
 	}
 	u32 off = _IMM26 << 2;
-	u32 targetAddr = (GetCompilerPC() & 0xF0000000) + off;
+	//TODO MAKE SURE THIS IS VALID, may need + 4?
+	u32 targetAddr = (GetCompilerPC() & 0xF0000000) | off;
 	//INFO_LOG(JIT, "Target address: 0x%08x\n", targetAddr);
 	// Might be a stubbed address or something?
 	if (!Memory::IsValidAddress(targetAddr)) {
@@ -701,7 +706,7 @@ void Jit::Comp_JumpReg(MIPSOpcode op)
 			gpr.SetImm(rd, GetCompilerPC() + 8);
 		CompileDelaySlot(DELAYSLOT_NICE);
 		//TODO re-add this option maybe
-		if (!andLink && rs == MIPS_REG_RA /*&& g_Config.bDiscardRegsOnJRRA*/) {
+		if (!andLink && rs == MIPS_REG_RA && false /* g_Config.bDiscardRegsOnJRRA*/) {
 			// According to the MIPS ABI, there are some regs we don't need to preserve.
 			// Let's discard them so we don't need to write them back.
 			// NOTE: Not all games follow the MIPS ABI! Tekken 6, for example, will crash
@@ -750,6 +755,15 @@ void Jit::Comp_JumpReg(MIPSOpcode op)
 		_dbg_assert_msg_(CPU,0,"Trying to compile instruction that can't be compiled");
 		break;
 	}
+	//Debug stuff, for debugging jumps
+	/*
+	MOV(32, R(EDX), Imm32(GetCompilerPC()));
+	MOV(32, R(ECX), R(destReg));
+	ABI_PushAllCallerSavedRegsAndAdjustStack();	
+	ABI_CallFunctionRR((void *)&PrintBranch, EDX, destReg);
+	ABI_CallFunctionC((void*)&PrintOP, op.encoding);
+	ABI_PopAllCallerSavedRegsAndAdjustStack();
+	MOV(32, R(destReg), R(ECX))*/
 
 	CONDITIONAL_LOG_EXIT_EAX();
 	WriteExitDestInReg(destReg);

@@ -48,9 +48,9 @@ void Jit::Comp_Cp2(MIPSOpcode op){
     if (type >= 0x10 && type <= 0x1F)
     {
        //TODO Compile the instructions themselves.
-       ABI_CallFunction((void *)JITTS_update_gte_done);
-       ABI_CallFunctionC((void *)GTE_Instruction, op.encoding);
-       ABI_CallFunctionR((void *)JITTS_increment_gte_done, EAX);
+       ABI_CallFunction((void *)&JITTS_update_gte_done);
+       ABI_CallFunctionC((void *)&GTE_Instruction, op.encoding);
+       ABI_CallFunctionR((void *)&JITTS_increment_gte_done, EAX);
 
     }
     uint32 rd = (op.encoding >> 11) & 0x1F;
@@ -59,22 +59,22 @@ void Jit::Comp_Cp2(MIPSOpcode op){
 
     switch(type){
         case 0: //MFc2        
-            ABI_CallFunction((void *)JITTS_update_gte_done);
-            ABI_CallFunctionC((void *)GTE_ReadDR, rd);
+            ABI_CallFunction((void *)&JITTS_update_gte_done);
+            ABI_CallFunctionC((void *)&GTE_ReadDR, rd);
             MOV(32, gpr.R(rt), R(EAX));
             break;
         case 2: //CFc2
-            ABI_CallFunction((void *)JITTS_update_gte_done);
-            ABI_CallFunctionC((void *)GTE_ReadCR, rd);
+            ABI_CallFunction((void *)&JITTS_update_gte_done);
+            ABI_CallFunctionC((void *)&GTE_ReadCR, rd);
             MOV(32, gpr.R(rt), R(EAX));
             break;
         case 4: //MTc2
-            ABI_CallFunction((void *)JITTS_update_gte_done);
-            ABI_CallFunctionCA((void *)GTE_WriteDR, rd, gpr.R(rt));
+            ABI_CallFunction((void *)&JITTS_update_gte_done);
+            ABI_CallFunctionCA((void *)&GTE_WriteDR, rd, gpr.R(rt));
             break;
         case 6: //CTc2
-            ABI_CallFunction((void *)JITTS_update_gte_done);
-            ABI_CallFunctionCA((void *)GTE_WriteCR, rd, gpr.R(rt));
+            ABI_CallFunction((void *)&JITTS_update_gte_done);
+            ABI_CallFunctionCA((void *)&GTE_WriteCR, rd, gpr.R(rt));
             break;
         default: //Who knows?
             ERROR_LOG(COP2, "Unkown opcode in Comp_Cp2: %08x\n", op.encoding);
@@ -134,7 +134,7 @@ void caught(uint32_t code, uint32_t instr, uint32_t pc){
 void Jit::JitComp_Exception(MIPSOpcode op, uint32_t code){
     //ABI_PushAllCalleeSavedRegsAndAdjustStack();
     
-    ABI_CallFunctionCCC((void *)caught, code, op.encoding, js.compilerPC);
+    ABI_CallFunctionCCC((void *)&caught, code, op.encoding, js.compilerPC);
     
     ABI_CallFunctionCCCC((void *)&Exception_Helper, code, js.compilerPC, js.inDelaySlot, op.encoding);
     
@@ -167,8 +167,7 @@ uint32_t Jit::Exception_Helper(uint32_t code, uint32_t PC, uint32_t inDelaySlot,
     // If EPC was adjusted -= 4 because we are after a branch instruction, set bit 31.
     currentMIPS->CP0.CAUSE |= inDelaySlot << 31;
     currentMIPS->CP0.CAUSE |= inDelaySlot << 30;
-   //TODO Check this out?
-   //Sets what coprocessor the error is for, (for CP Unusable) maybe not needed?
+   //Sets what coprocessor the error is for, (for CP Unusable)
    currentMIPS->CP0.CAUSE |= (instr << 2) & (0x3 << 28); // CE
  
     return(handler);
