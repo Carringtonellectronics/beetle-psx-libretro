@@ -723,7 +723,7 @@ void Jit::Comp_JumpReg(MIPSOpcode op)
 			AddContinuedBlock(gpr.GetImm(rs));
 			// Account for the increment in the loop.
 			js.compilerPC = gpr.GetImm(rs) - 4;
-			INFO_LOG(JIT, "Compile PC changed to 0x%08x\n", js.compilerPC);
+			//INFO_LOG(JIT, "Compile PC changed to 0x%08x\n", js.compilerPC);
 			// In case the delay slot was a break or something.
 			js.compiling = true;
 			return;

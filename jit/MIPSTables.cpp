@@ -1105,10 +1105,10 @@ int MIPSGetInstructionCycleEstimate(MIPSOpcode op)
 {
 	MIPSInfo info = MIPSGetInfo(op);
 	if (info & DELAYSLOT)
-		//Simply fetching an instruction takes 4 cycles
-		return 4;
+		//Simply fetching an instruction takes 5 cycles, I guess
+		return 5;
 	else
-		return 4;
+		return 5;
 }
 
 const char *MIPSDisasmAt(uint32 compilerPC) {

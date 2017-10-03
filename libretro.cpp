@@ -3723,7 +3723,9 @@ void retro_run(void)
    INFO_LOG(CPU, "Entering CPU!\n");
 #ifdef JIT
    if(enable_jit){
+     INFO_LOG(CPU, "Entering at PC: 0x%08x\n", currentMIPS->pc);
      timestamp = currentMIPS->Run(timestamp);    
+     INFO_LOG(CPU, "Exiting at PC: 0x%08x, RA = 0x%08x\n", currentMIPS->pc, currentMIPS->r[31]);
    }
    else
 #endif

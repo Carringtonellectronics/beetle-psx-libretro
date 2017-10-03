@@ -1980,7 +1980,6 @@ int32_t PS_CPU::RunReal(int32_t timestamp_in)
     BEGIN_OPF(SYSCALL);
     DO_LDS();
     
-    log_cb(RETRO_LOG_DEBUG, "Syscall| instr: %u, v0: %u, t1: %u", instr, GPR[2], GPR[9]);
 	new_PC = Exception(EXCEPTION_SYSCALL, PC, new_PC, new_PC_mask, instr);
         new_PC_mask = 0;
     END_OPF;

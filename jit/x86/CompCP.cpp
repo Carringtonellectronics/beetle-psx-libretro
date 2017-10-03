@@ -97,8 +97,8 @@ void Jit::JitComp_MT0(MIPSOpcode op){
     MIPSGPReg rt = _RT;
     MIPSGPReg rd = _RD;
 
-    gpr.Lock(rt);
-    gpr.MapReg(rt, true, true);
+    gpr.MapReg(rt, true, false);
+
     switch(rd){
     case 7:
         MOV(32, R(EAX), gpr.R(rt));
@@ -113,10 +113,11 @@ void Jit::JitComp_MT0(MIPSOpcode op){
         break;
     case 12:
         MOV(32, R(EAX), Imm32(~((0x3 << 26) | (0x3 << 23) | (0x3 << 6))));
-        AND(32, R(EAX), Imm32(0x3 << 8));
+        AND(32, R(EAX), gpr.R(rt));
         MOV(32, MIPSSTATE_VAR_ELEM32(CP0.Regs[0], rd), R(EAX));
         break;
     default:
+        gpr.Lock(rt);
         MOV(32, MIPSSTATE_VAR_ELEM32(CP0.Regs[0], rd), gpr.R(rt));
         break;
     }
@@ -136,41 +137,13 @@ void Jit::JitComp_Exception(MIPSOpcode op, uint32_t code){
     
     ABI_CallFunctionCCC((void *)&caught, code, op.encoding, js.compilerPC);
     
-    ABI_CallFunctionCCCC((void *)&Exception_Helper, code, js.compilerPC, js.inDelaySlot, op.encoding);
+    ABI_CallFunctionCCCC((void *)&currentMIPS->Exception_Helper, code, js.compilerPC, js.inDelaySlot, op.encoding);
     
     //ABI_PopAllCalleeSavedRegsAndAdjustStack();
     //We need to set the PC to be the handler
     MOV(32, MIPSSTATE_VAR(pc), R(EAX));
     //Now we need to exit this block, by going back to the dispatcher.
     WriteSyscallExit();
-}
-
-uint32_t Jit::Exception_Helper(uint32_t code, uint32_t PC, uint32_t inDelaySlot, uint32_t instr){
-    uint32_t handler = 0x80000080;
-    if(currentMIPS->CP0.SR & (1 << 22))	// BEV
-       handler = 0xBFC00180;
- 
-    currentMIPS->CP0.EPC = PC;
-    //We need to execute the branch again, otherwise we'll miss it
-    if(inDelaySlot)
-    {
-        currentMIPS->CP0.EPC -= 4;
-        currentMIPS->CP0.TAR = PC;
-    }
-    // "Push" IEc and KUc(so that the new IEc and KUc are 0)
-    currentMIPS->CP0.SR = (currentMIPS->CP0.SR & ~0x3F) | ((currentMIPS->CP0.SR << 2) & 0x3F);
- 
-    // Setup cause register
-    currentMIPS->CP0.CAUSE &= 0x0000FF00;
-    currentMIPS->CP0.CAUSE |= code << 2;
- 
-    // If EPC was adjusted -= 4 because we are after a branch instruction, set bit 31.
-    currentMIPS->CP0.CAUSE |= inDelaySlot << 31;
-    currentMIPS->CP0.CAUSE |= inDelaySlot << 30;
-   //Sets what coprocessor the error is for, (for CP Unusable)
-   currentMIPS->CP0.CAUSE |= (instr << 2) & (0x3 << 28); // CE
- 
-    return(handler);
 }
 
 }

@@ -324,6 +324,9 @@ public:
 	void ClearJitCache();
 
 	void AssertIRQ(unsigned which, bool asserted);
+	void RecalcInterrupt();
+	
+	uint32_t Exception_Helper(uint32_t code, uint32_t PC, uint32_t inDelaySlot, uint32_t instr);
 };
 
 void InitMips();

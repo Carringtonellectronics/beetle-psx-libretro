@@ -100,6 +100,8 @@ public:
 	void Comp_Cp1(MIPSOpcode op) override;
 	void Comp_Cp0(MIPSOpcode op) override;
 	void Comp_DoNothing(MIPSOpcode op) override;
+	//Exception for cop0 function, CALLed in JIT code
+	uint32_t Exception_Helper(uint32_t code, uint32_t PC, uint32_t inDelaySlot, uint32_t instr);
 	//since illegal instructions are guaranteed to be hit, we should stop compiling when we hit one
 	void  Comp_IllegalInstr(MIPSOpcode op) override {
 		ERROR_LOG_REPORT(CPU, "MIPSCompileOp: Invalid instruction %08x at 0x%08x, timestamp %u\n", op.encoding, js.compilerPC, JITTS_get_timestamp());
@@ -217,8 +219,6 @@ private:
 	void JitComp_CT0(MIPSOpcode op);
 	void JitComp_BC0(MIPSOpcode op);
 	void JitComp_Exception(MIPSOpcode op, uint32_t code);
-	//Exception for cop0 function, CALLed in JIT code
-	uint32_t Exception_Helper(uint32_t code, uint32_t PC, uint32_t inDelaySlot, uint32_t instr);
 
 	void CallProtectedFunction(const void *func, const Gen::OpArg &arg1);
 	void CallProtectedFunction(const void *func, const Gen::OpArg &arg1, const Gen::OpArg &arg2);

@@ -372,6 +372,7 @@ INLINE void ReadMemory(T &var, uint32_t address)
 
 
 Opcode Read_Instruction(uint32 address, bool resolve_replacements){
+    /*
     Opcode instr = Opcode(ICache.ICache[(address & 0xFFC) >> 2].Data);
     
     if(ICache.ICache[(address & 0xFFC) >> 2].TV != address)
@@ -419,11 +420,14 @@ Opcode Read_Instruction(uint32 address, bool resolve_replacements){
             instr = Opcode(ICache.ICache[(address & 0xFFC) >> 2].Data);
         }
     }
-
+    */
    /* if (MIPS_IS_RUNBLOCK(inst.encoding) && MIPSComp::jit) {
         inst = MIPSComp::jit->GetOriginalOp(inst);
     }*/
-    return instr;
+    //For now, let's get rid of the cache
+    uint32_t encoding;
+    ReadMemory<uint32_t>(encoding, address);
+    return Opcode(encoding);
 }
 template <typename T>
 inline void WriteToHardware(uint32 address, const T data) {
@@ -556,7 +560,7 @@ inline void WriteToHardware(uint32 address, const T data) {
 
 template<typename T>
 inline void WriteMemory(uint32_t address, uint32_t value){
-    if(MDFN_LIKELY(!(currentMIPS->CP0.SR & 0x10000)))
+    /*if(MDFN_LIKELY(!(currentMIPS->CP0.SR & 0x10000)))
     {
        address &= addr_mask[address >> 29];
  
@@ -592,7 +596,15 @@ inline void WriteMemory(uint32_t address, uint32_t value){
        {
              ScratchRAM->Write<T>(address & 0x3FF, value);
        }
-     }
+     }*/
+     address &= addr_mask[address >> 29];
+
+    if(address >= 0x1F800000 && address <= 0x1F8003FF)
+    {
+        ScratchRAM->Write<T>(address & 0x3FF, value);
+        return;
+    }
+    WriteToHardware<T>(address, value);
 }
 
 bool IsRAMAddress(const uint32 address) {

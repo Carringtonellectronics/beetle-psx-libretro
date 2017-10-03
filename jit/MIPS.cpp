@@ -284,8 +284,13 @@ uint32 MIPSState::Run(uint32 timestamp_in){
     DEBUG_LOG(TIMESTAMP, "Cur timestamp: %u, next ts = %u\n", JITTS_get_timestamp(), JITTS_get_next_event());
     DEBUG_LOG(TIMESTAMP, "Mips Downcount: %d\n", currentMIPS->downcount);
     do {
-        MIPSComp::jit->RunLoopUntil(JITTS_get_timestamp());
+		//DEBUG_LOG(JIT, "currentPC before iteration %d: 0x%08x\n", iterations, currentMIPS->pc);
+		MIPSComp::jit->RunLoopUntil(JITTS_get_timestamp());
+		if(coreState == CORE_INTERRUPT){
+			currentMIPS->pc = Exception_Helper(EXCEPTION_INT, currentMIPS->pc, 0, 0);
+		}
 		JITTS_update_from_downcount();
+		//DEBUG_LOG(JIT, "currentPC after iteration %d: 0x%08x\n", iterations, currentMIPS->pc);
     } while(MDFN_LIKELY(PSX_EventHandler(JITTS_get_timestamp())));
     return JITTS_get_timestamp();
 }
@@ -308,5 +313,48 @@ void MIPSState::AssertIRQ(unsigned which, bool asserted)
    CP0.CAUSE &= ~(1 << (10 + which));
 
    if(asserted)
-      CP0.CAUSE |= 1 << (10 + which);
+	  CP0.CAUSE |= 1 << (10 + which);
+
+	  INFO_LOG(INT, "RECALC INTERRUPT\n");
+   RecalcInterrupt();
+}
+
+void MIPSState::RecalcInterrupt(){
+	coreState = CORE_RUNNING;
+ 	if(((CP0.SR & CP0.CAUSE & 0xFF00) && (CP0.SR & 1))){
+		INFO_LOG(INT, "CHANGED CORE STATE TO INTERRUPT\n");
+		coreState = CORE_INTERRUPT;
+	}
+ 	if(halted)
+	 	coreState = CORE_HALTED;
+}
+
+uint32_t MIPSState::Exception_Helper(uint32_t code, uint32_t PC, uint32_t inDelaySlot, uint32_t instr){
+    uint32_t handler = 0x80000080;
+    if(currentMIPS->CP0.SR & (1 << 22))	// BEV
+       handler = 0xBFC00180;
+ 
+    currentMIPS->CP0.EPC = PC;
+    //We need to execute the branch again, otherwise we'll miss it
+    if(inDelaySlot)
+    {
+        currentMIPS->CP0.EPC -= 4;
+        currentMIPS->CP0.TAR = PC;
+    }
+    // "Push" IEc and KUc(so that the new IEc and KUc are 0)
+    currentMIPS->CP0.SR = (currentMIPS->CP0.SR & ~0x3F) | ((currentMIPS->CP0.SR << 2) & 0x3F);
+ 
+    // Setup cause register
+    currentMIPS->CP0.CAUSE &= 0x0000FF00;
+    currentMIPS->CP0.CAUSE |= code << 2;
+ 
+    // If EPC was adjusted -= 4 because we are after a branch instruction, set bit 31.
+    currentMIPS->CP0.CAUSE |= inDelaySlot << 31;
+    currentMIPS->CP0.CAUSE |= inDelaySlot << 30;
+   //Sets what coprocessor the error is for, (for CP Unusable)
+   currentMIPS->CP0.CAUSE |= (instr << 2) & (0x3 << 28); // CE
+
+   currentMIPS->RecalcInterrupt();
+    
+   return(handler);
 }

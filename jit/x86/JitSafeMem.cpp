@@ -86,8 +86,8 @@ bool JitSafeMem::PrepareWrite(OpArg &dest, int size)
 			MemCheckImm(MEM_WRITE);
 			u32 addr = (iaddr_ & alignMask_);
 
-			if(addr >= 0x1F801080 && addr <= 0x1F8010FF){
-				//DMA address, could trigger a halt. We could either check it, or just return to the dispatcher.
+			if((addr >= 0x1F801080 && addr <= 0x1F8010FF) || (addr >= 0x1F801070 && addr <= 0x1F801077)){
+				//DMA address, could trigger a halt/interrupt. We could either check it, or just return to the dispatcher.
 				//Let's just return to the dispatcher and let it handle it.
 				needsCheck_ = true;
 			}
