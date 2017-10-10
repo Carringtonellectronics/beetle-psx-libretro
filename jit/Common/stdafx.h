@@ -17,21 +17,21 @@
 
 #pragma once
 
-#ifdef _WIN32
-#ifndef _WIN32_WINNT
+#ifdef OS_WINDOWS
+#ifndef OS_WINDOWS_WINNT
 
 #if _MSC_VER < 1700
 #error You need a newer version of Visual Studio.
 #else
-#define _WIN32_WINNT 0x600
+#define OS_WINDOWS_WINNT 0x600
 #endif
 
-#endif // #ifndef _WIN32_WINNT
+#endif // #ifndef OS_WINDOWS_WINNT
 
 #undef WINVER
 #define WINVER 0x0600
-#ifndef _WIN32_IE
-#define _WIN32_IE 0x0600       // Default value is 0x0400
+#ifndef OS_WINDOWS_IE
+#define OS_WINDOWS_IE 0x0600       // Default value is 0x0400
 #endif
 
 #define WIN32_LEAN_AND_MEAN		// Exclude rarely-used stuff from Windows headers

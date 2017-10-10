@@ -57,7 +57,7 @@ static const DefMappingStruct defaultQwertyKeyboardKeyMap[] = {
 	{CTRL_RTRIGGER, NKCODE_W},
 
 	{CTRL_START, NKCODE_SPACE},
-#ifdef _WIN32
+#ifdef OS_WINDOWS
 	{CTRL_SELECT, NKCODE_V},
 #else
 	{CTRL_SELECT, NKCODE_ENTER},
@@ -87,7 +87,7 @@ static const DefMappingStruct defaultAzertyKeyboardKeyMap[] = {
 	{CTRL_RTRIGGER, NKCODE_Z},
 
 	{CTRL_START, NKCODE_SPACE},
-#ifdef _WIN32
+#ifdef OS_WINDOWS
 	{CTRL_SELECT, NKCODE_V},
 #else
 	{CTRL_SELECT, NKCODE_ENTER},
@@ -117,7 +117,7 @@ static const DefMappingStruct defaultQwertzKeyboardKeyMap[] = {
 	{CTRL_RTRIGGER, NKCODE_W},
 
 	{CTRL_START, NKCODE_SPACE},
-#ifdef _WIN32
+#ifdef OS_WINDOWS
 	{CTRL_SELECT, NKCODE_V},
 #else
 	{CTRL_SELECT, NKCODE_ENTER},
@@ -653,7 +653,7 @@ const KeyMap_IntStrPair psp_button_names[] = {
 	{VIRTKEY_SAVE_STATE, "Save State"},
 	{VIRTKEY_LOAD_STATE, "Load State"},
 	{VIRTKEY_NEXT_SLOT,  "Next Slot"},
-#if !defined(_WIN32) && !defined(MOBILE_DEVICE)
+#if !defined(OS_WINDOWS) && !defined(MOBILE_DEVICE)
 	{VIRTKEY_TOGGLE_FULLSCREEN, "Toggle Fullscreen"},
 #endif
 
@@ -833,7 +833,7 @@ void SetAxisMapping(int btn, int deviceId, int axisId, int direction, bool repla
 // Note that it's easy to add other defaults if desired.
 void RestoreDefault() {
 	g_controllerMap.clear();
-#if defined(_WIN32)
+#if defined(OS_WINDOWS)
 	SetDefaultKeyMap(DEFAULT_MAPPING_KEYBOARD, true);
 	SetDefaultKeyMap(DEFAULT_MAPPING_X360, false);
 	SetDefaultKeyMap(DEFAULT_MAPPING_PAD, false);

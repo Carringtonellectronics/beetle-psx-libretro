@@ -84,7 +84,7 @@ char retro_base_directory[4096];
 static char retro_cd_base_directory[4096];
 static char retro_cd_path[4096];
 char retro_cd_base_name[4096];
-#ifdef _WIN32
+#ifdef OS_WINDOWS
    static char retro_slash = '\\';
 #else
    static char retro_slash = '/';
@@ -4277,7 +4277,7 @@ void retro_cheat_set(unsigned index, bool enabled, const char * codeLine)
    }
 }
 
-#ifdef _WIN32
+#ifdef OS_WINDOWS
 static void sanitize_path(std::string &path)
 {
    size_t size = path.size();

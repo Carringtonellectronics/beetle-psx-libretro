@@ -20,7 +20,7 @@
 #include <errno.h>
 #include <vector>
 
-#ifdef _WIN32
+#ifdef OS_WINDOWS
 #include <compat/msvc.h>
 #endif
 

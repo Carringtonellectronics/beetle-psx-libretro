@@ -67,7 +67,7 @@ bool MsgAlert(bool yes_no, int Style, const char* format, ...)
 	return true;
 }
 
-#ifdef _WIN32
+#ifdef OS_WINDOWS
 #include "CommonWindows.h"
 #endif
 

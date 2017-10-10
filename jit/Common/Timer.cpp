@@ -19,7 +19,7 @@
 
 
 
-#ifdef _WIN32
+#ifdef OS_WINDOWS
 #include "Windows.h"
 #include <mmsystem.h>
 #include <sys/timeb.h>
@@ -35,7 +35,7 @@ namespace Common
 
 uint32 Timer::GetTimeMs()
 {
-#if defined(_WIN32)
+#if defined(OS_WINDOWS)
 #if defined(UWP)
 	return (u32)GetTickCount64();
 #else
@@ -59,7 +59,7 @@ Timer::Timer()
 {
 	Update();
 
-#ifdef _WIN32
+#ifdef OS_WINDOWS
 	QueryPerformanceFrequency((LARGE_INTEGER*)&m_frequency);
 #endif
 }
@@ -206,7 +206,7 @@ void Timer::GetTimeFormatted(char formattedTime[13])
 	strftime(tmp, 6, "%M:%S", gmTime);
 
 	// Now tack on the milliseconds
-#ifdef _WIN32
+#ifdef OS_WINDOWS
 	struct timeb tp;
 	(void)::ftime(&tp);
 	snprintf(formattedTime, 13, "%s:%03i", tmp, tp.millitm);
@@ -221,7 +221,7 @@ void Timer::GetTimeFormatted(char formattedTime[13])
 // ----------------
 double Timer::GetDoubleTime()
 {
-#ifdef _WIN32
+#ifdef OS_WINDOWS
 	struct timeb tp;
 	(void)::ftime(&tp);
 #else
@@ -239,7 +239,7 @@ double Timer::GetDoubleTime()
 
 	// Make a smaller integer that fits in the double
 	uint32 Seconds = (u32)TmpSeconds;
-#ifdef _WIN32
+#ifdef OS_WINDOWS
 	double ms = tp.millitm / 1000.0 / 1000.0;
 #else
 	double ms = t.tv_usec / 1000000.0;

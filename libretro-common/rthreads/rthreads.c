@@ -29,16 +29,16 @@
 #include <boolean.h>
 #include <rthreads/rthreads.h>
 
-/* with RETRO_WIN32_USE_PTHREADS, pthreads can be used even on win32. Maybe only supported in MSVC>=2005  */
+/* with RETROOS_WINDOWS_USE_PTHREADS, pthreads can be used even on win32. Maybe only supported in MSVC>=2005  */
 
-#if defined(_WIN32) && !defined(RETRO_WIN32_USE_PTHREADS)
-#define USE_WIN32_THREADS
+#if defined(OS_WINDOWS) && !defined(RETROOS_WINDOWS_USE_PTHREADS)
+#define USEOS_WINDOWS_THREADS
 #ifdef _XBOX
 #include <xtl.h>
 #else
 #define WIN32_LEAN_AND_MEAN
-#ifndef _WIN32_WINNT
-#define _WIN32_WINNT 0x0500 /*_WIN32_WINNT_WIN2K */
+#ifndef OS_WINDOWS_WINNT
+#define OS_WINDOWS_WINNT 0x0500 /*OS_WINDOWS_WINNT_WIN2K */
 #endif
 #include <windows.h>
 #include <mmsystem.h>
@@ -77,7 +77,7 @@ struct thread_data
 
 struct sthread
 {
-#ifdef USE_WIN32_THREADS
+#ifdef USEOS_WINDOWS_THREADS
    HANDLE thread;
 #else
    pthread_t id;
@@ -86,14 +86,14 @@ struct sthread
 
 struct slock
 {
-#ifdef USE_WIN32_THREADS
+#ifdef USEOS_WINDOWS_THREADS
    CRITICAL_SECTION lock;
 #else
    pthread_mutex_t lock;
 #endif
 };
 
-#ifdef USE_WIN32_THREADS
+#ifdef USEOS_WINDOWS_THREADS
 /* The syntax we'll use is mind-bending unless we use a struct. Plus, we might want to store more info later */
 /* This will be used as a linked list immplementing a queue of waiting threads */
 struct QueueEntry
@@ -104,7 +104,7 @@ struct QueueEntry
 
 struct scond
 {
-#ifdef USE_WIN32_THREADS
+#ifdef USEOS_WINDOWS_THREADS
    /* With this implementation of scond, we don't have any way of waking 
     * (or even identifying) specific threads
     * But we need to wake them in the order indicated by the queue.
@@ -135,7 +135,7 @@ struct scond
 #endif
 };
 
-#ifdef USE_WIN32_THREADS
+#ifdef USEOS_WINDOWS_THREADS
 static DWORD CALLBACK thread_wrap(void *data_)
 #else
 static void *thread_wrap(void *data_)
@@ -175,7 +175,7 @@ sthread_t *sthread_create(void (*thread_func)(void*), void *userdata)
    data->func = thread_func;
    data->userdata = userdata;
 
-#ifdef USE_WIN32_THREADS
+#ifdef USEOS_WINDOWS_THREADS
    thread->thread = CreateThread(NULL, 0, thread_wrap, data, 0, NULL);
    thread_created = !!thread->thread;
 #else
@@ -214,7 +214,7 @@ error:
  */
 int sthread_detach(sthread_t *thread)
 {
-#ifdef USE_WIN32_THREADS
+#ifdef USEOS_WINDOWS_THREADS
    CloseHandle(thread->thread);
    free(thread);
    return 0;
@@ -236,7 +236,7 @@ int sthread_detach(sthread_t *thread)
  */
 void sthread_join(sthread_t *thread)
 {
-#ifdef USE_WIN32_THREADS
+#ifdef USEOS_WINDOWS_THREADS
    WaitForSingleObject(thread->thread, INFINITE);
    CloseHandle(thread->thread);
 #else
@@ -256,7 +256,7 @@ bool sthread_isself(sthread_t *thread)
   /* This thread can't possibly be a null thread */
   if (!thread) return false;
 
-#ifdef USE_WIN32_THREADS
+#ifdef USEOS_WINDOWS_THREADS
    return GetCurrentThread() == thread->thread;
 #else
    return pthread_equal(pthread_self(),thread->id);
@@ -278,7 +278,7 @@ slock_t *slock_new(void)
    if (!lock)
       return NULL;
 
-#ifdef USE_WIN32_THREADS
+#ifdef USEOS_WINDOWS_THREADS
    InitializeCriticalSection(&lock->lock);
    mutex_created = true;
 #else
@@ -306,7 +306,7 @@ void slock_free(slock_t *lock)
    if (!lock)
       return;
 
-#ifdef USE_WIN32_THREADS
+#ifdef USEOS_WINDOWS_THREADS
    DeleteCriticalSection(&lock->lock);
 #else
    pthread_mutex_destroy(&lock->lock);
@@ -326,7 +326,7 @@ void slock_lock(slock_t *lock)
 {
    if (!lock)
       return;
-#ifdef USE_WIN32_THREADS
+#ifdef USEOS_WINDOWS_THREADS
    EnterCriticalSection(&lock->lock);
 #else
    pthread_mutex_lock(&lock->lock);
@@ -343,7 +343,7 @@ void slock_unlock(slock_t *lock)
 {
    if (!lock)
       return;
-#ifdef USE_WIN32_THREADS
+#ifdef USEOS_WINDOWS_THREADS
    LeaveCriticalSection(&lock->lock);
 #else
    pthread_mutex_unlock(&lock->lock);
@@ -366,7 +366,7 @@ scond_t *scond_new(void)
    if (!cond)
       return NULL;
 
-#ifdef USE_WIN32_THREADS
+#ifdef USEOS_WINDOWS_THREADS
 
    /* This is very complex because recreating condition variable semantics 
     * with Win32 parts is not easy.
@@ -429,7 +429,7 @@ void scond_free(scond_t *cond)
    if (!cond)
       return;
 
-#ifdef USE_WIN32_THREADS
+#ifdef USEOS_WINDOWS_THREADS
    CloseHandle(cond->event);
    CloseHandle(cond->hot_potato);
    DeleteCriticalSection(&cond->cs);
@@ -439,13 +439,13 @@ void scond_free(scond_t *cond)
    free(cond);
 }
 
-#ifdef USE_WIN32_THREADS
+#ifdef USEOS_WINDOWS_THREADS
 static bool _scond_wait_win32(scond_t *cond, slock_t *lock, DWORD dwMilliseconds)
 {
    struct QueueEntry myentry;
    struct QueueEntry **ptr;
 
-#if _WIN32_WINNT >= 0x0500
+#if OS_WINDOWS_WINNT >= 0x0500
    static LARGE_INTEGER performanceCounterFrequency = { .QuadPart = 0 };
    LARGE_INTEGER tsBegin;
 #else
@@ -464,7 +464,7 @@ static bool _scond_wait_win32(scond_t *cond, slock_t *lock, DWORD dwMilliseconds
 
    /* since this library is meant for realtime game software 
     * I have no problem setting this to 1 and forgetting about it. */
-#if _WIN32_WINNT >= 0x0500
+#if OS_WINDOWS_WINNT >= 0x0500
    if (performanceCounterFrequency.QuadPart == 0)
    {
       QueryPerformanceFrequency(&performanceCounterFrequency);
@@ -480,7 +480,7 @@ static bool _scond_wait_win32(scond_t *cond, slock_t *lock, DWORD dwMilliseconds
    /* Now we can take a good timestamp for use in faking the timeout ourselves. */
    /* But don't bother unless we need to (to save a little time) */
    if (dwMilliseconds != INFINITE)
-#if _WIN32_WINNT >= 0x0500
+#if OS_WINDOWS_WINNT >= 0x0500
       QueryPerformanceCounter(&tsBegin);
 #else
       tsBegin = timeGetTime();
@@ -526,7 +526,7 @@ static bool _scond_wait_win32(scond_t *cond, slock_t *lock, DWORD dwMilliseconds
       /* Assess the remaining timeout time */
       if (dwMilliseconds != INFINITE)
       {
-#if _WIN32_WINNT >= 0x0500
+#if OS_WINDOWS_WINNT >= 0x0500
          LARGE_INTEGER now;
          QueryPerformanceCounter(&now);
          LONGLONG elapsed = now.QuadPart - tsBegin.QuadPart;
@@ -648,7 +648,7 @@ static bool _scond_wait_win32(scond_t *cond, slock_t *lock, DWORD dwMilliseconds
  **/
 void scond_wait(scond_t *cond, slock_t *lock)
 {
-#ifdef USE_WIN32_THREADS
+#ifdef USEOS_WINDOWS_THREADS
    _scond_wait_win32(cond, lock, INFINITE);
 #else
    pthread_cond_wait(&cond->cond, &lock->lock);
@@ -664,7 +664,7 @@ void scond_wait(scond_t *cond, slock_t *lock)
  **/
 int scond_broadcast(scond_t *cond)
 {
-#ifdef USE_WIN32_THREADS
+#ifdef USEOS_WINDOWS_THREADS
    /* remember: we currently have mutex */
    if (cond->waiters == 0)
       return 0;
@@ -692,7 +692,7 @@ int scond_broadcast(scond_t *cond)
  **/
 void scond_signal(scond_t *cond)
 {
-#ifdef USE_WIN32_THREADS
+#ifdef USEOS_WINDOWS_THREADS
 
    /* Unfortunately, pthread_cond_signal does not require that the 
     * lock be held in advance */
@@ -743,7 +743,7 @@ void scond_signal(scond_t *cond)
  **/
 bool scond_wait_timeout(scond_t *cond, slock_t *lock, int64_t timeout_us)
 {
-#ifdef USE_WIN32_THREADS
+#ifdef USEOS_WINDOWS_THREADS
    /* How to convert a microsecond (us) timeout to millisecond (ms)?
     *
     * Someone asking for a 0 timeout clearly wants immediate timeout.
@@ -795,7 +795,7 @@ bool scond_wait_timeout(scond_t *cond, slock_t *lock, int64_t timeout_us)
    gettimeofday(&tm, NULL);
    now.tv_sec = tm.tv_sec;
    now.tv_nsec = tm.tv_usec * 1000;
-#elif defined(RETRO_WIN32_USE_PTHREADS)
+#elif defined(RETROOS_WINDOWS_USE_PTHREADS)
    _ftime64_s(&now);
 #elif !defined(GEKKO)
    /* timeout on libogc is duration, not end time. */
@@ -816,7 +816,7 @@ bool scond_wait_timeout(scond_t *cond, slock_t *lock, int64_t timeout_us)
 #ifdef HAVE_THREAD_STORAGE
 bool sthread_tls_create(sthread_tls_t *tls)
 {
-#ifdef USE_WIN32_THREADS
+#ifdef USEOS_WINDOWS_THREADS
    return (*tls = TlsAlloc()) != TLS_OUT_OF_INDEXES;
 #else
    return pthread_key_create((pthread_key_t*)tls, NULL) == 0;
@@ -825,7 +825,7 @@ bool sthread_tls_create(sthread_tls_t *tls)
 
 bool sthread_tls_delete(sthread_tls_t *tls)
 {
-#ifdef USE_WIN32_THREADS
+#ifdef USEOS_WINDOWS_THREADS
    return TlsFree(*tls) != 0;
 #else
    return pthread_key_delete(*tls) == 0;
@@ -834,7 +834,7 @@ bool sthread_tls_delete(sthread_tls_t *tls)
 
 void *sthread_tls_get(sthread_tls_t *tls)
 {
-#ifdef USE_WIN32_THREADS
+#ifdef USEOS_WINDOWS_THREADS
    return TlsGetValue(*tls);
 #else
    return pthread_getspecific(*tls);
@@ -843,7 +843,7 @@ void *sthread_tls_get(sthread_tls_t *tls)
 
 bool sthread_tls_set(sthread_tls_t *tls, const void *data)
 {
-#ifdef USE_WIN32_THREADS
+#ifdef USEOS_WINDOWS_THREADS
    return TlsSetValue(*tls, (void*)data) != 0;
 #else
    return pthread_setspecific(*tls, data) == 0;

@@ -6,7 +6,7 @@
 #include "mednafen/mednafen-types.h"
 // Helper functions:
 
-#ifdef _WIN32
+#ifdef OS_WINDOWS
 #include <intrin.h>
 template <typename T>
 inline int CountSetBits(T v) {

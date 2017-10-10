@@ -36,7 +36,7 @@ extern "C" {
 ** Khronos $Revision: 32749 $ on $Date: 2016-04-28 12:03:03 -0400 (Thu, 28 Apr 2016) $
 */
 
-#if defined(_WIN32) && !defined(APIENTRY) && !defined(__CYGWIN__) && !defined(__SCITECH_SNAP__)
+#if defined(OS_WINDOWS) && !defined(APIENTRY) && !defined(__CYGWIN__) && !defined(__SCITECH_SNAP__)
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN 1
 #endif
@@ -1409,9 +1409,9 @@ typedef unsigned long long int uint64_t;
 typedef long int int32_t;
 typedef long long int int64_t;
 typedef unsigned long long int uint64_t;
-#elif defined(_WIN32) && defined(__GNUC__)
+#elif defined(OS_WINDOWS) && defined(__GNUC__)
 #include <stdint.h>
-#elif defined(_WIN32)
+#elif defined(OS_WINDOWS)
 typedef __int32 int32_t;
 typedef __int64 int64_t;
 typedef unsigned __int64 uint64_t;

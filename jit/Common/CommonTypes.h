@@ -30,7 +30,7 @@ struct u24_be {
 	}
 };
 
-#ifdef _WIN32
+#ifdef OS_WINDOWS
 
 typedef unsigned __int8 u8;
 typedef unsigned __int16 u16;
@@ -54,4 +54,4 @@ typedef signed short s16;
 typedef signed int s32;
 typedef signed long long s64;
 
-#endif // _WIN32
+#endif // OS_WINDOWS

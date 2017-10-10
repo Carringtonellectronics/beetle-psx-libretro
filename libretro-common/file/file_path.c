@@ -38,7 +38,7 @@
 #include <compat/strcasestr.h>
 #include <retro_miscellaneous.h>
 
-#if defined(_WIN32)
+#if defined(OS_WINDOWS)
 #ifdef _MSC_VER
 #define setmode _setmode
 #endif
@@ -110,7 +110,7 @@ static bool path_stat(const char *path, enum stat_mode mode, int32_t *size)
     CellFsStat buf;
     if (cellFsStat(path, &buf) < 0)
        return false;
-#elif defined(_WIN32)
+#elif defined(OS_WINDOWS)
    struct _stat buf;
    DWORD file_info = GetFileAttributes(path);
 
@@ -134,13 +134,13 @@ static bool path_stat(const char *path, enum stat_mode mode, int32_t *size)
          return FIO_S_ISDIR(buf.st_mode);
 #elif defined(__CELLOS_LV2__)
          return ((buf.st_mode & S_IFMT) == S_IFDIR);
-#elif defined(_WIN32)
+#elif defined(OS_WINDOWS)
          return (file_info & FILE_ATTRIBUTE_DIRECTORY);
 #else
          return S_ISDIR(buf.st_mode);
 #endif
       case IS_CHARACTER_SPECIAL:
-#if defined(VITA) || defined(PSP) || defined(__CELLOS_LV2__) || defined(_WIN32)
+#if defined(VITA) || defined(PSP) || defined(__CELLOS_LV2__) || defined(OS_WINDOWS)
          return false;
 #else
          return S_ISCHR(buf.st_mode);
@@ -226,7 +226,7 @@ bool path_mkdir(const char *dir)
 
    if (norecurse)
    {
-#if defined(_WIN32)
+#if defined(OS_WINDOWS)
       int ret = _mkdir(dir);
 #elif defined(IOS)
       int ret = mkdir(dir, 0755);
@@ -432,7 +432,7 @@ void fill_pathname_noext(char *out_path, const char *in_path,
 char *find_last_slash(const char *str)
 {
    const char *slash     = strrchr(str, '/');
-#ifdef _WIN32
+#ifdef OS_WINDOWS
    const char *backslash = strrchr(str, '\\');
 
    if (backslash && ((slash && backslash > slash) || !slash))
@@ -691,7 +691,7 @@ bool path_is_absolute(const char *path)
 {
    if (path[0] == '/')
       return true;
-#ifdef _WIN32
+#ifdef OS_WINDOWS
    /* Many roads lead to Rome ... */
    if ((    strstr(path, "\\\\") == path)
          || strstr(path, ":/") 
@@ -719,7 +719,7 @@ void path_resolve_realpath(char *buf, size_t size)
 
    strlcpy(tmp, buf, sizeof(tmp));
 
-#ifdef _WIN32
+#ifdef OS_WINDOWS
    if (!_fullpath(buf, tmp, size))
       strlcpy(buf, tmp, size);
 #else

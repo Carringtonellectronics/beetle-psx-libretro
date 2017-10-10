@@ -72,8 +72,13 @@ void PrintOP(uint32_t encoding){
 	INFO_LOG(OP, "Op is: 0x%08x\n", encoding);
 }
 
-void PrintBranch(uint32_t curPC, uint32_t newPC){
-	INFO_LOG(JMP, "Jump from 0x%08x to 0x%08x\n", curPC, newPC);
+void PrintJAL(uint32_t curPC, uint32_t newPC){
+	//static int interesting = 0;
+	INFO_LOG(JMP, "JAL from 0x%08x to 0x%08x\n", curPC, newPC);
+}
+
+void PrintJR(uint32_t curPC, uint32_t newPC){
+	INFO_LOG(JMP, "JR from 0x%08x to 0x%08x\n", curPC, newPC);
 }
 
 namespace MIPSComp
@@ -748,22 +753,31 @@ void Jit::Comp_JumpReg(MIPSOpcode op)
 
 	switch (op & 0x3f) {
 	case 8: //jr
+
+		MOV(32, R(EDX), Imm32(GetCompilerPC()));
+		MOV(32, R(ECX), R(destReg));
+		ABI_PushAllCallerSavedRegsAndAdjustStack();	
+		ABI_CallFunctionRR((void *)&PrintJR, EDX, destReg);
+		ABI_CallFunctionC((void*)&PrintOP, op.encoding);
+		ABI_PopAllCallerSavedRegsAndAdjustStack();
+		MOV(32, R(destReg), R(ECX));
 		break;
 	case 9: //jalr
+		MOV(32, R(EDX), Imm32(GetCompilerPC()));
+		MOV(32, R(ECX), R(destReg));
+		ABI_PushAllCallerSavedRegsAndAdjustStack();	
+		ABI_CallFunctionRR((void *)&PrintJAL, EDX, destReg);
+		ABI_CallFunctionC((void*)&PrintOP, op.encoding);
+		ABI_PopAllCallerSavedRegsAndAdjustStack();
+		MOV(32, R(destReg), R(ECX));
 		break;
 	default:
 		_dbg_assert_msg_(CPU,0,"Trying to compile instruction that can't be compiled");
 		break;
 	}
 	//Debug stuff, for debugging jumps
-	/*
-	MOV(32, R(EDX), Imm32(GetCompilerPC()));
-	MOV(32, R(ECX), R(destReg));
-	ABI_PushAllCallerSavedRegsAndAdjustStack();	
-	ABI_CallFunctionRR((void *)&PrintBranch, EDX, destReg);
-	ABI_CallFunctionC((void*)&PrintOP, op.encoding);
-	ABI_PopAllCallerSavedRegsAndAdjustStack();
-	MOV(32, R(destReg), R(ECX))*/
+	
+	
 
 	CONDITIONAL_LOG_EXIT_EAX();
 	WriteExitDestInReg(destReg);

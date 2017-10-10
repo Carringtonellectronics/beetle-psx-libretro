@@ -11,7 +11,7 @@
 #include "math_ops.h"
 #include "git.h"
 
-#ifdef _WIN32
+#ifdef OS_WINDOWS
 #define strcasecmp _stricmp
 #endif
 
@@ -73,7 +73,7 @@ private:
 #undef swap32
 #undef swap64
 
-#ifdef _WIN32
+#ifdef OS_WINDOWS
 inline uint16_t swap16(uint16_t _data) {return _byteswap_ushort(_data);}
 inline uint32_t swap32(uint32_t _data) {return _byteswap_ulong (_data);}
 inline uint64_t swap64(uint64_t _data) {return _byteswap_uint64(_data);}

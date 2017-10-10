@@ -17,7 +17,7 @@
 
 #pragma once
 
-#ifdef _WIN32
+#ifdef OS_WINDOWS
 
 #include "Atomic_Win32.h"
 

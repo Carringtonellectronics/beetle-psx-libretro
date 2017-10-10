@@ -1,4 +1,4 @@
-#ifdef _WIN32
+#ifdef OS_WINDOWS
 #include <windows.h>
 #undef min
 #undef max
@@ -15,7 +15,7 @@
 
 #include "stringutil.h"
 
-#ifdef _WIN32
+#ifdef OS_WINDOWS
 // Function Cross-Compatibility
 #define strcasecmp _stricmp
 
@@ -136,7 +136,7 @@ std::string StringFromFormat(const char* format, ...)
 {
 	va_list args;
 	std::string temp = "";
-#ifdef _WIN32
+#ifdef OS_WINDOWS
 	int required = 0;
 
 	va_start(args, format);

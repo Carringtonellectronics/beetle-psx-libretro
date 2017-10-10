@@ -5,7 +5,7 @@
 #include <algorithm>
 #include "mednafen/mednafen.h"
 
-#ifdef _WIN32
+#ifdef OS_WINDOWS
 #include <winsock2.h>
 #undef min
 #undef max

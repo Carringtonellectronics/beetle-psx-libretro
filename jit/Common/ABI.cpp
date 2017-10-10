@@ -30,7 +30,7 @@ void XEmitter::ABI_EmitPrologue(int maxCallParams)
 #ifdef ARCH_32BIT
 	// Don't really need to do anything
 #elif defined(ARCH_64BIT)
-#ifdef _WIN32
+#ifdef OS_WINDOWS
 	int stacksize = ((maxCallParams + 1) & ~1) * 8 + 8;
 	// Set up a stack frame so that we can call functions
 	// TODO: use maxCallParams
@@ -46,7 +46,7 @@ void XEmitter::ABI_EmitEpilogue(int maxCallParams)
 #ifdef ARCH_32BIT
 	RET();
 #elif defined(ARCH_64BIT)
-#ifdef _WIN32
+#ifdef OS_WINDOWS
 	int stacksize = ((maxCallParams+1)&~1)*8 + 8;
 	ADD(64, R(RSP), Imm8(stacksize));
 #endif
@@ -598,7 +598,7 @@ unsigned int XEmitter::ABI_GetAlignedFrameSize(unsigned int frameSize) {
 	return frameSize;
 }
 
-#ifdef _WIN32
+#ifdef OS_WINDOWS
 
 // The Windows x64 ABI requires XMM6 - XMM15 to be callee saved.  10 regs.
 // But, not saving XMM4 and XMM5 breaks things in VS 2010, even though they are volatile regs.

@@ -315,14 +315,14 @@ void MIPSState::AssertIRQ(unsigned which, bool asserted)
    if(asserted)
 	  CP0.CAUSE |= 1 << (10 + which);
 
-	  INFO_LOG(INT, "RECALC INTERRUPT\n");
+   //INFO_LOG(INT, "RECALC INTERRUPT\n");
    RecalcInterrupt();
 }
 
 void MIPSState::RecalcInterrupt(){
 	coreState = CORE_RUNNING;
  	if(((CP0.SR & CP0.CAUSE & 0xFF00) && (CP0.SR & 1))){
-		INFO_LOG(INT, "CHANGED CORE STATE TO INTERRUPT\n");
+		//INFO_LOG(INT, "CHANGED CORE STATE TO INTERRUPT\n");
 		coreState = CORE_INTERRUPT;
 	}
  	if(halted)

@@ -68,7 +68,7 @@ struct LabelDefinition{
 	
 };
 
-#ifdef _WIN32
+#ifdef OS_WINDOWS
 struct HWND__;
 typedef struct HWND__ *HWND;
 #endif
@@ -90,7 +90,7 @@ public:
 	std::string GetDescription(unsigned int address) const;
 	std::vector<SymbolEntry> GetAllSymbols(SymbolType symmask);
 
-#ifdef _WIN32
+#ifdef OS_WINDOWS
 	void FillSymbolListBox(HWND listbox, SymbolType symType) const;
 #endif
 	void GetLabels(std::vector<LabelDefinition> &dest) const;

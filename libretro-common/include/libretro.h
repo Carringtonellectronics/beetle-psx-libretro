@@ -54,7 +54,7 @@ extern "C" {
 #endif
 
 #ifndef RETRO_API
-#  if defined(_WIN32) || defined(__CYGWIN__) || defined(__MINGW32__)
+#  if defined(OS_WINDOWS) || defined(__CYGWIN__) || defined(__MINGW32__)
 #    ifdef RETRO_IMPORT_SYMBOLS
 #      ifdef __GNUC__
 #        define RETRO_API RETRO_CALLCONV __attribute__((__dllimport__))

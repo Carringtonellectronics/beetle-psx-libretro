@@ -44,6 +44,10 @@
 #define CONDITIONAL_DISABLE ;
 #define DISABLE { Comp_Generic(op); return; }
 
+/*void PrintRSI(uint32_t rsi){
+	INFO_LOG(JIT, "RSI: 0x%08x\n", rsi);
+}*/
+
 namespace MIPSComp {
 	using namespace Gen;
 
@@ -298,6 +302,9 @@ namespace MIPSComp {
 		MIPSGPReg rt = _RT;
 		MIPSGPReg rs = _RS;
 		int o = op>>26;
+
+		if(rt == MIPS_REG_SP) INFO_LOG(SP, "Stack Pointer is being updated!\n");
+
 		if (((op >> 29) & 1) == 0 && rt == MIPS_REG_ZERO) {
 			// Don't load anything into $zr
 			return;
@@ -309,7 +316,7 @@ namespace MIPSComp {
 		{
 		case 37: //R(rt) = ReadMem16(addr); break; //lhu
 			//Make sure that address is a 16-bit addressable one
-			gpr.MapReg(rt, true, false);
+			gpr.MapReg(rs, true, false);
 
 			MOV(32, R(EAX), gpr.R(rs));
 			ADD(32, R(EAX), Imm32(offset));
@@ -328,7 +335,7 @@ namespace MIPSComp {
 
 		case 35: //R(rt) = ReadMem32(addr); break; //lw
 			//Make sure that address is a 32-bit addressable one
-			gpr.MapReg(rt, true, false);
+			gpr.MapReg(rs, true, false);
 
 			MOV(32, R(EAX), gpr.R(rs));
 			ADD(32, R(EAX), Imm32(offset));
@@ -346,7 +353,7 @@ namespace MIPSComp {
 
 		case 33: //R(rt) = (u32)(s32)(s16)ReadMem16(addr); break; //lh
 			//Make sure that address is a 16-bit addressable one
-			gpr.MapReg(rt, true, false);
+			gpr.MapReg(rs, true, false);
 
 			MOV(32, R(EAX), gpr.R(rs));
 			ADD(32, R(EAX), Imm32(offset));
@@ -364,7 +371,7 @@ namespace MIPSComp {
 
 		case 41: //WriteMem16(addr, R(rt)); break; //sh
 			//Make sure that address is a 16-bit addressable one
-			gpr.MapReg(rt, true, false);
+			gpr.MapReg(rs, true, false);
 
 			MOV(32, R(EAX), gpr.R(rs));
 			ADD(32, R(EAX), Imm32(offset));
@@ -378,11 +385,11 @@ namespace MIPSComp {
 
 		case 43: //WriteMem32(addr, R(rt)); break; //sw
 			//Make sure that address is a 32-bit addressable one
-			gpr.MapReg(rt, true, false);
+			gpr.MapReg(rs, true, false);
 
 			MOV(32, R(EAX), gpr.R(rs));
 			ADD(32, R(EAX), Imm32(offset));
-			TEST(32, R(EAX), Imm32(0x1));
+			TEST(32, R(EAX), Imm32(0x3));
 			goodAddress = J_CC(CC_Z);
 			JitComp_Exception(op, EXCEPTION_ADES);
 			SetJumpTarget(goodAddress);

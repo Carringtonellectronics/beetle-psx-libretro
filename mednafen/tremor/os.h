@@ -25,7 +25,7 @@
 
 #  ifdef __GNUC__
 #    define STIN static __inline__
-#  elif _WIN32
+#  elif OS_WINDOWS
 #    define STIN static __inline
 #  endif
 #else
@@ -36,7 +36,7 @@
 #  define M_PI (3.1415926536f)
 #endif
 
-#ifdef _WIN32
+#ifdef OS_WINDOWS
 #  include <malloc.h>
 #  define rint(x)   (floor((x)+0.5f)) 
 #  define NO_FLOAT_MATH_LIB

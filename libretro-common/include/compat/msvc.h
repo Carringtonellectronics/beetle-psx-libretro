@@ -64,7 +64,7 @@ extern "C"  {
 #ifndef HAVE_SSIZE_T
 #if defined(_WIN64)
 typedef __int64 ssize_t;
-#elif defined(_WIN32)
+#elif defined(OS_WINDOWS)
 typedef int ssize_t;
 #endif
 #endif

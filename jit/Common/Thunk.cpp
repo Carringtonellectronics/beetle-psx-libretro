@@ -56,7 +56,7 @@ void ThunkManager::Init()
 	MOV(64, MDisp(RSP, stackOffset + (stackPosition++ * 8)), R(R9) );
 	MOV(64, MDisp(RSP, stackOffset + (stackPosition++ * 8)), R(R10));
 	MOV(64, MDisp(RSP, stackOffset + (stackPosition++ * 8)), R(R11));
-#ifndef _WIN32
+#ifndef OS_WINDOWS
 	MOV(64, MDisp(RSP, stackOffset + (stackPosition++ * 8)), R(RSI));
 	MOV(64, MDisp(RSP, stackOffset + (stackPosition++ * 8)), R(RDI));
 #endif
@@ -82,7 +82,7 @@ void ThunkManager::Init()
 	MOV(64, R(R9) , MDisp(RSP, stackOffset + (stackPosition++ * 8)));
 	MOV(64, R(R10), MDisp(RSP, stackOffset + (stackPosition++ * 8)));
 	MOV(64, R(R11), MDisp(RSP, stackOffset + (stackPosition++ * 8)));
-#ifndef _WIN32
+#ifndef OS_WINDOWS
 	MOV(64, R(RSI), MDisp(RSP, stackOffset + (stackPosition++ * 8)));
 	MOV(64, R(RDI), MDisp(RSP, stackOffset + (stackPosition++ * 8)));
 #endif
@@ -117,7 +117,7 @@ int ThunkManager::ThunkBytesNeeded()
 	// MXCSR
 	space += 8;
 	space += 7 * 8;
-#ifndef _WIN32
+#ifndef OS_WINDOWS
 	space += 2 * 8;
 #endif
 #else
@@ -133,7 +133,7 @@ int ThunkManager::ThunkBytesNeeded()
 int ThunkManager::ThunkStackOffset()
 {
 #ifdef ARCH_64BIT
-#ifdef _WIN32
+#ifdef OS_WINDOWS
 	return 0x28;
 #else
 	return 0x8;

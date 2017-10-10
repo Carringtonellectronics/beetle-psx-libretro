@@ -25,7 +25,7 @@
 #include <string.h>
 #include <errno.h>
 
-#if defined(_WIN32)
+#if defined(OS_WINDOWS)
 #  ifdef _MSC_VER
 #    define setmode _setmode
 #  endif
@@ -195,7 +195,7 @@ RFILE *filestream_open(const char *path, unsigned mode, ssize_t len)
          else
          {
             flags    = O_WRONLY | O_CREAT | O_TRUNC;
-#ifndef _WIN32
+#ifndef OS_WINDOWS
             flags   |=  S_IRUSR | S_IWUSR;
 #endif
          }
@@ -213,7 +213,7 @@ RFILE *filestream_open(const char *path, unsigned mode, ssize_t len)
          else
          {
             flags    = O_RDWR;
-#ifdef _WIN32
+#ifdef OS_WINDOWS
             flags   |= O_BINARY;
 #endif
          }

@@ -21,7 +21,7 @@
 #pragma optimize("gty", on)
 #endif
 
-#ifdef _WIN32
+#ifdef OS_WINDOWS
 #include <Windows.h>
 #include <WindowsX.h>
 #else
@@ -65,7 +65,7 @@ bool SymbolMap::LoadSymbolMap(const char *filename) {
 
 	std::lock_guard<std::recursive_mutex> guard(lock_);
 
-#if defined(_WIN32) && defined(UNICODE)
+#if defined(OS_WINDOWS) && defined(UNICODE)
 	gzFile f = gzopen_w(ConvertUTF8ToWString(filename).c_str(), "r");
 #else
 	gzFile f = gzopen(filename, "r");
@@ -189,7 +189,7 @@ void SymbolMap::SaveSymbolMap(const char *filename) const {
 		return;
 	}
 
-#if defined(_WIN32) && defined(UNICODE)
+#if defined(OS_WINDOWS) && defined(UNICODE)
 	gzFile f = gzopen_w(ConvertUTF8ToWString(filename).c_str(), "w9");
 #else
 	gzFile f = gzopen(filename, "w9");
@@ -960,7 +960,7 @@ void SymbolMap::GetLabels(std::vector<LabelDefinition> &dest) const
 	}
 }
 
-#if defined(_WIN32) && !defined(UWP)
+#if defined(OS_WINDOWS) && !defined(UWP)
 
 struct DefaultSymbol {
 	uint32 address;

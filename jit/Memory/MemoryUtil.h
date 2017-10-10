@@ -17,7 +17,7 @@
 
 #pragma once
 
-#ifndef _WIN32
+#ifndef OS_WINDOWS
 #include <sys/mman.h>
 #endif
 #include <stdint.h>

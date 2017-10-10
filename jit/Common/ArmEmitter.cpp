@@ -32,7 +32,7 @@
 #include "ArmEmitter.h"
 #include "CPUDetect.h"
 
-#ifdef _WIN32
+#ifdef OS_WINDOWS
 #include <Windows.h>
 #endif
 

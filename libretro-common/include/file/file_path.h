@@ -407,7 +407,7 @@ void fill_pathname_abbreviate_special(char *out_path,
  *
  * Returns: true (1) if character is a slash, otherwise false (0).
  */
-#ifdef _WIN32
+#ifdef OS_WINDOWS
 #define path_char_is_slash(c) (((c) == '/') || ((c) == '\\'))
 #else
 #define path_char_is_slash(c) ((c) == '/')
@@ -420,7 +420,7 @@ void fill_pathname_abbreviate_special(char *out_path,
  *
  * Returns: default slash separator.
  */
-#ifdef _WIN32
+#ifdef OS_WINDOWS
 #define path_default_slash() "\\"
 #else
 #define path_default_slash() "/"

@@ -25,7 +25,7 @@
 
 #if defined(__CELLOS_LV2__) || defined(PSP) || defined(GEKKO) || defined(VITA) || defined(_XBOX) || defined(_3DS)
 /* No mman available */
-#elif defined(_WIN32) && !defined(_XBOX)
+#elif defined(OS_WINDOWS) && !defined(_XBOX)
 #include <windows.h>
 #include <errno.h>
 #include <io.h>
@@ -34,7 +34,7 @@
 #include <sys/mman.h>
 #endif
 
-#if !defined(HAVE_MMAN) || defined(_WIN32)
+#if !defined(HAVE_MMAN) || defined(OS_WINDOWS)
 void* mmap(void *addr, size_t len, int mmap_prot, int mmap_flags, int fildes, size_t off);
 
 int munmap(void *addr, size_t len);

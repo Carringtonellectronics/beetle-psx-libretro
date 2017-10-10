@@ -118,7 +118,7 @@ LogManager::LogManager() {
 #if !defined(MOBILE_DEVICE) || defined(_DEBUG)
 	fileLog_ = new FileLogListener("");
 	consoleLog_ = new ConsoleListener();
-#ifdef _WIN32
+#ifdef OS_WINDOWS
 	if (IsDebuggerPresent())
 		debuggerLog_ = new OutputDebugStringLogListener();
 #endif
@@ -196,7 +196,7 @@ void LogManager::Log(LogTypes::LOG_LEVELS level, LogTypes::LOG_TYPE type, const 
 	message.level = level;
 	message.log = log.m_shortName;
 
-#ifdef _WIN32
+#ifdef OS_WINDOWS
 	static const char sep = '\\';
 #else
 	static const char sep = '/';
@@ -280,7 +280,7 @@ void LogManager::RemoveListener(LogListener *listener) {
 }
 
 FileLogListener::FileLogListener(const char *filename) {
-#ifdef _WIN32
+#ifdef OS_WINDOWS
 	m_logfile.open(ConvertUTF8ToWString(filename).c_str(), std::ios::app);
 #else
 	m_logfile.open(filename, std::ios::app);

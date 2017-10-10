@@ -26,7 +26,7 @@
 #define	DEBUG_LEVEL   5  // Detailed debugging - might make things slow.
 #define	VERBOSE_LEVEL 6  // Noisy debugging - sometimes needed but usually unimportant.
 
-#if !defined(_WIN32)
+#if !defined(OS_WINDOWS)
 #include <signal.h>
 #endif
 
@@ -87,7 +87,7 @@ void GenericLog(LogTypes::LOG_LEVELS level, LogTypes::LOG_TYPE type,
 		;
 bool GenericLogEnabled(LogTypes::LOG_LEVELS level, LogTypes::LOG_TYPE type);
 
-#if defined(LOGGING) || defined(_DEBUG) || defined(DEBUGFAST) || defined(_WIN32)
+#if defined(LOGGING) || defined(_DEBUG) || defined(DEBUGFAST) || defined(OS_WINDOWS)
 #define MAX_LOGLEVEL DEBUG_LEVEL
 #else
 #ifndef MAX_LOGLEVEL

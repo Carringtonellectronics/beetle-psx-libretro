@@ -12,7 +12,7 @@
   valid.
 */
 
-#ifdef _WIN32
+#ifdef OS_WINDOWS
 #include <windows.h>
 #undef min
 #undef max
@@ -420,7 +420,7 @@ bool UTF8StringHasNonASCII(const char *utf8string) {
 	return UTF8StringNonASCIICount(utf8string) > 0;
 }
 
-#ifdef _WIN32
+#ifdef OS_WINDOWS
 
 std::string ConvertWStringToUTF8(const wchar_t *wstr) {
 	int len = (int)wcslen(wstr);

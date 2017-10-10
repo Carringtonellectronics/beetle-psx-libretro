@@ -106,7 +106,8 @@ public:
 	void  Comp_IllegalInstr(MIPSOpcode op) override {
 		ERROR_LOG_REPORT(CPU, "MIPSCompileOp: Invalid instruction %08x at 0x%08x, timestamp %u\n", op.encoding, js.compilerPC, JITTS_get_timestamp());
 		JitComp_Exception(op, EXCEPTION_RI);
-		js.compiling = false; 
+		js.compiling = false;
+		FlushAll();
 		WriteSyscallExit();
 	}
 

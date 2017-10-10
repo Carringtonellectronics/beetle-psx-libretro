@@ -4,7 +4,7 @@
 
 #include "mednafen/mednafen-types.h"
 
-#if defined(_WIN32) || defined(__ANDROID__)
+#if defined(OS_WINDOWS) || defined(__ANDROID__)
 // Temporarily turned off on Android
 //TODO have this actually work the way it should
 //#define USE_ARMIPS

@@ -43,10 +43,10 @@
 #include <time.h>
 #endif
 
-#if defined(_WIN32) && !defined(_XBOX)
+#if defined(OS_WINDOWS) && !defined(_XBOX)
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
-#elif defined(_WIN32) && defined(_XBOX)
+#elif defined(OS_WINDOWS) && defined(_XBOX)
 #include <Xtl.h>
 #endif
 
@@ -116,7 +116,7 @@ static INLINE void retro_sleep(unsigned msec)
    sceKernelDelayThread(1000 * msec);
 #elif defined(_3DS)
    svcSleepThread(1000000 * (s64)msec);
-#elif defined(_WIN32)
+#elif defined(OS_WINDOWS)
    Sleep(msec);
 #elif defined(XENON)
    udelay(1000 * msec);

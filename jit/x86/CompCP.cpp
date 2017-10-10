@@ -133,13 +133,10 @@ void caught(uint32_t code, uint32_t instr, uint32_t pc){
 }
 
 void Jit::JitComp_Exception(MIPSOpcode op, uint32_t code){
-    //ABI_PushAllCalleeSavedRegsAndAdjustStack();
-    
     ABI_CallFunctionCCC((void *)&caught, code, op.encoding, js.compilerPC);
     
     ABI_CallFunctionCCCC((void *)&currentMIPS->Exception_Helper, code, js.compilerPC, js.inDelaySlot, op.encoding);
     
-    //ABI_PopAllCalleeSavedRegsAndAdjustStack();
     //We need to set the PC to be the handler
     MOV(32, MIPSSTATE_VAR(pc), R(EAX));
     //Now we need to exit this block, by going back to the dispatcher.

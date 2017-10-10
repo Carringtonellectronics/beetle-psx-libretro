@@ -22,7 +22,7 @@ static uint16_t Mask;
 static uint16_t Status;
 
 void Recalc(){
-      INFO_LOG(IRQ, "AssertIRQ called!\n"); 
+      //INFO_LOG(IRQ, "AssertIRQ called!\n"); 
       CPU->AssertIRQ(0, (bool)(Status & Mask));
 #ifdef JIT
       currentMIPS->AssertIRQ(0, (bool)(Status & Mask));

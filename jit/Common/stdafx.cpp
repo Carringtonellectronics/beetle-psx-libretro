@@ -2,7 +2,7 @@
 // Common.pch will be the pre-compiled header
 // stdafx.obj will contain the pre-compiled type information
 
-#ifdef _WIN32
+#ifdef OS_WINDOWS
 
 #include "stdafx.h"
 

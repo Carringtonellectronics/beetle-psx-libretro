@@ -60,7 +60,7 @@ private:
 
 #define CHECK_HEAP_INTEGRITY()
 
-#elif defined(_WIN32)
+#elif defined(OS_WINDOWS)
 
 // Check MSC ver
 	#if !defined _MSC_VER || _MSC_VER <= 1000
@@ -91,7 +91,7 @@ private:
 #endif
 
 // Windows compatibility
-#ifndef _WIN32
+#ifndef OS_WINDOWS
 #include <limits.h>
 #ifndef MAX_PATH
 #define MAX_PATH PATH_MAX

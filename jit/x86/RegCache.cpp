@@ -34,7 +34,7 @@ static const X64Reg allocationOrder[] = {
 	// R12, when used as base register, for example in a LEA, can generate bad code! Need to look into this.
 	// On x64, RCX and RDX are the first args.  CallProtectedFunction() assumes they're not regcached.
 #ifdef ARCH_64BIT
-#ifdef _WIN32
+#ifdef OS_WINDOWS
 	RSI, RDI, R8, R9, R10, R11, R12, R13,
 #else
 	RBP, R8, R9, R10, R11, R12, R13,
@@ -362,6 +362,10 @@ void GPRRegCache::MapReg(MIPSGPReg i, bool doLoad, bool makeDirty) {
 		xregs[xr].mipsReg = i;
 		xregs[xr].dirty = makeDirty || regs[i].location.IsImm();
 		OpArg newloc = ::Gen::R(xr);
+
+		if(i == MIPS_REG_SP) 
+			INFO_LOG(SP, "Stack Pointer mapped to %u\n", xr);
+
 		if (doLoad) {
 			// Force ZERO to be 0.
 			if (i == MIPS_REG_ZERO)

@@ -20,7 +20,7 @@
 #include "mednafen/mednafen.h"
 #include "jit/Common/Misc.h"
 
-#ifdef _WIN32
+#ifdef OS_WINDOWS
 #include "Windows.h"
 #else
 #include <errno.h>
@@ -33,13 +33,13 @@
 #include <mach/vm_param.h>
 #endif
 
-#ifndef _WIN32
+#ifndef OS_WINDOWS
 #include <unistd.h>
 #endif
 static int hint_location;
 #ifdef __APPLE__
 #define MEM_PAGE_SIZE (PAGE_SIZE)
-#elif defined(_WIN32)
+#elif defined(OS_WINDOWS)
 static SYSTEM_INFO sys_info;
 #define MEM_PAGE_SIZE (uintptr_t)(sys_info.dwPageSize)
 #else
@@ -49,7 +49,7 @@ static SYSTEM_INFO sys_info;
 #define MEM_PAGE_MASK ((MEM_PAGE_SIZE)-1)
 #define round_page(x) ((((uintptr_t)(x)) + MEM_PAGE_MASK) & ~(MEM_PAGE_MASK))
 
-#ifdef _WIN32
+#ifdef OS_WINDOWS
 // Win32 flags are odd...
 static uint32_t ConvertProtFlagsWin32(uint32_t flags) {
 	uint32_t protect = 0;
@@ -81,7 +81,7 @@ static uint32_t ConvertProtFlagsUnix(uint32_t flags) {
 
 #endif
 
-#if defined(_WIN32) && defined(ARCH_64BIT)
+#if defined(OS_WINDOWS) && defined(ARCH_64BIT)
 static uintptr_t last_executable_addr;
 static void *SearchForFreeMem(size_t size) {
 	if (!last_executable_addr)
@@ -116,7 +116,7 @@ static void *SearchForFreeMem(size_t size) {
 // provides exactly the primitive operations that PPSSPP needs.
 
 void *AllocateExecutableMemory(size_t size) {
-#if defined(_WIN32)
+#if defined(OS_WINDOWS)
 	void *ptr = nullptr;
 	DWORD prot = PAGE_EXECUTE_READWRITE;
 	if (PlatformIsWXExclusive())
@@ -180,9 +180,9 @@ void *AllocateExecutableMemory(size_t size) {
 #endif
 		, -1, 0);
 
-#endif /* defined(_WIN32) */
+#endif /* defined(OS_WINDOWS) */
 
-#if !defined(_WIN32)
+#if !defined(OS_WINDOWS)
 	static const void *failed_result = MAP_FAILED;
 #else
 	static const void *failed_result = nullptr;
@@ -193,7 +193,7 @@ void *AllocateExecutableMemory(size_t size) {
 		ERROR_LOG(MEMMAP, "Failed to allocate executable memory (%d)\n", (int)size);
 		PanicAlert("Failed to allocate executable memory\n%s\n", GetLastErrorMsg());
 	}
-#if defined(ARCH_64BIT) && !defined(_WIN32) && !defined(MAP_32BIT)
+#if defined(ARCH_64BIT) && !defined(OS_WINDOWS) && !defined(MAP_32BIT)
 	else if ((uintptr_t)map_hint <= 0xFFFFFFFF) {
 		// Round up if we're below 32-bit mark, probably allocating sequentially.
 		map_hint += round_page(size);
@@ -210,7 +210,7 @@ void *AllocateExecutableMemory(size_t size) {
 
 void *AllocateMemoryPages(size_t size, uint32_t memProtFlags) {
 	size = round_page(size);
-#ifdef _WIN32
+#ifdef OS_WINDOWS
 	if (sys_info.dwPageSize == 0)
 		GetSystemInfo(&sys_info);
 	uint32_t protect = ConvertProtFlagsWin32(memProtFlags);
@@ -236,7 +236,7 @@ void *AllocateMemoryPages(size_t size, uint32_t memProtFlags) {
 }
 
 void *AllocateAlignedMemory(size_t size, size_t alignment) {
-#ifdef _WIN32
+#ifdef OS_WINDOWS
 	void* ptr =  _aligned_malloc(size,alignment);
 #else
 	void* ptr = NULL;
@@ -262,7 +262,7 @@ void FreeMemoryPages(void *ptr, size_t size) {
 		return;
 	uintptr_t page_size = GetMemoryProtectPageSize();
 	size = (size + page_size - 1) & (~(page_size - 1));
-#ifdef _WIN32
+#ifdef OS_WINDOWS
 	if (!VirtualFree(ptr, 0, MEM_RELEASE))
 		PanicAlert("FreeMemoryPages failed!\n%s\n", GetLastErrorMsg());
 #else
@@ -273,7 +273,7 @@ void FreeMemoryPages(void *ptr, size_t size) {
 void FreeAlignedMemory(void* ptr) {
 	if (!ptr)
 		return;
-#ifdef _WIN32
+#ifdef OS_WINDOWS
 	_aligned_free(ptr);
 #else
 	free(ptr);
@@ -303,7 +303,7 @@ bool ProtectMemoryPages(const void* ptr, size_t size, uint32_t memProtFlags) {
 	}
 	// Note - VirtualProtect will affect the full pages containing the requested range.
 	// mprotect does not seem to, at least not on Android unless I made a mistake somewhere, so we manually round.
-#ifdef _WIN32
+#ifdef OS_WINDOWS
 	uint32_t protect = ConvertProtFlagsWin32(memProtFlags);
 
 #if defined(UWP)
@@ -338,7 +338,7 @@ bool ProtectMemoryPages(const void* ptr, size_t size, uint32_t memProtFlags) {
 }
 
 int GetMemoryProtectPageSize() {
-#ifdef _WIN32
+#ifdef OS_WINDOWS
 	if (sys_info.dwPageSize == 0)
 		GetSystemInfo(&sys_info);
 	return sys_info.dwPageSize;

@@ -1,6 +1,6 @@
 #pragma once
 
-#ifdef _WIN32
+#ifdef OS_WINDOWS
 #pragma warning(disable:4091)
 
 #ifndef WIN32_LEAN_AND_MEAN

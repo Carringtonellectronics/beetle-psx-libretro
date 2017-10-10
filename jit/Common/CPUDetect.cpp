@@ -27,7 +27,7 @@
 #include "StringUtils.h"
 #include "mednafen/mednafen-types.h"
 
-#ifdef _WIN32
+#ifdef OS_WINDOWS
 
 #include <Windows.h>
 #define WIN32_LEAN_AND_MEAN
@@ -112,7 +112,7 @@ void CPUInfo::Detect() {
 
 #if defined(UWP)
 	OS64bit = Mode64bit;  // TODO: Not always accurate!
-#elif defined(_WIN32) && defined(ARCH_32BIT)
+#elif defined(OS_WINDOWS) && defined(ARCH_32BIT)
 	BOOL f64 = false;
 	IsWow64Process(GetCurrentProcess(), &f64);
 	OS64bit = (f64 == TRUE) ? true : false;

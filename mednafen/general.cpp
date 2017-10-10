@@ -34,7 +34,7 @@ using namespace std;
 static bool IsAbsolutePath(const char *path)
 {
    if (
-#ifdef _WIN32
+#ifdef OS_WINDOWS
          path[0] == '\\' ||
 #endif
          path[0] == '/'
@@ -85,7 +85,7 @@ void MDFN_GetFilePathComponents(const std::string &file_path,
  size_t fn_final_dot;		            // in local var file_name
  string dir_path, file_base, file_ext; // Temporary output
 
-#ifdef _WIN32
+#ifdef OS_WINDOWS
  final_ds = file_path.find_last_of('\\');
 
  size_t alt_final_ds = file_path.find_last_of('/');
@@ -133,7 +133,7 @@ void MDFN_GetFilePathComponents(const std::string &file_path,
 std::string MDFN_EvalFIP(const std::string &dir_path, const std::string &rel_path, bool skip_safety_check)
 {
    char slash;
-#ifdef _WIN32
+#ifdef OS_WINDOWS
    slash = '\\';
 #else
    slash = '/';

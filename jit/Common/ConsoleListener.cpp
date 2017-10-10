@@ -19,7 +19,7 @@
 #include <algorithm>  // min
 #include <string> // System: To be able to add strings with "+"
 #include <math.h>
-#ifdef _WIN32
+#ifdef OS_WINDOWS
 #include <process.h>
 #include "CommonWindows.h"
 #include <array>
@@ -77,7 +77,7 @@ ConsoleListener::~ConsoleListener()
 	Close();
 }
 
-#ifdef _WIN32
+#ifdef OS_WINDOWS
 // Handle console event
 bool WINAPI ConsoleHandler(DWORD msgType)
 {

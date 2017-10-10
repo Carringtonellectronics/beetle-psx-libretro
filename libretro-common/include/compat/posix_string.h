@@ -31,7 +31,7 @@
 
 RETRO_BEGIN_DECLS
 
-#ifdef _WIN32
+#ifdef OS_WINDOWS
 #undef strtok_r
 #define strtok_r(str, delim, saveptr) retro_strtok_r__(str, delim, saveptr)
 

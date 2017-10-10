@@ -21,7 +21,7 @@
 template <bool> struct CompileTimeAssert;
 template<> struct CompileTimeAssert<true> {};
 
-#if !defined(_WIN32)
+#if !defined(OS_WINDOWS)
 
 #include <unistd.h>
 #include <errno.h>

@@ -45,6 +45,10 @@ using namespace MIPSAnalyst;
 #define CONDITIONAL_DISABLE ;
 #define DISABLE { Comp_Generic(op); return; }
 
+void PrintRSI(uint32_t rsi){
+	INFO_LOG(JIT, "RSI: 0x%08x\n", rsi);
+}
+
 namespace MIPSComp
 {
 	using namespace Gen;
@@ -82,7 +86,7 @@ namespace MIPSComp
 
 		MIPSGPReg rt = _RT;
 		MIPSGPReg rs = _RS;
-
+		
 		// noop, won't write to ZERO.
 		if (rt == MIPS_REG_ZERO)
 			return;
@@ -208,6 +212,11 @@ FixupBranch noOverflow;
 #endif*/
 		JitComp_Exception(op, EXCEPTION_OV);
 		SetJumpTarget(noOverflow);
+
+		if(rt == MIPS_REG_SP){ 
+			INFO_LOG(SP, "Stack Pointer is being updated, op = 0x%08x!\n", op);
+			ABI_CallFunctionR((void *)&PrintRSI, RSI);
+		}
 	}
 
 	void Jit::Comp_RType2(MIPSOpcode op)
@@ -303,6 +312,11 @@ FixupBranch noOverflow;
 #endif*/
 		JitComp_Exception(op, EXCEPTION_OV);
 		SetJumpTarget(noOverflow);
+
+		if(rd == MIPS_REG_SP){ 
+			INFO_LOG(SP, "Stack Pointer is being updated, op = 0x%08x!\n", op);
+			ABI_CallFunctionR((void *)&PrintRSI, RSI);
+		}
 	}
 
 	static u32 RType3_ImmAdd(const u32 a, const u32 b)
@@ -418,6 +432,11 @@ FixupBranch noOverflow;
 #endif*/
 		JitComp_Exception(op, EXCEPTION_OV);
 		SetJumpTarget(noOverflow);
+
+		if(rd == MIPS_REG_SP){ 
+			INFO_LOG(SP, "Stack Pointer is being updated, op = 0x%08x!\n", op);
+			ABI_CallFunctionR((void *)&PrintRSI, RSI);
+		}
 	}
 
 	void Jit::Comp_RType3(MIPSOpcode op)
@@ -645,6 +664,10 @@ FixupBranch noOverflow;
 #endif*/
 		JitComp_Exception(op, EXCEPTION_OV);
 		SetJumpTarget(noOverflow);
+		if(rd == MIPS_REG_SP){ 
+			INFO_LOG(SP, "Stack Pointer is being updated, op = 0x%08x!\n", op);
+			ABI_CallFunctionR((void *)&PrintRSI, RSI);
+		}
 	}
 
 	static u32 ShiftType_ImmLogicalLeft(const u32 a, const u32 b)

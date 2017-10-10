@@ -207,54 +207,7 @@ public:
 	void Reset();
 
 	int StateAction(StateMem *sm, int load, int data_only);
-
-	// MUST start with r and be followed by f, v, and t!
-	uint32 r[32];
-	union {
-		float f[32];
-		uint32 fi[32];
-		int fs[32];
-	};
-	union {
-		float v[128];
-		uint32 vi[128];
-	};
-
-	// Register-allocated JIT Temps don't get flushed so we don't reserve space for them.
-	// However, the IR interpreter needs some temps that can stick around between ops.
-	// Can be indexed through r[] using indices 192+.
-	uint32 t[16];     //192
-
-	// If vfpuCtrl (prefixes) get mysterious values, check the VFPU regcache code.
-	uint32 vfpuCtrl[16]; // 208
-
-	float vt[16];  //224  TODO: VFPU temp
-
-	// ARM64 wants lo/hi to be aligned to 64 bits from the base of this struct.
-	uint32 padLoHi;    // 240
-
-	union {
-		struct {
-			uint32 pc;   //241
-
-			uint32 lo;   //242
-			uint32 hi;   //243
-
-			uint32 fcr31; //244 fpu control register
-			uint32 fpcond;  //245 cache the cond flag of fcr31  (& 1 << 23)
-		};
-		uint32 other[6];
-	};
-
-	uint32 nextPC;
-	int downcount;  // This really doesn't belong here, it belongs in timing.h. But you gotta do what you gotta do, this needs to be reachable in the ARM JIT.
-
-	bool inDelaySlot;
-	int llBit;  // ll/sc
-	uint32 temp;  // can be used to save temporaries during calculations when we need more than R0 and R1
-	uint32 mxcsrTemp;
-	// Temporary used around delay slots and similar.
-	u64 saved_flags;
+	
 	//Cop0
 	struct
 	{
@@ -285,7 +238,53 @@ public:
 	} CP0;
 
 	uint32_t halted;
+	// MUST start with r and be followed by f, v, and t!
+	uint32 r[32];
+	union {
+		float f[32];
+		uint32 fi[32];
+		int fs[32];
+	};
+	union {
+		float v[128];
+		uint32 vi[128];
+	};
 
+	// Register-allocated JIT Temps don't get flushed so we don't reserve space for them.
+	// However, the IR interpreter needs some temps that can stick around between ops.
+	// Can be indexed through r[] using indices 192+.
+	uint32 t[16];     //192
+
+	// If vfpuCtrl (prefixes) get mysterious values, check the VFPU regcache code.
+	uint32 vfpuCtrl[16]; // 208
+
+	float vt[16];  //224  TODO: VFPU temp
+
+	// ARM64 wants lo/hi to be aligned to 64 bits from the base of this struct.
+	uint32 padLoHi;    // 240
+
+	union {
+		struct {
+			uint32 pc;   //241 (344)
+
+			uint32 lo;   //242
+			uint32 hi;   //243
+
+			uint32 fcr31; //244 fpu control register
+			uint32 fpcond;  //245 cache the cond flag of fcr31  (& 1 << 23)
+		};
+		uint32 other[6];
+	};
+
+	uint32 nextPC;
+	int downcount;  // This really doesn't belong here, it belongs in timing.h. But you gotta do what you gotta do, this needs to be reachable in the ARM JIT.
+
+	bool inDelaySlot;
+	int llBit;  // ll/sc
+	uint32 temp;  // can be used to save temporaries during calculations when we need more than R0 and R1
+	uint32 mxcsrTemp;
+	// Temporary used around delay slots and similar.
+	u64 saved_flags;
 	// Debug stuff
 	uint32 debugCount;	// can be used to count basic blocks before crashes, etc.
 

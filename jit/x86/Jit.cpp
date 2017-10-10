@@ -398,6 +398,10 @@ const u8 *Jit::DoJit(u32 em_address, JitBlock *b) {
 			js.afterOp &= ~JitState::AFTER_MEMCHECK_CLEANUP;
 		}
 
+		if(js.compilerPC == 0xBFC01A78){
+			INFO_LOG(JIT, "Compiling desired op ;).\n");
+		}
+
 		js.compilerPC += 4;
 		js.numInstructions++;
 
@@ -408,8 +412,10 @@ const u8 *Jit::DoJit(u32 em_address, JitBlock *b) {
 			WriteExit(GetCompilerPC(), js.nextExit++);
 			js.compiling = false;
 		}
+		
 	}
-
+	//Let's try flushing our registers between blocks.
+	//FlushAll();
 	b->codeSize = (u32)(GetCodePtr() - b->normalEntry);
 	NOP();
 	AlignCode4();

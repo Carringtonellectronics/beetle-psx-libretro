@@ -46,7 +46,7 @@ extern "C"
  * Function declaration:  VKAPI_ATTR void VKAPI_CALL vkCommand(void);
  * Function pointer type: typedef void (VKAPI_PTR *PFN_vkCommand)(void);
  */
-#if defined(_WIN32)
+#if defined(OS_WINDOWS)
     // On Windows, Vulkan commands use the stdcall convention
     #define VKAPI_ATTR
     #define VKAPI_CALL __stdcall
@@ -105,7 +105,7 @@ extern "C"
 #include <wayland-client.h>
 #endif
 
-#ifdef VK_USE_PLATFORM_WIN32_KHR
+#ifdef VK_USE_PLATFORMOS_WINDOWS_KHR
 #include <windows.h>
 #endif
 

@@ -23,7 +23,7 @@
 #define __thread
 #endif
 
-#ifdef _WIN32
+#ifdef OS_WINDOWS
 #include "Windows.h"
 #endif
 
@@ -33,7 +33,7 @@
 // This function might change the error code.
 const char *GetLastErrorMsg()
 {
-#ifdef _WIN32
+#ifdef OS_WINDOWS
 	return GetStringErrorMsg(GetLastError());
 #else
 	return GetStringErrorMsg(0);
@@ -42,7 +42,7 @@ const char *GetLastErrorMsg()
 
 const char *GetStringErrorMsg(int errCode) {
 	static const size_t buff_size = 1023;
-#ifdef _WIN32
+#ifdef OS_WINDOWS
 	static __declspec(thread) wchar_t err_strw[buff_size] = {};
 
 	FormatMessageW(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, NULL, errCode,

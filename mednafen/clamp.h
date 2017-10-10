@@ -6,7 +6,7 @@ extern "C" {
 #endif
 
 #include <stddef.h>
-#ifndef _WIN32
+#ifndef OS_WINDOWS
 #include <unistd.h>
 #endif
 

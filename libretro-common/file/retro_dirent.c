@@ -28,7 +28,7 @@
 #include <boolean.h>
 #include <retro_dirent.h>
 
-#if defined(_WIN32)
+#if defined(OS_WINDOWS)
 #  ifdef _MSC_VER
 #    define setmode _setmode
 #  endif
@@ -66,7 +66,7 @@
 
 struct RDIR
 {
-#if defined(_WIN32)
+#if defined(OS_WINDOWS)
    WIN32_FIND_DATA entry;
    HANDLE directory;
    bool next;
@@ -86,7 +86,7 @@ struct RDIR
 
 struct RDIR *retro_opendir(const char *name)
 {
-#if defined(_WIN32)
+#if defined(OS_WINDOWS)
    char path_buf[1024];
 #endif
    struct RDIR *rdir = (struct RDIR*)calloc(1, sizeof(*rdir));
@@ -94,7 +94,7 @@ struct RDIR *retro_opendir(const char *name)
    if (!rdir)
       return NULL;
 
-#if defined(_WIN32)
+#if defined(OS_WINDOWS)
    path_buf[0] = '\0';
    snprintf(path_buf, sizeof(path_buf), "%s\\*", name);
    rdir->directory = FindFirstFile(path_buf, &rdir->entry);
@@ -115,7 +115,7 @@ struct RDIR *retro_opendir(const char *name)
 
 bool retro_dirent_error(struct RDIR *rdir)
 {
-#if defined(_WIN32)
+#if defined(OS_WINDOWS)
    return (rdir->directory == INVALID_HANDLE_VALUE);
 #elif defined(VITA) || defined(PSP)
    return (rdir->directory < 0);
@@ -128,7 +128,7 @@ bool retro_dirent_error(struct RDIR *rdir)
 
 int retro_readdir(struct RDIR *rdir)
 {
-#if defined(_WIN32)
+#if defined(OS_WINDOWS)
    if(rdir->next)
       return (FindNextFile(rdir->directory, &rdir->entry) != 0);
 
@@ -147,7 +147,7 @@ int retro_readdir(struct RDIR *rdir)
 
 const char *retro_dirent_get_name(struct RDIR *rdir)
 {
-#if defined(_WIN32)
+#if defined(OS_WINDOWS)
    return rdir->entry.cFileName;
 #elif defined(VITA) || defined(PSP) || defined(__CELLOS_LV2__)
    return rdir->entry.d_name;
@@ -178,7 +178,7 @@ static bool path_is_directory_internal(const char *path)
    if (cellFsStat(path, &buf) < 0)
       return false;
    return ((buf.st_mode & S_IFMT) == S_IFDIR);
-#elif defined(_WIN32)
+#elif defined(OS_WINDOWS)
    struct _stat buf;
    DWORD file_info = GetFileAttributes(path);
 
@@ -208,7 +208,7 @@ static bool path_is_directory_internal(const char *path)
  */
 bool retro_dirent_is_dir(struct RDIR *rdir, const char *path)
 {
-#if defined(_WIN32)
+#if defined(OS_WINDOWS)
    const WIN32_FIND_DATA *entry = (const WIN32_FIND_DATA*)&rdir->entry;
    return entry->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY;
 #elif defined(PSP) || defined(VITA)
@@ -237,7 +237,7 @@ bool retro_dirent_is_dir(struct RDIR *rdir, const char *path)
 
 void retro_dirent_include_hidden(struct RDIR *rdir, bool include_hidden)
 {
-#ifdef _WIN32
+#ifdef OS_WINDOWS
    if (include_hidden)
       rdir->entry.dwFileAttributes |= FILE_ATTRIBUTE_HIDDEN;
    else
@@ -250,7 +250,7 @@ void retro_closedir(struct RDIR *rdir)
    if (!rdir)
       return;
 
-#if defined(_WIN32)
+#if defined(OS_WINDOWS)
    if (rdir->directory != INVALID_HANDLE_VALUE)
       FindClose(rdir->directory);
 #elif defined(VITA) || defined(PSP)

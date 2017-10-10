@@ -24,7 +24,7 @@
 #define _ogg_realloc realloc
 #define _ogg_free    free
 
-#if defined(_WIN32) 
+#if defined(OS_WINDOWS) 
 
 #  if defined(__CYGWIN__)
 #    include <stdint.h>

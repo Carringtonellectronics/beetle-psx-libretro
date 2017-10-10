@@ -70,13 +70,13 @@
 #define S_ISDIR(m)  (((m)&S_IFMT) == S_IFDIR)
 #endif
 
-#if !defined(__linux__) && !defined(_WIN32) && !defined(__QNX__)
+#if !defined(__linux__) && !defined(OS_WINDOWS) && !defined(__QNX__)
 #define stat64 stat
 #define fstat64 fstat
 #endif
 
 #define DIR_SEP "/"
-#ifdef _WIN32
+#ifdef OS_WINDOWS
 #define DIR_SEP_CHRS "/\\"
 #else
 #define DIR_SEP_CHRS "/"
@@ -90,7 +90,7 @@ namespace File
 
 FILE *OpenCFile(const std::string &filename, const char *mode)
 {
-#if defined(_WIN32) && defined(UNICODE)
+#if defined(OS_WINDOWS) && defined(UNICODE)
 	return _wfopen(ConvertUTF8ToWString(filename).c_str(), ConvertUTF8ToWString(mode).c_str());
 #else
 	return fopen(filename.c_str(), mode);
@@ -99,7 +99,7 @@ FILE *OpenCFile(const std::string &filename, const char *mode)
 
 bool OpenCPPFile(std::fstream & stream, const std::string &filename, std::ios::openmode mode)
 {
-#if defined(_WIN32) && defined(UNICODE)
+#if defined(OS_WINDOWS) && defined(UNICODE)
 	stream.open(ConvertUTF8ToWString(filename), mode);
 #else
 	stream.open(filename.c_str(), mode);
@@ -113,7 +113,7 @@ bool OpenCPPFile(std::fstream & stream, const std::string &filename, std::ios::o
 static void StripTailDirSlashes(std::string &fname) {
 	if (fname.length() > 1) {
 		size_t i = fname.length() - 1;
-#ifdef _WIN32
+#ifdef OS_WINDOWS
 		if (i == 2 && fname[1] == ':' && fname[2] == '\\')
 			return;
 #endif
@@ -128,7 +128,7 @@ bool Exists(const std::string &filename) {
 	std::string fn = filename;
 	StripTailDirSlashes(fn);
 
-#if defined(_WIN32) 
+#if defined(OS_WINDOWS) 
 
 #if defined(UNICODE)
 	std::wstring copy = ConvertUTF8ToWString(fn);
@@ -159,7 +159,7 @@ bool IsDirectory(const std::string &filename)
 	std::string fn = filename;
 	StripTailDirSlashes(fn);
 
-#if defined(_WIN32)
+#if defined(OS_WINDOWS)
 #if defined(UNICODE)
 	std::wstring copy = ConvertUTF8ToWString(fn);
 #else
@@ -203,7 +203,7 @@ bool Delete(const std::string &filename) {
 		return false;
 	}
 
-#ifdef _WIN32
+#ifdef OS_WINDOWS
 
 #if defined(UNICODE)
 	std::wstring copy = ConvertUTF8ToWString(filename);
@@ -231,7 +231,7 @@ bool Delete(const std::string &filename) {
 bool CreateDir(const std::string &path)
 {
 	INFO_LOG(COMMON, "CreateDir: directory %s", path.c_str());
-#ifdef _WIN32
+#ifdef OS_WINDOWS
 #if defined(UNICODE)
 	std::wstring copy = ConvertUTF8ToWString(path);
 #else
@@ -279,7 +279,7 @@ bool CreateFullPath(const std::string &fullPath)
 
 	size_t position = 0;
 
-#ifdef _WIN32
+#ifdef OS_WINDOWS
 	// Skip the drive letter, no need to create C:\.
 	position = 3;
 #endif
@@ -324,7 +324,7 @@ bool DeleteDir(const std::string &filename)
 		return false;
 	}
 
-#ifdef _WIN32
+#ifdef OS_WINDOWS
 #if defined(UNICODE)
 	std::wstring copy = ConvertUTF8ToWString(filename);
 #else
@@ -346,7 +346,7 @@ bool Rename(const std::string &srcFilename, const std::string &destFilename)
 {
 	INFO_LOG(COMMON, "Rename: %s --> %s", 
 			srcFilename.c_str(), destFilename.c_str());
-#if defined(_WIN32) && defined(UNICODE)
+#if defined(OS_WINDOWS) && defined(UNICODE)
 	std::wstring srcw = ConvertUTF8ToWString(srcFilename);
 	std::wstring destw = ConvertUTF8ToWString(destFilename);
 	if (_wrename(srcw.c_str(), destw.c_str()) == 0)
@@ -365,7 +365,7 @@ bool Copy(const std::string &srcFilename, const std::string &destFilename)
 {
 	INFO_LOG(COMMON, "Copy: %s --> %s", 
 			srcFilename.c_str(), destFilename.c_str());
-#ifdef _WIN32
+#ifdef OS_WINDOWS
 #if defined(UNICODE)
 	std::wstring srcCopy = ConvertUTF8ToWString(srcFilename);
 	std::wstring destCopy = ConvertUTF8ToWString(destFilename);
@@ -448,7 +448,7 @@ bool Copy(const std::string &srcFilename, const std::string &destFilename)
 #endif
 }
 
-#ifdef _WIN32
+#ifdef OS_WINDOWS
 
 static int64_t FiletimeToStatTime(FILETIME ft) {
 	const int windowsTickResolution = 10000000;
@@ -461,7 +461,7 @@ static int64_t FiletimeToStatTime(FILETIME ft) {
 
 // Returns file attributes.
 bool GetFileDetails(const std::string &filename, FileDetails *details) {
-#ifdef _WIN32
+#ifdef OS_WINDOWS
 #if defined(UNICODE)
 	std::wstring copy = ConvertUTF8ToWString(filename);
 #else
@@ -530,7 +530,7 @@ std::string GetDir(const std::string &path) {
 	for (size_t i = 0; i < cutpath.size(); i++) {
 		if (cutpath[i] == '\\') cutpath[i] = '/';
 	}
-#ifndef _WIN32
+#ifndef OS_WINDOWS
 	if (!cutpath.size()) {
 		return "/";
 	}
@@ -549,7 +549,7 @@ std::string GetFilename(std::string path) {
 // Returns the size of file (64bit)
 // TODO: Add a way to return an error.
 uint64 GetFileSize(const std::string &filename) {
-#if defined(_WIN32) && defined(UNICODE)
+#if defined(OS_WINDOWS) && defined(UNICODE)
 	WIN32_FILE_ATTRIBUTE_DATA attr;
 	if (!GetFileAttributesEx(ConvertUTF8ToWString(filename).c_str(), GetFileExInfoStandard, &attr))
 		return 0;
@@ -618,7 +618,7 @@ bool DeleteDirRecursively(const std::string &directory)
 #else
 	INFO_LOG(COMMON, "DeleteDirRecursively: %s", directory.c_str());
 
-#ifdef _WIN32
+#ifdef OS_WINDOWS
 #if defined(UNICODE)
 	std::wstring copy = ConvertUTF8ToWString(directory);
 #else
@@ -665,7 +665,7 @@ bool DeleteDirRecursively(const std::string &directory)
 		{
 			if (!DeleteDirRecursively(newPath))
 			{
-				#ifndef _WIN32
+				#ifndef OS_WINDOWS
 				closedir(dirp);
 				#endif
 				
@@ -676,7 +676,7 @@ bool DeleteDirRecursively(const std::string &directory)
 		{
 			if (!File::Delete(newPath))
 			{
-				#ifndef _WIN32
+				#ifndef OS_WINDOWS
 				closedir(dirp);
 				#endif
 				
@@ -684,7 +684,7 @@ bool DeleteDirRecursively(const std::string &directory)
 			}
 		}
 
-#ifdef _WIN32
+#ifdef OS_WINDOWS
 	} while (FindNextFile(hFind, &ffd) != 0);
 	FindClose(hFind);
 #else
@@ -700,7 +700,7 @@ bool DeleteDirRecursively(const std::string &directory)
 // Create directory and copy contents (does not overwrite existing files)
 void CopyDir(const std::string &source_path, const std::string &dest_path)
 {
-#ifndef _WIN32
+#ifndef OS_WINDOWS
 	if (source_path == dest_path) return;
 	if (!File::Exists(source_path)) return;
 	if (!File::Exists(dest_path)) File::CreateFullPath(dest_path);
@@ -826,7 +826,7 @@ bool IOFile::Flush()
 bool IOFile::Resize(uint64 size)
 {
 	if (!IsOpen() || 0 !=
-#ifdef _WIN32
+#ifdef OS_WINDOWS
 		// ector: _chsize sucks, not 64-bit safe
 		// F|RES: changed to _chsize_s. i think it is 64-bit safe
 		_chsize_s(_fileno(m_file), size)
