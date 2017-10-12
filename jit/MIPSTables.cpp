@@ -376,19 +376,19 @@ const MIPSInstruction tableCop2BC2[4] = // 010010 01000 ...xx ................
 
 const MIPSInstruction tableCop0[32] = // 010000 xxxxx ..... ................
 {
-	INSTR("mfc0", JITFUNC(Comp_Cp0), Dis_Generic, 0, OUT_RT),  // unused
+	INSTR("mfc0", JITFUNC(Comp_Cp0), Dis_Generic, 0, OUT_RT),
 	INVALID,
 	INSTR("cfc0", JITFUNC(Comp_Cp0), Dis_Generic, 0, 0), //INVALID, needs to create error
 	INVALID,
-	INSTR("mtc0", JITFUNC(Comp_Cp0), Dis_Generic, 0, IN_RT),  // unused
+	INSTR("mtc0", JITFUNC(Comp_Cp0), Dis_Generic, 0, IN_RT),
 	INVALID,
 	INSTR("ctc0", JITFUNC(Comp_Cp0), Dis_Generic, 0, 0), //INVALID, needs to create error
 	INVALID,
 	//8
 	INSTR("??", JITFUNC(Comp_Cp0), Dis_Generic, 0, 0), //BC???
 	INVALID,
-	INSTR("rdpgpr", JITFUNC(Comp_Cp0), Dis_Generic, 0, 0),
-	INSTR("mfmc0", JITFUNC(Comp_Cp0), Dis_Generic, 0, 0),
+	INVALID,
+	INVALID,
 
 	INVALID,
 	INVALID,
@@ -403,18 +403,20 @@ const MIPSInstruction tableCop0[32] = // 010000 xxxxx ..... ................
 const MIPSInstruction tableCop0CO[64] = // 010000 1.... ..... ..... ..... xxxxxx
 {
 	INVALID,
-	INSTR("tlbr", JITFUNC(Comp_Generic), Dis_Generic, 0, 0),
-	INSTR("tlbwi", JITFUNC(Comp_Generic), Dis_Generic, 0, 0),
+	INVALID,//INSTR("tlbr", JITFUNC(Comp_Generic), Dis_Generic, 0, 0),
+	INVALID,//INSTR("tlbwi", JITFUNC(Comp_Generic), Dis_Generic, 0, 0),
 	INVALID,
 	INVALID,
 	INVALID,
-	INSTR("tlbwr", JITFUNC(Comp_Generic), Dis_Generic, 0, 0),
+	INVALID,//INSTR("tlbwr", JITFUNC(Comp_Generic), Dis_Generic, 0, 0),
 	INVALID,
 	//8
-	INSTR("tlbp", JITFUNC(Comp_Generic), Dis_Generic, 0, 0),
+	INVALID,//INSTR("tlbp", JITFUNC(Comp_Generic), Dis_Generic, 0, 0),
+	INVALID, 
+	INVALID,
+	INVALID, INVALID, INVALID, INVALID, INVALID,
+	INSTR("rfe", JITFUNC(Comp_Cp0), Dis_Generic, 0, 0),
 	INVALID, INVALID, INVALID, INVALID, INVALID, INVALID, INVALID,
-	//TODO RFE here?
-	INVALID_X_8,
 	//24
 	INSTR("eret", JITFUNC(Comp_Generic), Dis_Generic, 0, 0),
 	INSTR("iack", JITFUNC(Comp_Generic), Dis_Generic, 0, 0),

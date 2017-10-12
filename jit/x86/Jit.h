@@ -220,6 +220,7 @@ private:
 	void JitComp_CT0(MIPSOpcode op);
 	void JitComp_BC0(MIPSOpcode op);
 	void JitComp_Exception(MIPSOpcode op, uint32_t code);
+	void JitComp_RFE(MIPSOpcode op);
 
 	void CallProtectedFunction(const void *func, const Gen::OpArg &arg1);
 	void CallProtectedFunction(const void *func, const Gen::OpArg &arg1, const Gen::OpArg &arg2);

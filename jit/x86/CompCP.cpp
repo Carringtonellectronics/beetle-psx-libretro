@@ -20,8 +20,12 @@ using namespace Gen;
 using namespace X64JitConstants;
 
 void Jit::Comp_Cp0(MIPSOpcode op){
-    uint32 type = (op.encoding >> 21) & 0x1f;
-    switch(type){
+    uint32 sub_op = (op.encoding >> 21) & 0x1F;
+    
+    if(sub_op & 0x10)
+         sub_op = 0x10 + (op.encoding & 0x3F);
+    
+    switch(sub_op){
         case 0: //MFc0
             JitComp_MF0(op);
             break;
@@ -34,8 +38,11 @@ void Jit::Comp_Cp0(MIPSOpcode op){
         case 6: //CTc0
             JitComp_Exception(op, EXCEPTION_COPU);
             break;
+        case (0x10 + 0x10): //RFE
+            JitComp_RFE(op);
+            break;
         default: //Who knows?
-            ERROR_LOG(COP0, "Unkown opcode in Comp_Cp0: %08x\n", op.encoding);
+            ERROR_LOG(COP0, "Unkown opcode in Comp_Cp0: 0x%08x, subop: 0x%08x\n", op.encoding, sub_op);
     }
 }
 void Jit::Comp_Cp1(MIPSOpcode op){
@@ -141,6 +148,23 @@ void Jit::JitComp_Exception(MIPSOpcode op, uint32_t code){
     MOV(32, MIPSSTATE_VAR(pc), R(EAX));
     //Now we need to exit this block, by going back to the dispatcher.
     WriteSyscallExit();
+}
+
+void Jit::JitComp_RFE(MIPSOpcode op){
+    gpr.FlushLockX(EDX);
+    
+    MOV(32, R(EAX), MIPSSTATE_VAR(CP0.SR));
+    AND(32, R(EAX), Imm32((uint32_t)~0x0F));
+
+    MOV(32, R(EDX), MIPSSTATE_VAR(CP0.SR));
+    SHR(32, R(EDX), Imm8(2));
+    AND(32, R(EDX), Imm32(0x0F));
+
+    OR(32, R(EAX), R(EDX));
+
+    MOV(32, MIPSSTATE_VAR(CP0.SR), R(EAX));
+
+    gpr.UnlockAllX();
 }
 
 }
