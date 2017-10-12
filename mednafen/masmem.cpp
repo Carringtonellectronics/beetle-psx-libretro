@@ -137,7 +137,7 @@ static const uint32_t addr_mask[8] = { 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFF
 //TODO it so it makes sense on PSX
 uint8 *GetPointer(uint32 address) {
     //This is essntially a read, so we'll treat it as if it is
-    //INFO_LOG(GETPOINTER, "Getting pointer at %p", address);
+    INFO_LOG(GETPOINTER, "Getting pointer at 0x%08x\n", address);
 	JTTTS_increment_timestamp(DMACycleSteal);
     uint32 origAddress = address;
     address &= addr_mask[address >> 29];
@@ -355,7 +355,6 @@ template<typename T, bool increment = true>
 INLINE void ReadMemory(T &var, uint32_t address)
 {
    T ret;
-   address &= addr_mask[address >> 29];
 
    if(address >= 0x1F800000 && address <= 0x1F8003FF)
    {
@@ -363,6 +362,7 @@ INLINE void ReadMemory(T &var, uint32_t address)
       return;
    }
 
+   address &= addr_mask[address >> 29];
    //timestamp += (ReadFudge >> 4) & 2;
 
    //assert(!(CP0.SR & 0x10000));
@@ -433,7 +433,7 @@ template <typename T>
 inline void WriteToHardware(uint32 address, const T data) {
     
     //if(address == 0xa0 && IsWrite)
-    // DBG_Break();
+    // DBG_Break(); 
     //INFO_LOG(WRITE, "Writing at address %p\n", address);
 
     if(address >= 0x1F800000 && address <= 0x1F8003FF)
@@ -597,13 +597,17 @@ inline void WriteMemory(uint32_t address, uint32_t value){
              ScratchRAM->Write<T>(address & 0x3FF, value);
        }
      }*/
-     address &= addr_mask[address >> 29];
+
+     //INFO_LOG(JIT, "Write to 0x%08x with data %u (0x%08x)\n", address, value, value);
+
 
     if(address >= 0x1F800000 && address <= 0x1F8003FF)
     {
         ScratchRAM->Write<T>(address & 0x3FF, value);
         return;
     }
+
+    address &= addr_mask[address >> 29];
     WriteToHardware<T>(address, value);
 }
 
@@ -623,21 +627,16 @@ bool IsValidAddress(const uint32 address){
 		(address >= 0xa0000000 && address <= 0xa01FFFFF)) {
         //RAM
 		return true;
-	} else if (address >= 0x1F000000 && address <= 0x1F00FFFF) {
-        //Parallel port
-        return false;
-	} else if (address >= 0x1F800000 && address <= 0x1F8003FF) {
+	}else if (address >= 0x1F800000 && address <= 0x1F8003FF) {
         //Scratch Pad
         return true;
-	} else if (address >= 0xBFC00000 && address <= 0xBFC7FFFF) {
+    } else if ((address >= 0xBFC00000 && address <= 0xBFC7FFFF) ||
+               (address >= 0x9FC00000 && address <= 0x9FC7FFFF) ||
+               (address >= 0x1FC00000 && address <= 0x1FC7FFFF)) {
         //BIOS
         return true;
-	} else if (address >= 0x1f801000 && address <= 0x1f802fff) {
-        //HArdware
-        return false;
-    } else{
-		return false;
-	}
+	} 
+	return false;
 }
 
 uint8 Read_U8(const uint32 _Address)

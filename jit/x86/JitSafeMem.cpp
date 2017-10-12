@@ -83,7 +83,7 @@ bool JitSafeMem::PrepareWrite(OpArg &dest, int size)
 	{
 		if (ImmValid())
 		{
-			MemCheckImm(MEM_WRITE);
+			//MemCheckImm(MEM_WRITE);
 			u32 addr = (iaddr_ & alignMask_);
 
 			if((addr >= 0x1F801080 && addr <= 0x1F8010FF) || (addr >= 0x1F801070 && addr <= 0x1F801077)){
@@ -104,7 +104,7 @@ bool JitSafeMem::PrepareWrite(OpArg &dest, int size)
 	}
 	// Otherwise, we always can do the write (conditionally.)
 	else
-		//dest = PrepareMemoryOpArg(MEM_WRITE);
+		dest = PrepareMemoryOpArg(MEM_WRITE);
 	return false;
 }
 
@@ -116,7 +116,7 @@ bool JitSafeMem::PrepareRead(OpArg &src, int size)
 	{
 		if (ImmValid())
 		{
-			MemCheckImm(MEM_READ);
+			//MemCheckImm(MEM_READ);
 			u32 addr = (iaddr_ & alignMask_);
 #if defined(ARCH_32BIT)
 			src = M(Memory::GetPointer(addr));
@@ -131,7 +131,7 @@ bool JitSafeMem::PrepareRead(OpArg &src, int size)
 			return false;
 	}
 	else
-		//src = PrepareMemoryOpArg(MEM_READ);
+		src = PrepareMemoryOpArg(MEM_READ);
 	//we don't know for sure that this is a good address, it could lead to bad places
 	return false;
 }
@@ -141,10 +141,11 @@ OpArg JitSafeMem::NextFastAddress(int suboffset)
 	if (iaddr_ != (u32) -1)
 	{
 		u32 addr = (iaddr_ + suboffset) & alignMask_;
+		/*
 #ifdef MASKED_PSP_MEMORY
 		addr &= Memory::MEMVIEW32_MASK;
 #endif
-
+*/
 #if defined(ARCH_32BIT)
 		return M(Memory::GetPointer(addr));
 #else
@@ -165,13 +166,13 @@ OpArg JitSafeMem::PrepareMemoryOpArg(MemoryOpType type)
 {
 	// We may not even need to move into EAX as a temporary.
 	bool needTemp = alignMask_ != 0xFFFFFFFF;
-
+/*
 #ifdef MASKED_PSP_MEMORY
 	bool needMask = true; // raddr_ != MIPS_REG_SP;    // Commented out this speedhack due to low impact
 	// We always mask on 32 bit in fast memory mode.
 	needTemp = needTemp || (fast_ && needMask);
 #endif
-
+*/
 	if (jit_->gpr.R(raddr_).IsSimpleReg() && !needTemp)
 	{
 		jit_->gpr.MapReg(raddr_, true, false);
@@ -185,7 +186,7 @@ OpArg JitSafeMem::PrepareMemoryOpArg(MemoryOpType type)
 
 	/*MemCheckAsm(type);*/
 
-	if (!fast_)
+	/*if (!fast_)
 	{
 		// Is it in physical ram?
 		jit_->CMP(32, R(xaddr_), Imm32(Memory::GetKernelMemoryBase() - offset_));
@@ -195,7 +196,7 @@ OpArg JitSafeMem::PrepareMemoryOpArg(MemoryOpType type)
 
 		// We may need to jump back up here.
 		safe_ = jit_->GetCodePtr();
-	}
+	}*/
 //TODO maybe check here for corestate changes, particularily
 //Halt changes. Maybe it will speed things up?
 /*
@@ -231,18 +232,18 @@ OpArg JitSafeMem::PrepareMemoryOpArg(MemoryOpType type)
 void JitSafeMem::PrepareSlowAccess()
 {
 	// Skip the fast path (which the caller wrote just now.)
-	skip_ = jit_->J(far_);
-	needsSkip_ = true;
+	/*skip_ = jit_->J(far_);
+	needsSkip_ = true;*/
 	
 	//jit_->SetJumpTarget(tooLow_);
 	//jit_->SetJumpTarget(tooHigh_);
 
 	// Might also be the scratchpad.
-	jit_->CMP(32, R(xaddr_), Imm32(Memory::GetScratchpadMemoryBase() - offset_));
+	/*jit_->CMP(32, R(xaddr_), Imm32(Memory::GetScratchpadMemoryBase() - offset_));
 	FixupBranch tooLow = jit_->J_CC(CC_B);
 	jit_->CMP(32, R(xaddr_), Imm32(Memory::GetScratchpadMemoryEnd() - offset_ - (size_ - 1)));
 	//jit_->J_CC(CC_B, safe_);
-	jit_->SetJumpTarget(tooLow);
+	jit_->SetJumpTarget(tooLow);*/
 	
 }
 
@@ -485,7 +486,7 @@ void JitSafeMemFuncs::Shutdown() {
 //   On x86-32, Write funcs also have an extra 4 bytes on the stack.
 
 void JitSafeMemFuncs::CreateReadFunc(int bits, const void *fallbackFunc) {
-	CheckDirectEAX();
+	//CheckDirectEAX();
 
 	// Since we were CALLed, we need to align the stack before calling C++.
 #if defined(ARCH_32BIT)
@@ -499,7 +500,7 @@ void JitSafeMemFuncs::CreateReadFunc(int bits, const void *fallbackFunc) {
 #endif
 
 	RET();
-
+/*
 	StartDirectAccess();
 
 #if defined(ARCH_32BIT)
@@ -508,11 +509,11 @@ void JitSafeMemFuncs::CreateReadFunc(int bits, const void *fallbackFunc) {
 	MOVZX(32, bits, EAX, MRegSum(MEMBASEREG, EAX));
 #endif
 
-	RET();
+	RET();*/
 }
 
 void JitSafeMemFuncs::CreateWriteFunc(int bits, const void *fallbackFunc) {
-	CheckDirectEAX();
+	//CheckDirectEAX();
 
 	// Since we were CALLed, we need to align the stack before calling C++.
 #if defined(ARCH_32BIT)
@@ -527,7 +528,7 @@ void JitSafeMemFuncs::CreateWriteFunc(int bits, const void *fallbackFunc) {
 #endif
 
 	RET();
-
+/*
 	StartDirectAccess();
 
 #if defined(ARCH_32BIT)
@@ -536,7 +537,7 @@ void JitSafeMemFuncs::CreateWriteFunc(int bits, const void *fallbackFunc) {
 	MOV(bits, R(EAX), R(EDX));
 #endif
 
-	RET();
+	RET();*/
 }
 //TODO MAYBE re add this if you can find a way to make it work
 //What it's supposed to do: check if EAX is directly accesable, then access it if possible.

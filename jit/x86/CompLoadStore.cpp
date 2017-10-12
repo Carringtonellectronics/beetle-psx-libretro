@@ -44,9 +44,9 @@
 #define CONDITIONAL_DISABLE ;
 #define DISABLE { Comp_Generic(op); return; }
 
-/*void PrintRSI(uint32_t rsi){
-	INFO_LOG(JIT, "RSI: 0x%08x\n", rsi);
-}*/
+void PrintREG(uint32_t reg){
+	INFO_LOG(JIT, "REG: 0x%08x\n", reg);
+}
 
 namespace MIPSComp {
 	using namespace Gen;
@@ -386,7 +386,10 @@ namespace MIPSComp {
 		case 43: //WriteMem32(addr, R(rt)); break; //sw
 			//Make sure that address is a 32-bit addressable one
 			gpr.MapReg(rs, true, false);
-
+			if(rs == MIPS_REG_SP){
+				INFO_LOG(JIT, "Storing value in %u to SP + %d\n", rt, offset);
+				ABI_CallFunctionR((void*)&PrintREG, RSI);
+			}
 			MOV(32, R(EAX), gpr.R(rs));
 			ADD(32, R(EAX), Imm32(offset));
 			TEST(32, R(EAX), Imm32(0x3));
