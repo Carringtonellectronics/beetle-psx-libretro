@@ -150,6 +150,10 @@ void Jit::JitComp_Exception(MIPSOpcode op, uint32_t code){
     WriteSyscallExit();
 }
 
+void recalcIPCache(){
+    currentMIPS->RecalcInterrupt();
+}
+
 void Jit::JitComp_RFE(MIPSOpcode op){
     gpr.FlushLockX(EDX);
     
@@ -165,6 +169,8 @@ void Jit::JitComp_RFE(MIPSOpcode op){
     MOV(32, MIPSSTATE_VAR(CP0.SR), R(EAX));
 
     gpr.UnlockAllX();
+
+    ABI_CallFunction((void *)&recalcIPCache);
 }
 
 }

@@ -472,6 +472,9 @@ void PSX_RequestMLExit(void)
 /* Remember to update MemPeek<>() and MemPoke<>() when we change address decoding in MemRW() */
 template<typename T, bool IsWrite, bool Access24> static INLINE void MemRW(int32_t &timestamp, uint32_t A, uint32_t &V)
 {
+      if(IsWrite && A == 0x000000b0){
+            INFO_LOG(MEMRW, "Hit exception vector\n");
+      }
 #if 0
    if(IsWrite)
       printf("Write%d: %08x(orig=%08x), %08x\n", (int)(sizeof(T) * 8), A & mask[A >> 29], A, V);

@@ -292,7 +292,7 @@ namespace MIPSComp {
 	}
 
 	void LogInt322(uint32 in){
-		DEBUG_LOG(CPU, "Register = %d\n", in);
+		DEBUG_LOG(CPU, "Register = 0x%08x\n", in);
 	}
 
 	void Jit::Comp_ITypeMem(MIPSOpcode op)
@@ -303,13 +303,16 @@ namespace MIPSComp {
 		MIPSGPReg rs = _RS;
 		int o = op>>26;
 
-		if(rt == MIPS_REG_SP) INFO_LOG(SP, "Stack Pointer is being updated!\n");
+		if(rt == MIPS_REG_T2){ 
+			INFO_LOG(SP, "A0 is being updated, op = 0x%08x\n", op.encoding);
+			ABI_CallFunctionR((void *)&LogInt322, RSI);
+		}
 
 		if (((op >> 29) & 1) == 0 && rt == MIPS_REG_ZERO) {
 			// Don't load anything into $zr
 			return;
 		}
-		
+		//TODO check if ISOLATE CACHE is enabled in SR and actually do something about it, idiot.
 		FixupBranch goodAddress;
 
 		switch (o)
@@ -386,8 +389,8 @@ namespace MIPSComp {
 		case 43: //WriteMem32(addr, R(rt)); break; //sw
 			//Make sure that address is a 32-bit addressable one
 			gpr.MapReg(rs, true, false);
-			if(rs == MIPS_REG_SP){
-				INFO_LOG(JIT, "Storing value in %u to SP + %d\n", rt, offset);
+			if(rs == MIPS_REG_T2){
+				INFO_LOG(JIT, "Storing value in %u to K0 + %d\n", rt, offset);
 				ABI_CallFunctionR((void*)&PrintREG, RSI);
 			}
 			MOV(32, R(EAX), gpr.R(rs));

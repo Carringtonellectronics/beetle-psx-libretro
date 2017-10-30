@@ -363,8 +363,8 @@ void GPRRegCache::MapReg(MIPSGPReg i, bool doLoad, bool makeDirty) {
 		xregs[xr].dirty = makeDirty || regs[i].location.IsImm();
 		OpArg newloc = ::Gen::R(xr);
 
-		if(i == MIPS_REG_SP) 
-			INFO_LOG(SP, "Stack Pointer mapped to %u\n", xr);
+		if(i == MIPS_REG_T2) 
+			INFO_LOG(SP, "K0 mapped to %u\n", xr);
 
 		if (doLoad) {
 			// Force ZERO to be 0.

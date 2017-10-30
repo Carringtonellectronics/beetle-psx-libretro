@@ -99,11 +99,13 @@ bool JitSafeMem::PrepareWrite(OpArg &dest, int size)
 #endif
 			return true;
 		}
-		else
+		/*else {
+			INFO_LOG(write, "WRITE TO IMMEDIATE, NOT VALID.\n");
 			return false;
+		}*/
 	}
 	// Otherwise, we always can do the write (conditionally.)
-	else
+	//else
 		dest = PrepareMemoryOpArg(MEM_WRITE);
 	return false;
 }
@@ -127,10 +129,12 @@ bool JitSafeMem::PrepareRead(OpArg &src, int size)
 #endif
 			return true;
 		}
-		else
+		/*else{
+			INFO_LOG(write, "READ TO IMMEDIATE, NOT VALID.\n");
 			return false;
+		}*/
 	}
-	else
+	//else
 		src = PrepareMemoryOpArg(MEM_READ);
 	//we don't know for sure that this is a good address, it could lead to bad places
 	return false;

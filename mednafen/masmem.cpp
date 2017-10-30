@@ -174,19 +174,19 @@ inline void ReadFromHardware(T &var, uint32 address) {
     //if(address == 0xa0 && IsWrite)
     // DBG_Break();
     //INFO_LOG(READ, "Masked address: %p\n", address);
-
+    
     if(address < 0x00800000)
     {
         if(increment){
             JTTTS_increment_timestamp(3);
         }
-        var = MainRAM->Read<T>(address & 0x001FFFFF);
+        var = MainRAM->Read<T>(address & 0x1FFFFF);
         return;
     }
 
     if(address >= 0x1FC00000 && address <= 0x1FC7FFFF)
     {
-        var = BIOSROM->Read<T>(address & 0x0007FFFF);
+        var = BIOSROM->Read<T>(address & 0x7FFFF);
         return;
     }
 
@@ -361,7 +361,11 @@ INLINE void ReadMemory(T &var, uint32_t address)
       var = ScratchRAM->Read<T>(address & 0x3FF);
       return;
    }
-
+/*
+   if(address == 0x28){
+       INFO_LOG(READ, "Reading from 0x28.\n");
+   }
+*/
    address &= addr_mask[address >> 29];
    //timestamp += (ReadFudge >> 4) & 2;
 
@@ -435,12 +439,6 @@ inline void WriteToHardware(uint32 address, const T data) {
     //if(address == 0xa0 && IsWrite)
     // DBG_Break(); 
     //INFO_LOG(WRITE, "Writing at address %p\n", address);
-
-    if(address >= 0x1F800000 && address <= 0x1F8003FF)
-    {
-        ScratchRAM->Write<T>(address & 0x3FF, data);
-        return;
-    }
 
     if(address < 0x00800000)
     {
@@ -560,8 +558,9 @@ inline void WriteToHardware(uint32 address, const T data) {
 
 template<typename T>
 inline void WriteMemory(uint32_t address, uint32_t value){
-    /*if(MDFN_LIKELY(!(currentMIPS->CP0.SR & 0x10000)))
+    if(MDFN_LIKELY(!(currentMIPS->CP0.SR & 0x10000)))
     {
+        
        address &= addr_mask[address >> 29];
  
        if(address >= 0x1F800000 && address <= 0x1F8003FF)
@@ -573,6 +572,10 @@ inline void WriteMemory(uint32_t address, uint32_t value){
     }
     else
     {
+        if(address >= 0xB0 && address <= 0xB0 + 0x10){
+            INFO_LOG(READ, "Writing to 0x%08x : 0x%08x\n", address, value);
+        }
+
         if(BIU & BIU_ENABLE_ICACHE_S1)	// Instruction cache is enabled/active
         {
             if(BIU & (BIU_TAG_TEST_MODE | BIU_INVALIDATE_MODE | BIU_LOCK_MODE))
@@ -596,7 +599,7 @@ inline void WriteMemory(uint32_t address, uint32_t value){
        {
              ScratchRAM->Write<T>(address & 0x3FF, value);
        }
-     }*/
+     }
 
      //INFO_LOG(JIT, "Write to 0x%08x with data %u (0x%08x)\n", address, value, value);
 
@@ -606,9 +609,7 @@ inline void WriteMemory(uint32_t address, uint32_t value){
         ScratchRAM->Write<T>(address & 0x3FF, value);
         return;
     }
-
-    address &= addr_mask[address >> 29];
-    WriteToHardware<T>(address, value);
+    
 }
 
 bool IsRAMAddress(const uint32 address) {
@@ -696,7 +697,6 @@ void Write_U64(const uint64 _Data, const uint32 _Address)
 {
 	WriteMemory<u64_le>(_Address, _Data);
 }
-
 uint8 ReadUnchecked_U8(const uint32 _Address)
 {
 	uint8 _var = 0;
@@ -726,17 +726,18 @@ uint32 Read_U32_instr(const uint32 _Address){
 
 void WriteUnchecked_U8(const uint8 _iValue, const uint32 _Address)
 {
-	WriteMemory<u8>(_Address, _iValue);
+	WriteToHardware<uint8_t>(_Address & addr_mask[_Address >> 29], _iValue);
 }
 
 void WriteUnchecked_U16(const uint16 _iValue, const uint32 _Address)
 {
-	WriteMemory<u16_le>(_Address, _iValue);
+	WriteToHardware<u16_le>(_Address & addr_mask[_Address >> 29], _iValue);
 }
 
 void WriteUnchecked_U32(const uint32 _iValue, const uint32 _Address)
+
 {
-	WriteMemory<u32_le>(_Address, _iValue);
+	WriteToHardware<u32_le>(_Address & addr_mask[_Address >> 29], _iValue);
 }
 #endif
 } //Namespace Memory

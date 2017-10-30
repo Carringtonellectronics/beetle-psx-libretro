@@ -332,6 +332,10 @@ MIPSOpcode Jit::GetOffsetInstruction(int offset) {
 	return Memory::Read_Instruction(GetCompilerPC() + 4 * offset);
 }
 
+void PrintR9(uint32_t r9){
+	INFO_LOG(R9, "R9 = 0x%08x\n", r9);
+}
+
 const u8 *Jit::DoJit(u32 em_address, JitBlock *b) {
 	js.cancel = false;
 	js.blockStart = js.compilerPC = mips_->pc;
@@ -344,6 +348,8 @@ const u8 *Jit::DoJit(u32 em_address, JitBlock *b) {
 	js.inDelaySlot = false;
 	js.afterOp = JitState::AFTER_NONE;
 	js.PrefixStart();
+
+	bool printOps = false;
 
 	// We add a check before the block, used when entering from a linked block.
 	b->checkedEntry = (u8 *)GetCodePtr();
@@ -361,6 +367,25 @@ const u8 *Jit::DoJit(u32 em_address, JitBlock *b) {
 	fpr.Start(mips_, &js, &jo, analysis, RipAccessible(&mips_->v[0]));
 
 	js.numInstructions = 0;
+
+	if(em_address == 0x000000b0 || em_address == 0x000000a0 || em_address == 0x000000c0){
+		gpr.Lock(MIPS_REG_A5);
+		gpr.MapReg(MIPS_REG_A5, true, false);
+		if(gpr.R(MIPS_REG_A5).IsSimpleReg())
+			ABI_CallFunctionR((void *)&PrintR9, gpr.RX(MIPS_REG_A5));
+		else {
+			MOV(32, R(EAX), gpr.R(MIPS_REG_A5));
+			ABI_CallFunctionR((void *)&PrintR9, EAX);
+		}
+		gpr.UnlockAll();
+		printOps = true;
+	}
+
+	if(em_address == 0xbfc01960){
+		INFO_LOG(JIT, "Compiling\n");
+		printOps = true;
+	}
+
 	while (js.compiling) {
 		// Jit breakpoints are quite fast, so let's do them in release too.
 		CheckJitBreakpoint(GetCompilerPC(), 0);
@@ -368,6 +393,10 @@ const u8 *Jit::DoJit(u32 em_address, JitBlock *b) {
 		MIPSOpcode inst = Memory::Read_Opcode_JIT(&js);
 
 		js.downcountAmount += MIPSGetInstructionCycleEstimate(inst);
+
+		if(printOps){
+			INFO_LOG(JIT, "PC: 0x%08x, Op: 0x%08x\n", js.compilerPC, inst.encoding);
+		}
 
 		MIPSCompileOp(inst, this);
 
@@ -396,10 +425,6 @@ const u8 *Jit::DoJit(u32 em_address, JitBlock *b) {
 		}
 		if (js.afterOp & JitState::AFTER_MEMCHECK_CLEANUP) {
 			js.afterOp &= ~JitState::AFTER_MEMCHECK_CLEANUP;
-		}
-
-		if(js.compilerPC == 0xBFC01A78){
-			INFO_LOG(JIT, "Compiling desired op ;).\n");
 		}
 
 		js.compilerPC += 4;

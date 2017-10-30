@@ -80,6 +80,7 @@ namespace MIPSComp
 	void Jit::Comp_IType(MIPSOpcode op)
 	{
 		CONDITIONAL_DISABLE;
+		bool checkOverflow = false;
 		s32 simm = (s32)_IMM16;  // sign extension
 		u32 uimm = op & 0xFFFF;
 		u32 suimm = (u32)(s32)simm;
@@ -100,6 +101,7 @@ namespace MIPSComp
 					gpr.SetImm(rt, gpr.GetImm(rs) + simm);
 					break;
 				}
+				checkOverflow = true;
 
 				gpr.Lock(rt, rs);
 				gpr.MapReg(rt, rt == rs, true);
@@ -127,6 +129,7 @@ namespace MIPSComp
 			if (gpr.IsImm(rs)) {
 				gpr.SetImm(rt, (s32)gpr.GetImm(rs) < simm);
 			} else {
+				checkOverflow = true;
 				gpr.Lock(rt, rs);
 				// This is often used before a branch.  If rs is not already mapped, let's leave it.
 				gpr.MapReg(rt, rt == rs, true);
@@ -198,23 +201,26 @@ namespace MIPSComp
 			Comp_Generic(op);
 			break;
 		}
-FixupBranch noOverflow;
-		//Check for overflow
-//#ifdef ARCH_32BIT
-		//Only works for signed values, otherwise the carry bit is set.
-		//However, it looks like all these immediates use the signed ADD instruction
-		//Anyways.
-		noOverflow = J_CC(CC_NO);
-/*#else
-		MOV(32, R(TEMPREG), gpr.R(rt));
-		CMP(32, R(TEMPREG), Imm32(0xFFFFFFFF));
-		noOverflow = J_CC(CC_B);
-#endif*/
-		JitComp_Exception(op, EXCEPTION_OV);
-		SetJumpTarget(noOverflow);
 
-		if(rt == MIPS_REG_SP){ 
-			INFO_LOG(SP, "Stack Pointer is being updated, op = 0x%08x!\n", op);
+		if (checkOverflow){
+			FixupBranch noOverflow;
+			//Check for overflow
+	//#ifdef ARCH_32BIT
+			//Only works for signed values, otherwise the carry bit is set.
+			//However, it looks like all these immediates use the signed ADD instruction
+			//Anyways.
+			noOverflow = J_CC(CC_NO);
+	/*#else
+			MOV(32, R(TEMPREG), gpr.R(rt));
+			CMP(32, R(TEMPREG), Imm32(0xFFFFFFFF));
+			noOverflow = J_CC(CC_B);
+	#endif*/
+			JitComp_Exception(op, EXCEPTION_OV);
+			SetJumpTarget(noOverflow);
+		}
+		if(rt == MIPS_REG_T2){ 
+			INFO_LOG(SP, "K0 is being updated, op = 0x%08x!\n", op);
+			INFO_LOG(K0, "IS IMMEDIATE? %d\n", gpr.IsImm(rt));
 			ABI_CallFunctionR((void *)&PrintRSI, RSI);
 		}
 	}
@@ -313,8 +319,8 @@ FixupBranch noOverflow;
 		JitComp_Exception(op, EXCEPTION_OV);
 		SetJumpTarget(noOverflow);
 
-		if(rd == MIPS_REG_SP){ 
-			INFO_LOG(SP, "Stack Pointer is being updated, op = 0x%08x!\n", op);
+		if(rd == MIPS_REG_T2){ 
+			INFO_LOG(SP, "K0 is being updated, op = 0x%08x!\n", op);
 			ABI_CallFunctionR((void *)&PrintRSI, RSI);
 		}
 	}
@@ -433,8 +439,8 @@ FixupBranch noOverflow;
 		JitComp_Exception(op, EXCEPTION_OV);
 		SetJumpTarget(noOverflow);
 
-		if(rd == MIPS_REG_SP){ 
-			INFO_LOG(SP, "Stack Pointer is being updated, op = 0x%08x!\n", op);
+		if(rd == MIPS_REG_T2){ 
+			INFO_LOG(SP, "K0 is being updated, op = 0x%08x!\n", op);
 			ABI_CallFunctionR((void *)&PrintRSI, RSI);
 		}
 	}
@@ -664,8 +670,8 @@ FixupBranch noOverflow;
 #endif*/
 		JitComp_Exception(op, EXCEPTION_OV);
 		SetJumpTarget(noOverflow);
-		if(rd == MIPS_REG_SP){ 
-			INFO_LOG(SP, "Stack Pointer is being updated, op = 0x%08x!\n", op);
+		if(rd == MIPS_REG_T2){ 
+			INFO_LOG(SP, "K0 is being updated, op = 0x%08x!\n", op);
 			ABI_CallFunctionR((void *)&PrintRSI, RSI);
 		}
 	}
